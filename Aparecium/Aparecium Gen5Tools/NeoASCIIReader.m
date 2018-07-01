@@ -1,5 +1,6 @@
 classdef NeoASCIIReader < handle
-    %UNTITLED Summary of this class goes here
+    %This class can read Synergy Neo ASCII files if they are defined as
+    %described in the Aparecium Documentation
     %   Detailed explanation goes here
     
     properties (SetAccess = public)
