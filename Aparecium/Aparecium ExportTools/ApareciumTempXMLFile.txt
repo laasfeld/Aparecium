@@ -1,0 +1,20 @@
+<BTIImageMetaData>  <System>
+    <Gen5>
+      <Version>2.09.1</Version>
+    </Gen5>
+    <Reader>
+      <Model>Cytation5</Model>
+      <SerialNumber>15033011</SerialNumber>
+      <BasecodeVersion>???</BasecodeVersion>
+    </Reader>
+    <Camera>
+      <Model>Grasshopper GRAS-14S5M</Model>
+      <SerialNumber>14372901</SerialNumber>
+      <Firmware>0.9.3.59</Firmware>
+      <Driver>FirePRO Driver (PGR1394.sys) - 2.3.3.59</Driver>
+      <DriverVersion>FirePRO Driver (PGR1394.sys) - 2.3.3.59</DriverVersion>
+      <SaturationLevel>65520</SaturationLevel>
+    </Camera>
+  </System>
+  <ImageReference>
+    <Experiment>C:

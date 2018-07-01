@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<userprogram>
+   <model value="3"/>
+   <name value="example"/>
+   <calibration index="0"/>
+   <protection value="0"/>
+   <notestep>
+      <text>In from b A1 to Final measurement plate A1</text>
+   </notestep>
+   <fillstep>
+      <speed value="10"/>
+      <volume value="87.5"/>
+      <excess value="0"/>
+   </fillstep>
+   <dispensestep>
+      <speed value="10"/>
+      <volume value="87.5"/>
+      <blowout value="0"/>
+   </dispensestep>
+   <notestep>
+      <text>In from b A1 to Final measurement plate A2</text>
+   </notestep>
+   <fillstep>
+      <speed value="10"/>
+      <volume value="75"/>
+      <excess value="0"/>
+   </fillstep>
+   <dispensestep>
+      <speed value="10"/>
+      <volume value="75"/>
+      <blowout value="0"/>
+   </dispensestep>
+   <notestep>
+      <text>In from b A1 to Final measurement plate A3</text>
+   </notestep>
+   <fillstep>
+      <speed value="10"/>
+      <volume value="50"/>
+      <excess value="0"/>
+   </fillstep>
+   <dispensestep>
+      <speed value="10"/>
+      <volume value="50"/>
+      <blowout value="0"/>
+   </dispensestep>
+   <notestep>
+      <text>In from a A1 to Final measurement plate A1</text>
+   </notestep>
+   <fillstep>
+      <speed value="10"/>
+      <volume value="87.5"/>
+      <excess value="0"/>
+   </fillstep>
+   <dispensestep>
+      <speed value="10"/>
+      <volume value="87.5"/>
+      <blowout value="0"/>
+   </dispensestep>
+   <notestep>
+      <text>In from Final measurement plate A1 to Final measurement plate A2</text>
+   </notestep>
+   <fillstep>
+      <speed value="10"/>
+      <volume value="75"/>
+      <excess value="0"/>
+   </fillstep>
+   <dispensestep>
+      <speed value="10"/>
+      <volume value="75"/>
+      <blowout value="0"/>
+   </dispensestep>
+   <notestep>
+      <text>In from Final measurement plate A2 to Final measurement plate A3</text>
+   </notestep>
+   <fillstep>
+      <speed value="10"/>
+      <volume value="50"/>
+      <excess value="0"/>
+   </fillstep>
+   <dispensestep>
+      <speed value="10"/>
+      <volume value="50"/>
+      <blowout value="0"/>
+   </dispensestep>
+</userprogram>

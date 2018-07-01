@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?><GraphPadPrismFile xmlns="http://graphpad.com/prism/Prism.htm" PrismXMLVersion="5.00"> <TableSequence Selected="1"><Ref ID="Table0" Selected="1"/></TableSequence>
+  <Table ID="Table0" XFormat="numbers" YFormat="replicates" Replicates="2" TableType="XY">
+    <Title>Group A</Title>
+    <XColumn>
+      <Title>Virus_-log(1/dil)</Title>
+      <Subcolumn>
+        <d>-0.3</d>
+        <d>-0.78</d>
+        <d>-1.26</d>
+        <d>-1.73</d>
+        <d>-2.21</d>
+        <d>-2.69</d>
+        <d>-3.16</d>
+        <d>-3.64</d>
+        <d>-4.12</d>
+        <d>-4.6</d>
+        <d>-5.07</d>
+        <d>-7</d>
+      </Subcolumn>
+    </XColumn>
+    <YColumn Decimals="4" Subcolumns="2">
+      <Title>87279.9375</Title>
+      <Subcolumn>
+        <d>18.1436</d>
+        <d>17.9074</d>
+        <d>18.1595</d>
+        <d>18.6908</d>
+        <d>17.4684</d>
+        <d>17.1293</d>
+        <d>16.4683</d>
+        <d>15.9815</d>
+        <d>15.8784</d>
+        <d>15.7526</d>
+        <d>16.1537</d>
+        <d>15.9284</d>
+      </Subcolumn>    
+      <Subcolumn>
+        <d>18.5429</d>
+        <d>17.9149</d>
+        <d>18.4168</d>
+        <d>17.3889</d>
+        <d>17.8753</d>
+        <d>17.778</d>
+        <d>16.4355</d>
+        <d>16.2324</d>
+        <d>15.8506</d>
+        <d>15.5663</d>
+        <d>15.5731</d>
+        <d>15.7596</d>
+      </Subcolumn>
+    </YColumn>
+  </Table>
+</GraphPadPrismFile>

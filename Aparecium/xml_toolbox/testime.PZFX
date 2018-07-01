@@ -1,0 +1,2457 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GraphPadPrismFile xmlns="http://graphpad.com/prism/Prism.htm" PrismXMLVersion="5.00">
+<Created>
+<OriginalVersion CreatedByProgram="GraphPad Prism" CreatedByVersion="5.0.0.288" Login="dell" DateTime="2016-04-09T17:23:25+02:00"/>
+</Created>
+<InfoSequence>
+<Ref ID="Info0" Selected="2"/>
+</InfoSequence>
+<Info ID="Info0">
+<Title>Project info 1</Title>
+<Notes>
+</Notes>
+<Constant><Name>Experiment Date</Name><Value>2016-04-09</Value></Constant>
+<Constant><Name>Experiment ID</Name><Value/></Constant>
+<Constant><Name>Notebook ID</Name><Value/></Constant>
+<Constant><Name>Project</Name><Value/></Constant>
+<Constant><Name>Experimenter</Name><Value/></Constant>
+<Constant><Name>Protocol</Name><Value/></Constant>
+</Info>
+
+<TableSequence Selected="2">
+<Ref ID="Table0"/>
+<Ref ID="Table1"/>
+<Ref ID="Table2" Selected="2"/>
+</TableSequence>
+  <Table ID="Table0" XFormat="numbers" YFormat="replicates" Replicates="1" TableType="XY">
+    <Title>Data 1</Title>
+    <RowTitlesColumn>
+      <Subcolumn>
+        <d>Viruss_-log(1/dil)</d>
+        <d>Viruss_-log(1/dil)</d>
+        <d>Viruss_-log(1/dil)</d>
+        <d>Viruss_-log(1/dil)</d>
+        <d>Viruss_-log(1/dil)</d>
+        <d>Viruss_-log(1/dil)</d>
+        <d>Viruss_-log(1/dil)</d>
+        <d>Viruss_-log(1/dil)</d>
+        <d>Viruss_-log(1/dil)</d>
+        <d>Viruss_-log(1/dil)</d>
+        <d>Viruss_-log(1/dil)</d>
+        <d>Viruss_-log(1/dil)</d>
+      </Subcolumn>
+    </RowTitlesColumn>
+    <XColumn>
+      <Title>[]</Title>
+      <Subcolumn>
+        <d>-0.3</d>
+        <d>-0.78</d>
+        <d>-1.26</d>
+        <d>-1.73</d>
+        <d>-2.21</d>
+        <d>-2.69</d>
+        <d>-3.16</d>
+        <d>-3.64</d>
+        <d>-4.12</d>
+        <d>-4.6</d>
+        <d>-5.07</d>
+        <d>-7</d>
+      </Subcolumn>
+    </XColumn>
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>21.2448</Title>
+      <Subcolumn>
+        <d>18.6361</d>
+        <d>18.9913</d>
+        <d>18.8308</d>
+        <d>19.3642</d>
+        <d>18.476</d>
+        <d>18.166</d>
+        <d>18.1446</d>
+        <d>17.5672</d>
+        <d>17.4318</d>
+        <d>17.7252</d>
+        <d>17.5551</d>
+        <d>17.1216</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <RowTitlesColumn/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>22.2447</Title>
+      <Subcolumn>
+        <d>18.6879</d>
+        <d>18.4915</d>
+        <d>18.7244</d>
+        <d>19.2604</d>
+        <d>18.5642</d>
+        <d>18.4266</d>
+        <d>18.2399</d>
+        <d>17.724</d>
+        <d>17.4572</d>
+        <d>17.4734</d>
+        <d>17.2044</d>
+        <d>17.1385</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <RowTitlesColumn/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>23.2448</Title>
+      <Subcolumn>
+        <d>18.6643</d>
+        <d>18.4399</d>
+        <d>19.0329</d>
+        <d>19.2245</d>
+        <d>18.449</d>
+        <d>18.5962</d>
+        <d>18.393</d>
+        <d>17.8346</d>
+        <d>17.894</d>
+        <d>17.5366</d>
+        <d>17.3375</d>
+        <d>17.5766</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <RowTitlesColumn/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>24.2444</Title>
+      <Subcolumn>
+        <d>18.7174</d>
+        <d>18.5273</d>
+        <d>18.7575</d>
+        <d>19.2464</d>
+        <d>18.3495</d>
+        <d>18.5532</d>
+        <d>18.1961</d>
+        <d>17.8208</d>
+        <d>17.7872</d>
+        <d>17.5129</d>
+        <d>17.5652</d>
+        <d>17.3854</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <RowTitlesColumn/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>25.2448</Title>
+      <Subcolumn>
+        <d>18.7251</d>
+        <d>18.4992</d>
+        <d>18.5468</d>
+        <d>19.2226</d>
+        <d>18.4813</d>
+        <d>18.6259</d>
+        <d>18.4035</d>
+        <d>17.8376</d>
+        <d>17.806</d>
+        <d>17.5025</d>
+        <d>17.3347</d>
+        <d>17.5768</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <RowTitlesColumn/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>26.2446</Title>
+      <Subcolumn>
+        <d>18.7772</d>
+        <d>18.5369</d>
+        <d>18.8883</d>
+        <d>19.302</d>
+        <d>18.2932</d>
+        <d>18.5965</d>
+        <d>18.5017</d>
+        <d>18.1418</d>
+        <d>17.8985</d>
+        <d>17.3654</d>
+        <d>17.6128</d>
+        <d>17.5868</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <RowTitlesColumn/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>27.2447</Title>
+      <Subcolumn>
+        <d>18.9689</d>
+        <d>18.6469</d>
+        <d>18.5881</d>
+        <d>19.3339</d>
+        <d>18.3568</d>
+        <d>18.7013</d>
+        <d>18.6353</d>
+        <d>17.8559</d>
+        <d>17.7483</d>
+        <d>17.5612</d>
+        <d>17.2775</d>
+        <d>17.4214</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <RowTitlesColumn/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>28.2445</Title>
+      <Subcolumn>
+        <d>18.9646</d>
+        <d>18.7802</d>
+        <d>19.1271</d>
+        <d>19.2999</d>
+        <d>18.4618</d>
+        <d>18.6077</d>
+        <d>18.662</d>
+        <d>18.0074</d>
+        <d>17.5995</d>
+        <d>17.3978</d>
+        <d>17.232</d>
+        <d>17.0825</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <RowTitlesColumn/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>29.2447</Title>
+      <Subcolumn>
+        <d>19.061</d>
+        <d>18.7789</d>
+        <d>18.9899</d>
+        <d>19.3881</d>
+        <d>18.5376</d>
+        <d>18.7004</d>
+        <d>18.5091</d>
+        <d>17.9335</d>
+        <d>17.6316</d>
+        <d>17.494</d>
+        <d>17.337</d>
+        <d>17.2718</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <RowTitlesColumn/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>30.2447</Title>
+      <Subcolumn>
+        <d>19.2071</d>
+        <d>18.8585</d>
+        <d>19.3117</d>
+        <d>19.5641</d>
+        <d>18.5064</d>
+        <d>18.7915</d>
+        <d>18.5892</d>
+        <d>18.0294</d>
+        <d>17.9339</d>
+        <d>17.3979</d>
+        <d>17.2591</d>
+        <d>17.0634</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <RowTitlesColumn/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>31.2447</Title>
+      <Subcolumn>
+        <d>19.1459</d>
+        <d>19.0172</d>
+        <d>19.0296</d>
+        <d>19.6214</d>
+        <d>18.5195</d>
+        <d>18.7812</d>
+        <d>18.6905</d>
+        <d>18.0486</d>
+        <d>17.6268</d>
+        <d>17.594</d>
+        <d>17.415</d>
+        <d>17.1037</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <RowTitlesColumn/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>32.2446</Title>
+      <Subcolumn>
+        <d>19.186</d>
+        <d>19.1225</d>
+        <d>19.45</d>
+        <d>19.689</d>
+        <d>18.7898</d>
+        <d>18.8205</d>
+        <d>18.6083</d>
+        <d>18.1194</d>
+        <d>17.8717</d>
+        <d>17.3683</d>
+        <d>17.2662</d>
+        <d>17.2615</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <RowTitlesColumn/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>33.2446</Title>
+      <Subcolumn>
+        <d>19.3073</d>
+        <d>19.1559</d>
+        <d>19.2124</d>
+        <d>19.8141</d>
+        <d>18.8304</d>
+        <d>18.8974</d>
+        <d>18.8572</d>
+        <d>18.1099</d>
+        <d>17.8503</d>
+        <d>17.5588</d>
+        <d>17.2256</d>
+        <d>17.0418</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <RowTitlesColumn/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>34.2446</Title>
+      <Subcolumn>
+        <d>19.2046</d>
+        <d>19.1927</d>
+        <d>19.3695</d>
+        <d>19.8371</d>
+        <d>18.9922</d>
+        <d>18.9516</d>
+        <d>18.9246</d>
+        <d>18.1477</d>
+        <d>17.8676</d>
+        <d>17.7374</d>
+        <d>17.4161</d>
+        <d>17.0164</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <RowTitlesColumn/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>35.2444</Title>
+      <Subcolumn>
+        <d>19.301</d>
+        <d>19.3034</d>
+        <d>19.124</d>
+        <d>19.8401</d>
+        <d>18.8909</d>
+        <d>18.9888</d>
+        <d>18.9137</d>
+        <d>18.3273</d>
+        <d>18.0138</d>
+        <d>17.5309</d>
+        <d>17.1462</d>
+        <d>17.0086</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <RowTitlesColumn/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>36.2447</Title>
+      <Subcolumn>
+        <d>19.4101</d>
+        <d>19.3274</d>
+        <d>19.7875</d>
+        <d>19.9004</d>
+        <d>19.0365</d>
+        <d>19.009</d>
+        <d>18.7785</d>
+        <d>18.4413</d>
+        <d>17.9369</d>
+        <d>17.5563</d>
+        <d>17.2351</d>
+        <d>16.937</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <RowTitlesColumn/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>37.2448</Title>
+      <Subcolumn>
+        <d>19.2324</d>
+        <d>19.3472</d>
+        <d>19.8766</d>
+        <d>20.0055</d>
+        <d>19.3637</d>
+        <d>19.1427</d>
+        <d>18.976</d>
+        <d>18.4467</d>
+        <d>17.9545</d>
+        <d>17.5956</d>
+        <d>17.4628</d>
+        <d>17.2506</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <RowTitlesColumn/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>38.2445</Title>
+      <Subcolumn>
+        <d>19.2416</d>
+        <d>19.3155</d>
+        <d>19.2234</d>
+        <d>20.0374</d>
+        <d>19.1852</d>
+        <d>19.1902</d>
+        <d>18.9008</d>
+        <d>18.5198</d>
+        <d>17.9539</d>
+        <d>17.7006</d>
+        <d>17.3583</d>
+        <d>17.0969</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <RowTitlesColumn/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>39.2448</Title>
+      <Subcolumn>
+        <d>19.2356</d>
+        <d>19.1979</d>
+        <d>19.1962</d>
+        <d>19.9706</d>
+        <d>19.2978</d>
+        <d>19.3119</d>
+        <d>18.9149</d>
+        <d>18.5488</d>
+        <d>18.0112</d>
+        <d>17.7438</d>
+        <d>17.2268</d>
+        <d>16.9954</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <RowTitlesColumn/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>40.2447</Title>
+      <Subcolumn>
+        <d>19.1434</d>
+        <d>19.242</d>
+        <d>19.1038</d>
+        <d>19.7957</d>
+        <d>19.5266</d>
+        <d>19.3631</d>
+        <d>19.0877</d>
+        <d>18.5604</d>
+        <d>18.0525</d>
+        <d>17.8485</d>
+        <d>17.3768</d>
+        <d>17.2554</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <RowTitlesColumn/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>41.2447</Title>
+      <Subcolumn>
+        <d>19.0735</d>
+        <d>19.2005</d>
+        <d>19.3078</d>
+        <d>19.7581</d>
+        <d>19.4207</d>
+        <d>19.3666</d>
+        <d>19.2271</d>
+        <d>18.5068</d>
+        <d>18.385</d>
+        <d>18.0141</d>
+        <d>17.4667</d>
+        <d>17.2059</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <RowTitlesColumn/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>42.2445</Title>
+      <Subcolumn>
+        <d>18.9584</d>
+        <d>19.2008</d>
+        <d>19.2412</d>
+        <d>20.2154</d>
+        <d>19.4421</d>
+        <d>19.4559</d>
+        <d>19.2398</d>
+        <d>18.6017</d>
+        <d>18.3247</d>
+        <d>18.0015</d>
+        <d>17.5917</d>
+        <d>17.2142</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <RowTitlesColumn/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>43.2447</Title>
+      <Subcolumn>
+        <d>18.8959</d>
+        <d>19.8916</d>
+        <d>19.7483</d>
+        <d>20.3384</d>
+        <d>19.4192</d>
+        <d>19.4985</d>
+        <d>19.2589</d>
+        <d>18.6153</d>
+        <d>18.5272</d>
+        <d>18.0186</d>
+        <d>17.5216</d>
+        <d>17.1728</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <RowTitlesColumn/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>44.2445</Title>
+      <Subcolumn>
+        <d>18.8282</d>
+        <d>19.1067</d>
+        <d>19.2541</d>
+        <d>20.1476</d>
+        <d>19.4152</d>
+        <d>19.4502</d>
+        <d>19.2844</d>
+        <d>18.6625</d>
+        <d>18.5743</d>
+        <d>18.0538</d>
+        <d>17.6544</d>
+        <d>17.1371</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <RowTitlesColumn/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>45.2447</Title>
+      <Subcolumn>
+        <d>18.9207</d>
+        <d>19.9442</d>
+        <d>19.2615</d>
+        <d>20.1887</d>
+        <d>19.4157</d>
+        <d>19.684</d>
+        <d>19.2947</d>
+        <d>18.7288</d>
+        <d>18.3082</d>
+        <d>18.0567</d>
+        <d>17.5713</d>
+        <d>17.4812</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <RowTitlesColumn/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>46.2445</Title>
+      <Subcolumn>
+        <d>18.7006</d>
+        <d>19.3758</d>
+        <d>19.1331</d>
+        <d>20.1129</d>
+        <d>19.3829</d>
+        <d>19.5197</d>
+        <d>19.4156</d>
+        <d>18.7246</d>
+        <d>18.3649</d>
+        <d>18.2068</d>
+        <d>17.7691</d>
+        <d>17.2687</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <RowTitlesColumn/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>47.2447</Title>
+      <Subcolumn>
+        <d>18.7368</d>
+        <d>19.7641</d>
+        <d>19.3992</d>
+        <d>20.0443</d>
+        <d>19.3763</d>
+        <d>19.5935</d>
+        <d>19.3713</d>
+        <d>18.681</d>
+        <d>18.4645</d>
+        <d>18.1561</d>
+        <d>17.8269</d>
+        <d>17.2119</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <RowTitlesColumn/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>48.2446</Title>
+      <Subcolumn>
+        <d>18.7039</d>
+        <d>19.2631</d>
+        <d>19.4806</d>
+        <d>19.9944</d>
+        <d>19.3328</d>
+        <d>19.6016</d>
+        <d>19.4604</d>
+        <d>18.7977</d>
+        <d>18.6794</d>
+        <d>18.3382</d>
+        <d>17.8147</d>
+        <d>17.2048</d>
+      </Subcolumn>
+    </YColumn>
+  </Table>
+  <Template>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
+dpu227Tdpu02bbdpu83b7X7tlrZb2m5pu6XtlrZb2m5pu6XtlrZb2m5pu/X3bg8AAAD//8zV
+MRHAMAwEsPnfNJryh9jd3XMSCf13e9Zu0XaLtlu03aLtFm23aLtF2y3abtF2i7ZbtN3i7XbW
+btV2q7Zbtd2q7VZtt2q7Vdut2m7Vdqu2W7Xd6u32rt1G22203Ubbbe7u9gEAAP//zNW5EYAw
+AAOwhidw9hxk/wnpU1Fx2kCdvoE2DbRroEMDnRpoaKBLA90aCNvtWXaLtlu03aLtFm23aLtF
+2y3abtF2i7ZbtN2i7RZvt7nsVm23artV263abtV2q7Zbtd36724vAAAA///M1aERw0AABDFq
+G9zWkfRfYPijII86ENN/oEsD3Rro0UDYbp9jt2m7Tdtt2m7Tdpu227Tdpu02bbdpu03bbdpu
+83b7Hrul7Za2W9puabul7Za2W9puabul7Za2W9puvbvbDwAA///M1TENwEAQAzAKydHolz+9
+7jd1eckm4T+7PWu3aLtF2y3abtF2i7ZbtN2i7RZtt2i7Rdst2m7xdjtrt2q7Vdut2m7Vdqu2
+W7Xdqu1Wbbdqu1Xbrdpu9XZ7126j7TbabqPtNjd3+wAAAP//zNW5DYAwAASwhifQ3s1B9t+O
+PiUSkjdw56+gTQPtGujQQKcGGhro0kC3BsJ2e5bdou0Wbbdou0XbLdpu0XaLtlu03aLtFm23
+aLvF220uu1Xbrdpu1Xartlu13artVm23/rnbCwAA///M1aENw1AARDGahN+bo91/ufIPK0Xy
+Bmb+F3RpoFsDPRoI2+1z7DZtt2m7Tdtt2m7Tdpu227Tdpu02bbdpu03bbd5u32O3tN3Sdkvb
+LW23tN3SdkvbLW23tN3SdkvbrTd3+wEAAP//zNUxEcAwDAQwGP+m0ZQ/tu4eexkkEvq327N2
+i7ZbtN2i7RZtt2i7Rdst2m7Rdou2W7Tdou0Wb7ezdqu2W7Xdqu1Wbbdqu1Xbrdpu1Xartlu1
+3artVm+3d+022m6j7TbabnNvtw8AAP//zNWpAYAwAAQww1MY4W4Ouv9o+OqKbBCXfaBDA50a
+6NJAtwYaGujRQK8Gwnb7lt2i7RZtt2i7Rdst2m7Rdou2W7Tdou0Wbbdou8XbbS67Vdut2m7V
+dqu2W7Xdqu1Wbbfu2+0HAAD//8ydy07CQBSGp5UQINEFoBtPYrnfr+UeFyxcuuINSHwEFi5d
+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
+drtfu6XtlrZb2m5pu6XtlrZb2m5pu6XtlrZb2m55u31fu03bbdpu03abttu03abtNm23abtN
+223abvtltwcAAP//zNUxDcBAEAMwBP0SSY4/vN9v6VTJDLz5bxC227N2i7ZbtN2i7RZtt2i7
+Rdst2m7Rdou2W7Tdou0Wb7ezdqu2W7Xdqu1Wbbdqu1Xbrdpu1Xartlu13artVm+3d+022m6j
+7Tbfu10AAAD//8zVqRGAQAAEMMF/CirZ7b86/Bkckw7i8j9o0UCrBto00K6BDg10aqBLAw0N
+hO12T7tF2y3abtF2i7ZbtN2i7RZtt2i7Rdst2m7Rdou32zPtVm23artV263abtV2q7Zbv3d7
+AQAA///M1aEVgwAARDEJVNJJ/u0/HB5T15cN4vJ/0KGBTg10aaCPBsJ2u1+7pe2Wtlvabmm7
+pe2Wtlvabmm7pe2Wtlvabnm7fV+7Tdtt2m7Tdpu227Tdpu02bbdpu03bbdpu+73bAwAA///M
+1TERwDAMBDASTYn8mz+17AaQEwNteg/CdvvWbtF2i7ZbtN2i7RZtt2i7Rdst2m7Rdou2W7Td
+4u121m7Vdqu2W7Xdqu1Wbbdqu1Xbrdpu1Xartlu13ert9q/dRttttN1m73YBAAD//8zVOQGA
+QBAEsIL/DICSGf/O6FdBHKSLANo00K6BDg10aqBLA90a6NFASwNhu71jt2i7Rdst2m7Rdou2
+W7Tdou0Wbbdou0XbLdpu8Xb7xm7Vdqu2W7Xdqu1Wbbdqu3Xu9gMAAP//zNUxAYRAAASx8nkc
+gJJZ/8boT0EcpIsA+mmgSwP9NdCtgbDdnmO3tN3SdkvbLW23tN3SdkvbLW23tN3SdkvbLW+3
+99ht2m7Tdpu227Tdpu02bbdpu03bbdpu03bbudsHAAD//xoMDhpktZs0Wu1mNdhqN6vBVrtZ
+DbbazWqw1W5Wg612sxpstZvVYKvdrAZb7WY12Go3q8FWu1kNttrNajDVbkIOQg1M4IKRE5yw
+XRJLEhVMgAEGmooLAhaXPiwIxbDiXBh83goPmxqXCO81Pmao6ysYjIAYAniASl2A6lPAPFC9
+xKAwj0EBWuCB+LHAVFvGATOZEW6HCDg5M0JtEwOTDAwLwKJMUDUTGWCOEoWzxBlsMDwX6YCb
+zwHyLYMr2CZpBhkGWZJN2AC22g1sghyDPNB35JngDjZBkUGJQZlhKTiMmAhEGjVVrW3gQQl/
+BoaV4NvjmYlMQCuIsoU4M7mINhOkcq0DqtsZibaHkWh7iDeTm2gzubG4nYloe5iItod4M3mI
+NpMHze2MQzjNMA7hNMM4hNMM0xBOM0xDOM0wER2/AAAAAP//GixpRrWhigHS9UatQWWOFwLR
+GntEPQ7xLSS8DRhy4GpVHDBdy4TW4sANyuGti1bwkQAMWFzSBjWvHUp3QGlVqOtl8LYHONij
+BtD1DAyEXC87pF0vh6EnFAy22iNaX8S7nhGqijquDw0l5Hp5vGG/gSVqAF1POOwVhrTrFama
+cqib7gmnHCWqhj29c63yEHW9BLimZYYOyDCA44EDqbWhDL6KjwvFREXwFQ9gwI8QVWiQA6s8
+yzKNs5JvHv9Hll2coXxV/KAetyTvbaAxH6A6BUB9b/jogQiw/y2Bx38tULeS1vJScIC4h4kh
+iMOJ8xPXBc4yjjTOc1xrOPs46ji3cU3hBMYBoxLc1wh/CaCMa4gwGMLDVx/sko7/BmCRDqCq
+QrB+2FEE2g2g41NdwPmelYHhAMwMHfD4ZEhmSU6qLjiKGOHRywd2Iiia9aANDdDwAxtDNpDU
+diAmYFjIDBgOBgHWTXwCwIgyYb3G94YXFFHX+ETAEWUAjXZOlKaeFtg+aQbUQKNl5HGAE5Mp
+2y8+UGISBLoPlJhANBNeN8rR1Y0feEAJ/hcw7EAJHhSGoAQPdiMHbjcq0tGNTAwOHAn8D7je
+8adwtPDv4TrFX8Mxh38J1yZ+cjPBCgZIJlgBxNgygSs4E7AxMCFlAtCYeATWXMAzYLmAiUGK
+xYyHi/UIjx1LFM8zlgU8YSxFPOdYOnhIC5kWZljIpEKLh0IcxYMbNGQY0EImEhoyUuAQYcYI
+GTawHfQPnwi+Zdwe/GG8NXynuFX4jXin8D3i5uGX4mVgMGImPnx6uGDhswuacnbhSDnu4PBh
+RwkfUG8p0pBgAIEsoV8ASTg0gAehOxgbwZdCaDnlJCZnKyTmpSiUZ2SWpDI0MSiwQYaecQ2U
+EzOADqsqofSwwVQHAAAAAP//GkWjYBSMgiEG5sBbVg0OzXD2TDhrMbjzhZi2WAJtOyG3KiH9
+MYQM0rQjWEbIwaIBwucE99gCivKzUpNLFDLz0vIVDHHMm8IqqFywsSAWO5rT88Cmu1YUpBZl
+5qbmlSi4JAKrvXxwL9exoEjXUtfIwNAMqIwPVZmnC1ARI8QEUG3tl1+SmpSfn40iwYFwJ0KQ
+F8Wg1CKEDCdEeUl+cn4OQhRMQXldDCqIHjVoRMT+7JkzdtiiBBH4Fg7MDQ4MiEqcXMDoABgA
+m1ccow==</Template>
+  <Created/> 
+  <InfoSequence/> 
+  <Info/> 
+  <TableSequence/> 
+  <Table ID="Table1" XFormat="numbers" YFormat="replicates" Replicates="1" TableType="XY">
+    <Title>Data 3</Title>
+    <XColumn>
+      <Title>[]</Title>
+      <Subcolumn>
+        <d>-0.3</d>
+        <d>-0.78</d>
+        <d>-1.26</d>
+        <d>-1.73</d>
+        <d>-2.21</d>
+        <d>-2.69</d>
+        <d>-3.16</d>
+        <d>-3.64</d>
+        <d>-4.12</d>
+        <d>-4.6</d>
+        <d>-5.07</d>
+        <d>-7</d>
+      </Subcolumn>
+    </XColumn>
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>21.2448</Title>
+      <Subcolumn>
+        <d>19.0272</d>
+        <d>18.424</d>
+        <d>18.517</d>
+        <d>18.1951</d>
+        <d>18.9953</d>
+        <d>18.7564</d>
+        <d>18.3157</d>
+        <d>17.9182</d>
+        <d>18.0097</d>
+        <d>17.5014</d>
+        <d>17.1704</d>
+        <d>17.0367</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>22.2447</Title>
+      <Subcolumn>
+        <d>18.9857</d>
+        <d>18.4929</d>
+        <d>18.6479</d>
+        <d>18.1878</d>
+        <d>19.2734</d>
+        <d>18.732</d>
+        <d>18.3195</d>
+        <d>17.9675</d>
+        <d>17.6252</d>
+        <d>17.4448</d>
+        <d>17.4347</d>
+        <d>16.9949</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>23.2448</Title>
+      <Subcolumn>
+        <d>19.0996</d>
+        <d>18.4496</d>
+        <d>18.5687</d>
+        <d>18.1437</d>
+        <d>19.1257</d>
+        <d>18.8856</d>
+        <d>18.3644</d>
+        <d>18.2129</d>
+        <d>17.7808</d>
+        <d>17.3632</d>
+        <d>17.6436</d>
+        <d>17.0541</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>24.2444</Title>
+      <Subcolumn>
+        <d>19.0479</d>
+        <d>18.542</d>
+        <d>19.0867</d>
+        <d>18.1342</d>
+        <d>18.9112</d>
+        <d>18.8162</d>
+        <d>18.346</d>
+        <d>18.1237</d>
+        <d>17.7703</d>
+        <d>17.4482</d>
+        <d>17.5073</d>
+        <d>17.2956</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>25.2448</Title>
+      <Subcolumn>
+        <d>19.0749</d>
+        <d>18.4973</d>
+        <d>18.6126</d>
+        <d>18.1666</d>
+        <d>19.1816</d>
+        <d>19.0347</d>
+        <d>18.2823</d>
+        <d>18.0976</d>
+        <d>17.7393</d>
+        <d>17.4328</d>
+        <d>17.1771</d>
+        <d>16.9806</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>26.2446</Title>
+      <Subcolumn>
+        <d>19.1392</d>
+        <d>18.9852</d>
+        <d>19.1539</d>
+        <d>18.3541</d>
+        <d>19.0878</d>
+        <d>18.9765</d>
+        <d>18.2441</d>
+        <d>17.8916</d>
+        <d>17.7135</d>
+        <d>17.4884</d>
+        <d>17.3213</d>
+        <d>17.1414</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>27.2447</Title>
+      <Subcolumn>
+        <d>19.2679</d>
+        <d>19.1516</d>
+        <d>19.1256</d>
+        <d>18.1253</d>
+        <d>19.0697</d>
+        <d>19.0458</d>
+        <d>18.4426</d>
+        <d>18.1628</d>
+        <d>17.7252</d>
+        <d>17.4158</d>
+        <d>17.4445</d>
+        <d>17.0318</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>28.2445</Title>
+      <Subcolumn>
+        <d>19.2612</d>
+        <d>19.1312</d>
+        <d>19.0793</d>
+        <d>18.2316</d>
+        <d>19.1626</d>
+        <d>18.8926</d>
+        <d>18.4524</d>
+        <d>18.2568</d>
+        <d>17.7917</d>
+        <d>17.4822</d>
+        <d>17.6374</d>
+        <d>17.2733</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>29.2447</Title>
+      <Subcolumn>
+        <d>19.2975</d>
+        <d>19.2269</d>
+        <d>18.7601</d>
+        <d>18.3424</d>
+        <d>19.2736</d>
+        <d>18.9554</d>
+        <d>18.4475</d>
+        <d>18.1165</d>
+        <d>17.6251</d>
+        <d>17.7308</d>
+        <d>17.4618</d>
+        <d>17.0102</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>30.2447</Title>
+      <Subcolumn>
+        <d>19.4885</d>
+        <d>19.6756</d>
+        <d>18.9475</d>
+        <d>18.4765</d>
+        <d>19.3106</d>
+        <d>19.1114</d>
+        <d>18.6034</d>
+        <d>18.2426</d>
+        <d>17.8614</d>
+        <d>17.4901</d>
+        <d>17.3929</d>
+        <d>16.8693</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>31.2447</Title>
+      <Subcolumn>
+        <d>19.5677</d>
+        <d>18.8958</d>
+        <d>19.3915</d>
+        <d>18.5514</d>
+        <d>19.379</d>
+        <d>19.0301</d>
+        <d>18.4317</d>
+        <d>18.3545</d>
+        <d>17.5841</d>
+        <d>17.655</d>
+        <d>17.2852</d>
+        <d>17.0713</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>32.2446</Title>
+      <Subcolumn>
+        <d>19.5797</d>
+        <d>18.9914</d>
+        <d>19.4646</d>
+        <d>18.6281</d>
+        <d>19.5037</d>
+        <d>19.097</d>
+        <d>18.6139</d>
+        <d>18.4475</d>
+        <d>17.6765</d>
+        <d>17.2951</d>
+        <d>17.3869</d>
+        <d>16.9191</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>33.2446</Title>
+      <Subcolumn>
+        <d>19.0904</d>
+        <d>19.0504</d>
+        <d>18.9819</d>
+        <d>18.7844</d>
+        <d>19.4792</d>
+        <d>19.0494</d>
+        <d>18.5937</d>
+        <d>18.5193</d>
+        <d>17.8872</d>
+        <d>17.5823</d>
+        <d>17.2725</d>
+        <d>17.2301</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>34.2446</Title>
+      <Subcolumn>
+        <d>19.5376</d>
+        <d>19.5109</d>
+        <d>19.1614</d>
+        <d>18.8015</d>
+        <d>19.6744</d>
+        <d>19.1976</d>
+        <d>18.6454</d>
+        <d>18.5452</d>
+        <d>17.8161</d>
+        <d>17.7047</d>
+        <d>17.4704</d>
+        <d>17.0408</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>35.2444</Title>
+      <Subcolumn>
+        <d>19.0978</d>
+        <d>19.5494</d>
+        <d>19.2224</d>
+        <d>18.9209</d>
+        <d>19.632</d>
+        <d>19.2091</d>
+        <d>18.8205</d>
+        <d>18.5401</d>
+        <d>18.129</d>
+        <d>17.6929</d>
+        <d>17.3831</d>
+        <d>16.9737</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>36.2447</Title>
+      <Subcolumn>
+        <d>19.5013</d>
+        <d>19.1909</d>
+        <d>19.2348</d>
+        <d>18.8797</d>
+        <d>19.7418</d>
+        <d>19.4094</d>
+        <d>18.7362</d>
+        <d>18.6367</d>
+        <d>18.0271</d>
+        <d>17.6238</d>
+        <d>17.6986</d>
+        <d>16.9354</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>37.2448</Title>
+      <Subcolumn>
+        <d>19.0332</d>
+        <d>19.6056</d>
+        <d>19.1546</d>
+        <d>18.9982</d>
+        <d>19.9255</d>
+        <d>19.3216</d>
+        <d>18.8235</d>
+        <d>18.6226</d>
+        <d>17.9244</d>
+        <d>17.634</d>
+        <d>17.3433</d>
+        <d>17.2509</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>38.2445</Title>
+      <Subcolumn>
+        <d>19.0282</d>
+        <d>19.5683</d>
+        <d>19.1805</d>
+        <d>19.0066</d>
+        <d>19.9994</d>
+        <d>19.3177</d>
+        <d>18.9321</d>
+        <d>18.6335</d>
+        <d>17.9735</d>
+        <d>17.5734</d>
+        <d>17.3957</d>
+        <d>16.883</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>39.2448</Title>
+      <Subcolumn>
+        <d>18.9097</d>
+        <d>19.6105</d>
+        <d>19.2339</d>
+        <d>18.9962</d>
+        <d>19.9831</d>
+        <d>19.3962</d>
+        <d>18.9164</d>
+        <d>18.8043</d>
+        <d>18.0569</d>
+        <d>17.7286</d>
+        <d>17.5016</d>
+        <d>16.9644</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>40.2447</Title>
+      <Subcolumn>
+        <d>18.9204</d>
+        <d>19.5727</d>
+        <d>19.1824</d>
+        <d>18.9523</d>
+        <d>20.0899</d>
+        <d>19.5001</d>
+        <d>19.0644</d>
+        <d>18.6266</d>
+        <d>18.051</d>
+        <d>17.751</d>
+        <d>17.429</d>
+        <d>16.9729</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>41.2447</Title>
+      <Subcolumn>
+        <d>19.2465</d>
+        <d>19.6285</d>
+        <d>19.3216</d>
+        <d>18.9093</d>
+        <d>20.1031</d>
+        <d>19.6328</d>
+        <d>18.993</d>
+        <d>18.6983</d>
+        <d>18.0797</d>
+        <d>17.7729</d>
+        <d>17.3771</d>
+        <d>17.2603</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>42.2445</Title>
+      <Subcolumn>
+        <d>18.6754</d>
+        <d>19.1027</d>
+        <d>19.0709</d>
+        <d>18.9337</d>
+        <d>20.1187</d>
+        <d>19.6443</d>
+        <d>19.1638</d>
+        <d>18.8239</d>
+        <d>18.1896</d>
+        <d>18.0959</d>
+        <d>17.5388</d>
+        <d>17.3386</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>43.2447</Title>
+      <Subcolumn>
+        <d>18.5948</d>
+        <d>19.4162</d>
+        <d>19.0515</d>
+        <d>18.8428</d>
+        <d>19.9973</d>
+        <d>19.6506</d>
+        <d>19.0208</d>
+        <d>18.7653</d>
+        <d>18.1835</d>
+        <d>17.8803</d>
+        <d>17.4791</d>
+        <d>17.3231</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>44.2445</Title>
+      <Subcolumn>
+        <d>18.6597</d>
+        <d>19.509</d>
+        <d>18.9447</d>
+        <d>18.9961</d>
+        <d>19.9845</d>
+        <d>19.6776</d>
+        <d>19.0308</d>
+        <d>18.7896</d>
+        <d>18.1969</d>
+        <d>17.9582</d>
+        <d>17.5886</d>
+        <d>17.3805</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>45.2447</Title>
+      <Subcolumn>
+        <d>18.5142</d>
+        <d>19.7507</d>
+        <d>18.9922</d>
+        <d>18.7377</d>
+        <d>20.0541</d>
+        <d>19.7891</d>
+        <d>19.2543</d>
+        <d>18.9494</d>
+        <d>18.3126</d>
+        <d>18.1433</d>
+        <d>17.4647</d>
+        <d>17.3145</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>46.2445</Title>
+      <Subcolumn>
+        <d>18.9322</d>
+        <d>19.715</d>
+        <d>19.1618</d>
+        <d>18.6366</d>
+        <d>19.9658</d>
+        <d>19.7182</d>
+        <d>19.1075</d>
+        <d>18.9253</d>
+        <d>18.397</d>
+        <d>18.0941</d>
+        <d>17.5845</d>
+        <d>17.3478</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>47.2447</Title>
+      <Subcolumn>
+        <d>18.9641</d>
+        <d>19.374</d>
+        <d>18.9504</d>
+        <d>18.606</d>
+        <d>19.9087</d>
+        <d>19.7608</d>
+        <d>19.2716</d>
+        <d>18.9975</d>
+        <d>18.3574</d>
+        <d>18.1245</d>
+        <d>17.6753</d>
+        <d>17.4474</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="1">
+      <Title>48.2446</Title>
+      <Subcolumn>
+        <d>18.7951</d>
+        <d>19.15</d>
+        <d>18.9788</d>
+        <d>18.4974</d>
+        <d>19.9044</d>
+        <d>19.6877</d>
+        <d>19.247</d>
+        <d>19.2733</d>
+        <d>18.416</d>
+        <d>18.1357</d>
+        <d>17.7992</d>
+        <d>17.4191</d>
+      </Subcolumn>
+    </YColumn>
+  </Table>
+  <Template/> 
+  <Created/> 
+  <InfoSequence/> 
+  <Info/> 
+  <TableSequence/> 
+  <Table ID="Table2" XFormat="numbers" YFormat="replicates" Replicates="2" TableType="XY">
+    <Title>Group A</Title>
+    <XColumn>
+      <Subcolumn>
+        <d>-0.3</d>
+        <d>-0.78</d>
+        <d>-1.26</d>
+        <d>-1.73</d>
+        <d>-2.21</d>
+        <d>-2.69</d>
+        <d>-3.16</d>
+        <d>-3.64</d>
+        <d>-4.12</d>
+        <d>-4.6</d>
+        <d>-5.07</d>
+        <d>-7</d>
+      </Subcolumn>
+      <Title>Viruss_-log(1/dil)</Title>
+    </XColumn>
+    <YColumn Width="81" Decimals="4" Subcolumns="2">
+      <Title>21.24475405555556</Title>
+      <Subcolumn>
+        <d>18.6361</d>
+        <d>18.9913</d>
+        <d>18.8308</d>
+        <d>19.3642</d>
+        <d>18.476</d>
+        <d>18.166</d>
+        <d>18.1446</d>
+        <d>17.5672</d>
+        <d>17.4318</d>
+        <d>17.7252</d>
+        <d>17.5551</d>
+        <d>17.1216</d>
+      </Subcolumn>
+      <Title/> 
+      <Subcolumn>
+        <d>19.0272</d>
+        <d>18.424</d>
+        <d>18.517</d>
+        <d>18.1951</d>
+        <d>18.9953</d>
+        <d>18.7564</d>
+        <d>18.3157</d>
+        <d>17.9182</d>
+        <d>18.0097</d>
+        <d>17.5014</d>
+        <d>17.1704</d>
+        <d>17.0367</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="2">
+      <Title>22.2446875</Title>
+      <Subcolumn>
+        <d>18.6879</d>
+        <d>18.4915</d>
+        <d>18.7244</d>
+        <d>19.2604</d>
+        <d>18.5642</d>
+        <d>18.4266</d>
+        <d>18.2399</d>
+        <d>17.724</d>
+        <d>17.4572</d>
+        <d>17.4734</d>
+        <d>17.2044</d>
+        <d>17.1385</d>
+      </Subcolumn>
+      <Title/> 
+      <Subcolumn>
+        <d>18.9857</d>
+        <d>18.4929</d>
+        <d>18.6479</d>
+        <d>18.1878</d>
+        <d>19.2734</d>
+        <d>18.732</d>
+        <d>18.3195</d>
+        <d>17.9675</d>
+        <d>17.6252</d>
+        <d>17.4448</d>
+        <d>17.4347</d>
+        <d>16.9949</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="2">
+      <Title>23.24475983333333</Title>
+      <Subcolumn>
+        <d>18.6643</d>
+        <d>18.4399</d>
+        <d>19.0329</d>
+        <d>19.2245</d>
+        <d>18.449</d>
+        <d>18.5962</d>
+        <d>18.393</d>
+        <d>17.8346</d>
+        <d>17.894</d>
+        <d>17.5366</d>
+        <d>17.3375</d>
+        <d>17.5766</d>
+      </Subcolumn>
+      <Title/> 
+      <Subcolumn>
+        <d>19.0996</d>
+        <d>18.4496</d>
+        <d>18.5687</d>
+        <d>18.1437</d>
+        <d>19.1257</d>
+        <d>18.8856</d>
+        <d>18.3644</d>
+        <d>18.2129</d>
+        <d>17.7808</d>
+        <d>17.3632</d>
+        <d>17.6436</d>
+        <d>17.0541</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="2">
+      <Title>24.24442708333334</Title>
+      <Subcolumn>
+        <d>18.7174</d>
+        <d>18.5273</d>
+        <d>18.7575</d>
+        <d>19.2464</d>
+        <d>18.3495</d>
+        <d>18.5532</d>
+        <d>18.1961</d>
+        <d>17.8208</d>
+        <d>17.7872</d>
+        <d>17.5129</d>
+        <d>17.5652</d>
+        <d>17.3854</d>
+      </Subcolumn>
+      <Title/> 
+      <Subcolumn>
+        <d>19.0479</d>
+        <d>18.542</d>
+        <d>19.0867</d>
+        <d>18.1342</d>
+        <d>18.9112</d>
+        <d>18.8162</d>
+        <d>18.346</d>
+        <d>18.1237</d>
+        <d>17.7703</d>
+        <d>17.4482</d>
+        <d>17.5073</d>
+        <d>17.2956</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="2">
+      <Title>25.24479166666667</Title>
+      <Subcolumn>
+        <d>18.7251</d>
+        <d>18.4992</d>
+        <d>18.5468</d>
+        <d>19.2226</d>
+        <d>18.4813</d>
+        <d>18.6259</d>
+        <d>18.4035</d>
+        <d>17.8376</d>
+        <d>17.806</d>
+        <d>17.5025</d>
+        <d>17.3347</d>
+        <d>17.5768</d>
+      </Subcolumn>
+      <Title/> 
+      <Subcolumn>
+        <d>19.0749</d>
+        <d>18.4973</d>
+        <d>18.6126</d>
+        <d>18.1666</d>
+        <d>19.1816</d>
+        <d>19.0347</d>
+        <d>18.2823</d>
+        <d>18.0976</d>
+        <d>17.7393</d>
+        <d>17.4328</d>
+        <d>17.1771</d>
+        <d>16.9806</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="2">
+      <Title>26.24458044444445</Title>
+      <Subcolumn>
+        <d>18.7772</d>
+        <d>18.5369</d>
+        <d>18.8883</d>
+        <d>19.302</d>
+        <d>18.2932</d>
+        <d>18.5965</d>
+        <d>18.5017</d>
+        <d>18.1418</d>
+        <d>17.8985</d>
+        <d>17.3654</d>
+        <d>17.6128</d>
+        <d>17.5868</d>
+      </Subcolumn>
+      <Title/> 
+      <Subcolumn>
+        <d>19.1392</d>
+        <d>18.9852</d>
+        <d>19.1539</d>
+        <d>18.3541</d>
+        <d>19.0878</d>
+        <d>18.9765</d>
+        <d>18.2441</d>
+        <d>17.8916</d>
+        <d>17.7135</d>
+        <d>17.4884</d>
+        <d>17.3213</d>
+        <d>17.1414</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="2">
+      <Title>27.24467013888889</Title>
+      <Subcolumn>
+        <d>18.9689</d>
+        <d>18.6469</d>
+        <d>18.5881</d>
+        <d>19.3339</d>
+        <d>18.3568</d>
+        <d>18.7013</d>
+        <d>18.6353</d>
+        <d>17.8559</d>
+        <d>17.7483</d>
+        <d>17.5612</d>
+        <d>17.2775</d>
+        <d>17.4214</d>
+      </Subcolumn>
+      <Title/> 
+      <Subcolumn>
+        <d>19.2679</d>
+        <d>19.1516</d>
+        <d>19.1256</d>
+        <d>18.1253</d>
+        <d>19.0697</d>
+        <d>19.0458</d>
+        <d>18.4426</d>
+        <d>18.1628</d>
+        <d>17.7252</d>
+        <d>17.4158</d>
+        <d>17.4445</d>
+        <d>17.0318</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="2">
+      <Title>28.24451966666667</Title>
+      <Subcolumn>
+        <d>18.9646</d>
+        <d>18.7802</d>
+        <d>19.1271</d>
+        <d>19.2999</d>
+        <d>18.4618</d>
+        <d>18.6077</d>
+        <d>18.662</d>
+        <d>18.0074</d>
+        <d>17.5995</d>
+        <d>17.3978</d>
+        <d>17.232</d>
+        <d>17.0825</d>
+      </Subcolumn>
+      <Title/> 
+      <Subcolumn>
+        <d>19.2612</d>
+        <d>19.1312</d>
+        <d>19.0793</d>
+        <d>18.2316</d>
+        <d>19.1626</d>
+        <d>18.8926</d>
+        <d>18.4524</d>
+        <d>18.2568</d>
+        <d>17.7917</d>
+        <d>17.4822</d>
+        <d>17.6374</d>
+        <d>17.2733</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="2">
+      <Title>29.24466725</Title>
+      <Subcolumn>
+        <d>19.061</d>
+        <d>18.7789</d>
+        <d>18.9899</d>
+        <d>19.3881</d>
+        <d>18.5376</d>
+        <d>18.7004</d>
+        <d>18.5091</d>
+        <d>17.9335</d>
+        <d>17.6316</d>
+        <d>17.494</d>
+        <d>17.337</d>
+        <d>17.2718</d>
+      </Subcolumn>
+      <Title/> 
+      <Subcolumn>
+        <d>19.2975</d>
+        <d>19.2269</d>
+        <d>18.7601</d>
+        <d>18.3424</d>
+        <d>19.2736</d>
+        <d>18.9554</d>
+        <d>18.4475</d>
+        <d>18.1165</d>
+        <d>17.6251</d>
+        <d>17.7308</d>
+        <d>17.4618</d>
+        <d>17.0102</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="2">
+      <Title>30.24469905555555</Title>
+      <Subcolumn>
+        <d>19.2071</d>
+        <d>18.8585</d>
+        <d>19.3117</d>
+        <d>19.5641</d>
+        <d>18.5064</d>
+        <d>18.7915</d>
+        <d>18.5892</d>
+        <d>18.0294</d>
+        <d>17.9339</d>
+        <d>17.3979</d>
+        <d>17.2591</d>
+        <d>17.0634</d>
+      </Subcolumn>
+      <Title/> 
+      <Subcolumn>
+        <d>19.4885</d>
+        <d>19.6756</d>
+        <d>18.9475</d>
+        <d>18.4765</d>
+        <d>19.3106</d>
+        <d>19.1114</d>
+        <d>18.6034</d>
+        <d>18.2426</d>
+        <d>17.8614</d>
+        <d>17.4901</d>
+        <d>17.3929</d>
+        <d>16.8693</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="2">
+      <Title>31.24473380555556</Title>
+      <Subcolumn>
+        <d>19.1459</d>
+        <d>19.0172</d>
+        <d>19.0296</d>
+        <d>19.6214</d>
+        <d>18.5195</d>
+        <d>18.7812</d>
+        <d>18.6905</d>
+        <d>18.0486</d>
+        <d>17.6268</d>
+        <d>17.594</d>
+        <d>17.415</d>
+        <d>17.1037</d>
+      </Subcolumn>
+      <Title/> 
+      <Subcolumn>
+        <d>19.5677</d>
+        <d>18.8958</d>
+        <d>19.3915</d>
+        <d>18.5514</d>
+        <d>19.379</d>
+        <d>19.0301</d>
+        <d>18.4317</d>
+        <d>18.3545</d>
+        <d>17.5841</d>
+        <d>17.655</d>
+        <d>17.2852</d>
+        <d>17.0713</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="2">
+      <Title>32.24456597222222</Title>
+      <Subcolumn>
+        <d>19.186</d>
+        <d>19.1225</d>
+        <d>19.45</d>
+        <d>19.689</d>
+        <d>18.7898</d>
+        <d>18.8205</d>
+        <d>18.6083</d>
+        <d>18.1194</d>
+        <d>17.8717</d>
+        <d>17.3683</d>
+        <d>17.2662</d>
+        <d>17.2615</d>
+      </Subcolumn>
+      <Title/> 
+      <Subcolumn>
+        <d>19.5797</d>
+        <d>18.9914</d>
+        <d>19.4646</d>
+        <d>18.6281</d>
+        <d>19.5037</d>
+        <d>19.097</d>
+        <d>18.6139</d>
+        <d>18.4475</d>
+        <d>17.6765</d>
+        <d>17.2951</d>
+        <d>17.3869</d>
+        <d>16.9191</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="2">
+      <Title>33.24461227777778</Title>
+      <Subcolumn>
+        <d>19.3073</d>
+        <d>19.1559</d>
+        <d>19.2124</d>
+        <d>19.8141</d>
+        <d>18.8304</d>
+        <d>18.8974</d>
+        <d>18.8572</d>
+        <d>18.1099</d>
+        <d>17.8503</d>
+        <d>17.5588</d>
+        <d>17.2256</d>
+        <d>17.0418</d>
+      </Subcolumn>
+      <Title/> 
+      <Subcolumn>
+        <d>19.0904</d>
+        <d>19.0504</d>
+        <d>18.9819</d>
+        <d>18.7844</d>
+        <d>19.4792</d>
+        <d>19.0494</d>
+        <d>18.5937</d>
+        <d>18.5193</d>
+        <d>17.8872</d>
+        <d>17.5823</d>
+        <d>17.2725</d>
+        <d>17.2301</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="2">
+      <Title>34.24462675</Title>
+      <Subcolumn>
+        <d>19.2046</d>
+        <d>19.1927</d>
+        <d>19.3695</d>
+        <d>19.8371</d>
+        <d>18.9922</d>
+        <d>18.9516</d>
+        <d>18.9246</d>
+        <d>18.1477</d>
+        <d>17.8676</d>
+        <d>17.7374</d>
+        <d>17.4161</d>
+        <d>17.0164</d>
+      </Subcolumn>
+      <Title/> 
+      <Subcolumn>
+        <d>19.5376</d>
+        <d>19.5109</d>
+        <d>19.1614</d>
+        <d>18.8015</d>
+        <d>19.6744</d>
+        <d>19.1976</d>
+        <d>18.6454</d>
+        <d>18.5452</d>
+        <d>17.8161</d>
+        <d>17.7047</d>
+        <d>17.4704</d>
+        <d>17.0408</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="2">
+      <Title>35.2444155</Title>
+      <Subcolumn>
+        <d>19.301</d>
+        <d>19.3034</d>
+        <d>19.124</d>
+        <d>19.8401</d>
+        <d>18.8909</d>
+        <d>18.9888</d>
+        <d>18.9137</d>
+        <d>18.3273</d>
+        <d>18.0138</d>
+        <d>17.5309</d>
+        <d>17.1462</d>
+        <d>17.0086</d>
+      </Subcolumn>
+      <Title/> 
+      <Subcolumn>
+        <d>19.0978</d>
+        <d>19.5494</d>
+        <d>19.2224</d>
+        <d>18.9209</d>
+        <d>19.632</d>
+        <d>19.2091</d>
+        <d>18.8205</d>
+        <d>18.5401</d>
+        <d>18.129</d>
+        <d>17.6929</d>
+        <d>17.3831</d>
+        <d>16.9737</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="2">
+      <Title>36.24467013888889</Title>
+      <Subcolumn>
+        <d>19.4101</d>
+        <d>19.3274</d>
+        <d>19.7875</d>
+        <d>19.9004</d>
+        <d>19.0365</d>
+        <d>19.009</d>
+        <d>18.7785</d>
+        <d>18.4413</d>
+        <d>17.9369</d>
+        <d>17.5563</d>
+        <d>17.2351</d>
+        <d>16.937</d>
+      </Subcolumn>
+      <Title/> 
+      <Subcolumn>
+        <d>19.5013</d>
+        <d>19.1909</d>
+        <d>19.2348</d>
+        <d>18.8797</d>
+        <d>19.7418</d>
+        <d>19.4094</d>
+        <d>18.7362</d>
+        <d>18.6367</d>
+        <d>18.0271</d>
+        <d>17.6238</d>
+        <d>17.6986</d>
+        <d>16.9354</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="2">
+      <Title>37.24476852777778</Title>
+      <Subcolumn>
+        <d>19.2324</d>
+        <d>19.3472</d>
+        <d>19.8766</d>
+        <d>20.0055</d>
+        <d>19.3637</d>
+        <d>19.1427</d>
+        <d>18.976</d>
+        <d>18.4467</d>
+        <d>17.9545</d>
+        <d>17.5956</d>
+        <d>17.4628</d>
+        <d>17.2506</d>
+      </Subcolumn>
+      <Title/> 
+      <Subcolumn>
+        <d>19.0332</d>
+        <d>19.6056</d>
+        <d>19.1546</d>
+        <d>18.9982</d>
+        <d>19.9255</d>
+        <d>19.3216</d>
+        <d>18.8235</d>
+        <d>18.6226</d>
+        <d>17.9244</d>
+        <d>17.634</d>
+        <d>17.3433</d>
+        <d>17.2509</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="2">
+      <Title>38.244511</Title>
+      <Subcolumn>
+        <d>19.2416</d>
+        <d>19.3155</d>
+        <d>19.2234</d>
+        <d>20.0374</d>
+        <d>19.1852</d>
+        <d>19.1902</d>
+        <d>18.9008</d>
+        <d>18.5198</d>
+        <d>17.9539</d>
+        <d>17.7006</d>
+        <d>17.3583</d>
+        <d>17.0969</d>
+      </Subcolumn>
+      <Title/> 
+      <Subcolumn>
+        <d>19.0282</d>
+        <d>19.5683</d>
+        <d>19.1805</d>
+        <d>19.0066</d>
+        <d>19.9994</d>
+        <d>19.3177</d>
+        <d>18.9321</d>
+        <d>18.6335</d>
+        <d>17.9735</d>
+        <d>17.5734</d>
+        <d>17.3957</d>
+        <d>16.883</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="2">
+      <Title>39.24479455555556</Title>
+      <Subcolumn>
+        <d>19.2356</d>
+        <d>19.1979</d>
+        <d>19.1962</d>
+        <d>19.9706</d>
+        <d>19.2978</d>
+        <d>19.3119</d>
+        <d>18.9149</d>
+        <d>18.5488</d>
+        <d>18.0112</d>
+        <d>17.7438</d>
+        <d>17.2268</d>
+        <d>16.9954</d>
+      </Subcolumn>
+      <Title/> 
+      <Subcolumn>
+        <d>18.9097</d>
+        <d>19.6105</d>
+        <d>19.2339</d>
+        <d>18.9962</d>
+        <d>19.9831</d>
+        <d>19.3962</d>
+        <d>18.9164</d>
+        <d>18.8043</d>
+        <d>18.0569</d>
+        <d>17.7286</d>
+        <d>17.5016</d>
+        <d>16.9644</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="2">
+      <Title>40.24469327777778</Title>
+      <Subcolumn>
+        <d>19.1434</d>
+        <d>19.242</d>
+        <d>19.1038</d>
+        <d>19.7957</d>
+        <d>19.5266</d>
+        <d>19.3631</d>
+        <d>19.0877</d>
+        <d>18.5604</d>
+        <d>18.0525</d>
+        <d>17.8485</d>
+        <d>17.3768</d>
+        <d>17.2554</d>
+      </Subcolumn>
+      <Title/> 
+      <Subcolumn>
+        <d>18.9204</d>
+        <d>19.5727</d>
+        <d>19.1824</d>
+        <d>18.9523</d>
+        <d>20.0899</d>
+        <d>19.5001</d>
+        <d>19.0644</d>
+        <d>18.6266</d>
+        <d>18.051</d>
+        <d>17.751</d>
+        <d>17.429</d>
+        <d>16.9729</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="2">
+      <Title>41.24466147222222</Title>
+      <Subcolumn>
+        <d>19.0735</d>
+        <d>19.2005</d>
+        <d>19.3078</d>
+        <d>19.7581</d>
+        <d>19.4207</d>
+        <d>19.3666</d>
+        <d>19.2271</d>
+        <d>18.5068</d>
+        <d>18.385</d>
+        <d>18.0141</d>
+        <d>17.4667</d>
+        <d>17.2059</d>
+      </Subcolumn>
+      <Title/> 
+      <Subcolumn>
+        <d>19.2465</d>
+        <d>19.6285</d>
+        <d>19.3216</d>
+        <d>18.9093</d>
+        <d>20.1031</d>
+        <d>19.6328</d>
+        <d>18.993</d>
+        <d>18.6983</d>
+        <d>18.0797</d>
+        <d>17.7729</d>
+        <d>17.3771</d>
+        <d>17.2603</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="2">
+      <Title>42.24449944444444</Title>
+      <Subcolumn>
+        <d>18.9584</d>
+        <d>19.2008</d>
+        <d>19.2412</d>
+        <d>20.2154</d>
+        <d>19.4421</d>
+        <d>19.4559</d>
+        <d>19.2398</d>
+        <d>18.6017</d>
+        <d>18.3247</d>
+        <d>18.0015</d>
+        <d>17.5917</d>
+        <d>17.2142</d>
+      </Subcolumn>
+      <Title/> 
+      <Subcolumn>
+        <d>18.6754</d>
+        <d>19.1027</d>
+        <d>19.0709</d>
+        <d>18.9337</d>
+        <d>20.1187</d>
+        <d>19.6443</d>
+        <d>19.1638</d>
+        <d>18.8239</d>
+        <d>18.1896</d>
+        <d>18.0959</d>
+        <d>17.5388</d>
+        <d>17.3386</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="2">
+      <Title>43.24471355555556</Title>
+      <Subcolumn>
+        <d>18.8959</d>
+        <d>19.8916</d>
+        <d>19.7483</d>
+        <d>20.3384</d>
+        <d>19.4192</d>
+        <d>19.4985</d>
+        <d>19.2589</d>
+        <d>18.6153</d>
+        <d>18.5272</d>
+        <d>18.0186</d>
+        <d>17.5216</d>
+        <d>17.1728</d>
+      </Subcolumn>
+      <Title/> 
+      <Subcolumn>
+        <d>18.5948</d>
+        <d>19.4162</d>
+        <d>19.0515</d>
+        <d>18.8428</d>
+        <d>19.9973</d>
+        <d>19.6506</d>
+        <d>19.0208</d>
+        <d>18.7653</d>
+        <d>18.1835</d>
+        <d>17.8803</d>
+        <d>17.4791</d>
+        <d>17.3231</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="2">
+      <Title>44.24453702777777</Title>
+      <Subcolumn>
+        <d>18.8282</d>
+        <d>19.1067</d>
+        <d>19.2541</d>
+        <d>20.1476</d>
+        <d>19.4152</d>
+        <d>19.4502</d>
+        <d>19.2844</d>
+        <d>18.6625</d>
+        <d>18.5743</d>
+        <d>18.0538</d>
+        <d>17.6544</d>
+        <d>17.1371</d>
+      </Subcolumn>
+      <Title/> 
+      <Subcolumn>
+        <d>18.6597</d>
+        <d>19.509</d>
+        <d>18.9447</d>
+        <d>18.9961</d>
+        <d>19.9845</d>
+        <d>19.6776</d>
+        <d>19.0308</d>
+        <d>18.7896</d>
+        <d>18.1969</d>
+        <d>17.9582</d>
+        <d>17.5886</d>
+        <d>17.3805</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="2">
+      <Title>45.24473669444444</Title>
+      <Subcolumn>
+        <d>18.9207</d>
+        <d>19.9442</d>
+        <d>19.2615</d>
+        <d>20.1887</d>
+        <d>19.4157</d>
+        <d>19.684</d>
+        <d>19.2947</d>
+        <d>18.7288</d>
+        <d>18.3082</d>
+        <d>18.0567</d>
+        <d>17.5713</d>
+        <d>17.4812</d>
+      </Subcolumn>
+      <Title/> 
+      <Subcolumn>
+        <d>18.5142</d>
+        <d>19.7507</d>
+        <d>18.9922</d>
+        <d>18.7377</d>
+        <d>20.0541</d>
+        <d>19.7891</d>
+        <d>19.2543</d>
+        <d>18.9494</d>
+        <d>18.3126</d>
+        <d>18.1433</d>
+        <d>17.4647</d>
+        <d>17.3145</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="2">
+      <Title>46.24447338888889</Title>
+      <Subcolumn>
+        <d>18.7006</d>
+        <d>19.3758</d>
+        <d>19.1331</d>
+        <d>20.1129</d>
+        <d>19.3829</d>
+        <d>19.5197</d>
+        <d>19.4156</d>
+        <d>18.7246</d>
+        <d>18.3649</d>
+        <d>18.2068</d>
+        <d>17.7691</d>
+        <d>17.2687</d>
+      </Subcolumn>
+      <Title/> 
+      <Subcolumn>
+        <d>18.9322</d>
+        <d>19.715</d>
+        <d>19.1618</d>
+        <d>18.6366</d>
+        <d>19.9658</d>
+        <d>19.7182</d>
+        <d>19.1075</d>
+        <d>18.9253</d>
+        <d>18.397</d>
+        <d>18.0941</d>
+        <d>17.5845</d>
+        <d>17.3478</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="2">
+      <Title>47.24467013888889</Title>
+      <Subcolumn>
+        <d>18.7368</d>
+        <d>19.7641</d>
+        <d>19.3992</d>
+        <d>20.0443</d>
+        <d>19.3763</d>
+        <d>19.5935</d>
+        <d>19.3713</d>
+        <d>18.681</d>
+        <d>18.4645</d>
+        <d>18.1561</d>
+        <d>17.8269</d>
+        <d>17.2119</d>
+      </Subcolumn>
+      <Title/> 
+      <Subcolumn>
+        <d>18.9641</d>
+        <d>19.374</d>
+        <d>18.9504</d>
+        <d>18.606</d>
+        <d>19.9087</d>
+        <d>19.7608</d>
+        <d>19.2716</d>
+        <d>18.9975</d>
+        <d>18.3574</d>
+        <d>18.1245</d>
+        <d>17.6753</d>
+        <d>17.4474</d>
+      </Subcolumn>
+    </YColumn>
+    <Title/> 
+    <XColumn/> 
+    <YColumn Width="81" Decimals="4" Subcolumns="2">
+      <Title>48.24462383333334</Title>
+      <Subcolumn>
+        <d>18.7039</d>
+        <d>19.2631</d>
+        <d>19.4806</d>
+        <d>19.9944</d>
+        <d>19.3328</d>
+        <d>19.6016</d>
+        <d>19.4604</d>
+        <d>18.7977</d>
+        <d>18.6794</d>
+        <d>18.3382</d>
+        <d>17.8147</d>
+        <d>17.2048</d>
+      </Subcolumn>
+      <Title/> 
+      <Subcolumn>
+        <d>18.7951</d>
+        <d>19.15</d>
+        <d>18.9788</d>
+        <d>18.4974</d>
+        <d>19.9044</d>
+        <d>19.6877</d>
+        <d>19.247</d>
+        <d>19.2733</d>
+        <d>18.416</d>
+        <d>18.1357</d>
+        <d>17.7992</d>
+        <d>17.4191</d>
+      </Subcolumn>
+    </YColumn>
+  </Table>
+  <Template/> 
+</GraphPadPrismFile>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<userprogram>
+   <model value="3"/>
+   <name value="example"/>
+   <calibration index="0"/>
+   <protection value="0"/>
+   <notestep>
+      <text>From A1 to A2</text>
+   </notestep>
+   <fillstep>
+      <speed value="10"/>
+      <volume value="300"/>
+      <excess value="0"/>
+   </fillstep>
+   <dispensestep>
+      <speed value="10"/>
+      <volume value="300"/>
+      <blowout value="100"/>
+   </dispensestep>
+   <fillstep>
+      <speed value="10"/>
+      <volume value="250"/>
+      <excess value="0"/>
+   </fillstep>
+   <dispensestep>
+      <speed value="10"/>
+      <volume value="250"/>
+      <blowout value="100"/>
+   </dispensestep>
+</userprogram>

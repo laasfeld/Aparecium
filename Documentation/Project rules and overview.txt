@@ -1,0 +1,3 @@
+Aparecium - Project organization overview
+
+M and mat files that are used only by a single tool must be separated into separate folders according to the tools that they are used by. General functions will be added to a general folder. All external or third party functions will remain in separate folders as they were. 
