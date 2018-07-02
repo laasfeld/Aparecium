@@ -86,6 +86,8 @@ handles.midasTableController.addTreatmentColumn(' ', '', ''); % Set up the stand
 handles.apareciumExperimentInput = ApareciumExperimentInput(); % Create a new object that holds information about treatments and wells
 handles.plateSimulatorInterface = PlateSimulatorInterface(); % Create a new object that can commonicate with PlateSimulator which is written in Java
 handles.cameraAndLensParameters = CameraAndLensParameters(); % Create a new object that holds information about the camera and the lens that were used
+handles.cameraAndLensParameters.pixelSize = str2double(get(handles.pixelLength,'String'));
+handles.cameraAndLensParameters.magnification = str2double(get(handles.magnification,'String'));
 handles.simPlateHandle = []; % a handle to the PlateSimulator
 handles.analysisMode = 'Completed'; % A standard parameter
 handles.observationStarted = 0; % No observation is started when the program is launched
@@ -104,7 +106,7 @@ else
     handles.imageProcessingParameters.setParallelComputing('off');
 end
 
-thresholdFunctionNames = [ICSEThresholdManager.getThresholdFunctionNames(), 'None'];
+thresholdFunctionNames = ['None', ICSEThresholdManager.getThresholdFunctionNames()];
 set(handles.popupmenu1, 'String', thresholdFunctionNames);
 handles.imageAnalyzer.thresholdFunctionHandle = eval(['@',thresholdFunctionNames{1}]);
 %%
@@ -1020,7 +1022,7 @@ function pushbutton19_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 functionName = inputdlg('Enter function name');
-thresholdFunctionNames = [ICSEThresholdManager.addNewThreshold(functionName{1}), 'None'];
+thresholdFunctionNames = ['None', ICSEThresholdManager.addNewThreshold(functionName{1})];
 set(handles.popupmenu1, 'String', thresholdFunctionNames);
 guidata(hObject, handles);
 

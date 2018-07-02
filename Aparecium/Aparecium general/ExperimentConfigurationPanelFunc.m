@@ -32,7 +32,7 @@ handles = setTag(mainPanel, handles, 'ExperimentConfigurationPanel');
 ConfigurationFilesPanel = uipanel('Parent', mainPanel);
 set(ConfigurationFilesPanel, 'BackgroundColor', [225/255 226/255 251/255]);
 set(ConfigurationFilesPanel, 'Position', [0.00516795865633075 0.8560747663551411 0.9586563307493542 0.11775700934579443]);
-set(ConfigurationFilesPanel, 'Title', 'Experiment configuration')
+set(ConfigurationFilesPanel, 'Title', 'Experiment configuration files')
 handles = setTag(ConfigurationFilesPanel, handles, 'ConfigurationFilesPanel');
 
 
