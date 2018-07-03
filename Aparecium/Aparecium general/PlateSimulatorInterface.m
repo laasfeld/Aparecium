@@ -82,7 +82,11 @@ classdef PlateSimulatorInterface < handle
                         this.PlateSimulator.setTimewiseBlankStructure(timewiseBlankStructure);
                         this.experiment.setHasChanged(0);
                     elseif strfind(mode, 'addTreatments')
-                        this.PlateSimulator = plateSimulator.PlateSimulator(treatments, concentrations, units, mode, wellNames, inUse, cycles, probableEventCycles, probableEventTimes);
+                        try
+                            this.PlateSimulator = plateSimulator.PlateSimulator(treatments, concentrations, units, mode, wellNames, inUse, cycles, probableEventCycles, probableEventTimes);
+                        catch MException
+                            this.PlateSimulator = plateSimulator.PlateSimulator(treatments, concentrations, units, mode, wellNames, inUse, cycles);
+                        end
                         this.experiment.setHasChanged(0);
                     end
 
