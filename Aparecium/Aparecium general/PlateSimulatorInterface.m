@@ -221,30 +221,29 @@ classdef PlateSimulatorInterface < handle
             probableEventCycles = [];
             probableEventTimes = [];
             probableEventCycles(end + 1) = 1;
-            probableEventTimes(end + 1) = cycleTimeMoments(1);
-            
-            if(numel(cycleTimeMoments) > 1)
-                delta = 0;
-                expectingDelta = 0;
-                for i = 2 : numel(cycleTimeMoments)
-                    newDelta = cycleTimeMoments(i) - cycleTimeMoments(i - 1);
-                    if ~isequal(delta, newDelta) && isequal(expectingDelta, 0) 
-                       expectingDelta = 1;
-                       delta = newDelta;
-                    elseif ~isequal(delta, newDelta) && isequal(expectingDelta, 1) 
-                       probableEventCycles(end + 1) = i;
-                       probableEventTimes(end + 1) = cycleTimeMoments(i);
-                       delta = newDelta;
-                       expectingDelta = 0;
-                    else
-                       expectingDelta = 0;
+            if numel(cycleTimeMoments > 0)
+                probableEventTimes(end + 1) = cycleTimeMoments(1);
+
+                if(numel(cycleTimeMoments) > 1)
+                    delta = 0;
+                    expectingDelta = 0;
+                    for i = 2 : numel(cycleTimeMoments)
+                        newDelta = cycleTimeMoments(i) - cycleTimeMoments(i - 1);
+                        if ~isequal(delta, newDelta) && isequal(expectingDelta, 0) 
+                           expectingDelta = 1;
+                           delta = newDelta;
+                        elseif ~isequal(delta, newDelta) && isequal(expectingDelta, 1) 
+                           probableEventCycles(end + 1) = i;
+                           probableEventTimes(end + 1) = cycleTimeMoments(i);
+                           delta = newDelta;
+                           expectingDelta = 0;
+                        else
+                           expectingDelta = 0;
+                        end
                     end
                 end
-            end
-           
-        end
-        
-        
+            end          
+        end             
     end
     
     methods(Static)
