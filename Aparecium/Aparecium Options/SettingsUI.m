@@ -22,7 +22,7 @@ function varargout = SettingsUI(varargin)
 
 % Edit the above text to modify the response to help SettingsUI
 
-% Last Modified by GUIDE v2.5 02-Nov-2017 11:59:16
+% Last Modified by GUIDE v2.5 06-Jul-2018 20:55:47
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -177,6 +177,27 @@ catch MException
         rethrow(MException)
     end
 end
+
+try
+    if(strcmp(userpath, regexprep(fullPath, '\\Aparecium Options\\SettingsUIRANDOM556874', ';'))) % Userpath already corresponds to the Aparecium folder
+        set(handles.userPathOption, 'Value', 1);
+        set(handles.userPathOption, 'Enable', 'off');
+    end
+
+catch MException
+    
+end
+
+try
+    if strcmp(fileread('startup.m'), sprintf('cd(regexprep(mfilename(''fullpath''), ''startup'', ''''));\naddApareciumToPath();\nApareciumStart();')) % Startup.m already corresonds to the specified value
+        set(handles.startupOption, 'Value', 1);
+        set(handles.startupOption, 'Enable', 'off');
+    end
+
+catch MException
+    
+end
+            
 % Update handles structure
 
 guidata(hObject, handles);
@@ -350,16 +371,34 @@ function save_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 settings = handles.settings;
 handles.folderPath;
+
+if(isequal(get(handles.userPathOption, 'Value'), 1))
+    userpath(regexprep(mfilename('fullpath'), '\\Aparecium Options\\SettingsUI', ''));
+end
+
+if isequal(get(handles.startupOption, 'Value'), 1)
+    fileID = fopen([regexprep(regexprep(mfilename('fullpath'), '\Aparecium Options\\\SettingsUI',''), '\\', '\\\\') '\\startup.m'],'w+');
+    fprintf(fileID, sprintf('cd(regexprep(mfilename(''fullpath''), ''startup'', ''''));\naddApareciumToPath();\nApareciumStart();'));
+    fclose(fileID);
+end
+
 try
     if isequal(handles.saveExistAndReturn, 0) % save as usual, do not return the structure
         save([handles.folderPath, '\settings'],'settings');
     elseif isequal(handles.saveExistAndReturn, 1)
-        % here should be code for the case when settings should be returned -
-        % code not complete
+        save([handles.folderPath, '\settings'],'settings');
+        guidata(hObject, handles);
+        if isequal(get(handles.figure1, 'waitstatus'),'waiting')
+            uiresume(handles.figure1)
+        else
+            delete(handles.figure1);
+        end
     end
 catch
     save([handles.folderPath, '\settings'], 'settings');
 end
+
+
 
 % --- Executes on button press in PHERAStarASCII.
 function PHERAStarASCII_Callback(hObject, eventdata, handles)
@@ -454,6 +493,7 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: delete(hObject) closes the figure
+guidata(hObject, handles);
 if isequal(get(hObject, 'waitstatus'),'waiting')
     uiresume(hObject)
 else
@@ -611,3 +651,21 @@ function showBlank_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of showBlank
 handles.settings.showBlank = get(hObject, 'Value');
 guidata(hObject, handles)
+
+
+% --- Executes on button press in startupOption.
+function startupOption_Callback(hObject, eventdata, handles)
+% hObject    handle to startupOption (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of startupOption
+
+
+% --- Executes on button press in userPathOption.
+function userPathOption_Callback(hObject, eventdata, handles)
+% hObject    handle to userPathOption (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of userPathOption

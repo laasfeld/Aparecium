@@ -139,6 +139,7 @@ function midasTools_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to midasTools (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns
+addApareciumToPath();
 handles.MIDASTools = hObject;
 guidata(hObject, handles);
 
