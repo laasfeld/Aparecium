@@ -452,13 +452,21 @@ classdef GraphicalPreviewController < ExportPanelController
                 end
                 hold on;
             end
-
+                        
+            pointXYStack = [xStack',yStack'];
+            uniquePointXYStack = unique(pointXYStack, 'rows');
+            meanZPoints = zeros(size(uniquePointXYStack, 1), 1);
+            for index = 1 : size(uniquePointXYStack, 1)
+                [~,indx]=ismember(pointXYStack,uniquePointXYStack(index,:),'rows');
+                meanZPoints(index) = mean(zStack(indx==1));
+            end
+            
             if get(this.trisurfCheckbox, 'Value')
                 try
-                    trisurf(delaunay(xStack, yStack, {'QJ'}), xStack, yStack, zStack);
+                    trisurf(delaunay(uniquePointXYStack(:,1), uniquePointXYStack(:,2), {'QJ'}), uniquePointXYStack(:,1), uniquePointXYStack(:,2), meanZPoints);
                 catch MException
                     if strcmp(MException.identifier, 'MATLAB:delaunay:DeprecatedQhullOptionsDelaunay'); 
-                        trisurf(delaunay(xStack, yStack), xStack, yStack, zStack);
+                        trisurf(delaunay(uniquePointXYStack(:,1), uniquePointXYStack(:,2)), uniquePointXYStack(:,1), uniquePointXYStack(:,2), meanZPoints);
                     end                  
                 end
             end
