@@ -91,7 +91,7 @@ classdef PlateSimulatorInterface < handle
                     end
 
                 catch MException
-                    if strcmp(MException.identifier, 'MATLAB:undefinedVarOrClass')
+                    if strcmp(MException.identifier, 'MATLAB:undefinedVarOrClass') || strcmp(MException.identifier, 'MATLAB:load:couldNotReadFile')
                         if ~this.installationAlreadyAttempted
                             result = questdlg('It seem like Java installation has not been performed. Would you like to install Java from current folder?');
                             pause(0.5); % without this pause the program seems to successfully install java but crash right after it.
