@@ -101,6 +101,8 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                     image = Cytation5TIFFImage([filePath, picName]);
                     I_org1 = image.getImage();
                     imageTime = image.getImageTime();
+                    imageWidthMicrons = image.getImageWidthMicrons();
+                    imageHeightMicrons = image.getImageHeightMicrons();
                 catch MException
                     I_org1 = imread([filePath, picName]); 
                     imageTime = 0;
@@ -133,6 +135,10 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                 binaryImageCalculator.calculateImageParameters(bw2, parametersToCalculate, functionHandle);
                 resultStructure = binaryImageCalculator.resultStructure;
                 resultStructure.imageTime = imageTime;
+                resultStructure.imageWidthMicrons = imageWidthMicrons;
+                resultStructure.imageHeightMicrons = imageHeightMicrons;
+                resultStructure.imageWidthPixels = size(I_org, 2);
+                resultStructure.imageHeightPixels = size(I_org, 1);
                 switch imageProcessingParameters.useParallelComputing
                     case 'on'
 
