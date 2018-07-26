@@ -39,7 +39,7 @@ function varargout = MembraneTools(varargin)
 
 % Edit the above text to modify the response to help MembraneTools
 
-% Last Modified by GUIDE v2.5 01-Jan-2010 11:16:07
+% Last Modified by GUIDE v2.5 26-Jul-2018 10:22:04
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -88,6 +88,7 @@ handles.plateSimulatorInterface = PlateSimulatorInterface(); % Create a new obje
 handles.cameraAndLensParameters = CameraAndLensParameters(); % Create a new object that holds information about the camera and the lens that were used
 handles.cameraAndLensParameters.pixelSize = str2double(get(handles.pixelLength,'String'));
 handles.cameraAndLensParameters.magnification = str2double(get(handles.magnification,'String'));
+handles.cameraAndLensParameters.fromImage = get(handles.fromImageTickBox, 'Value');
 handles.simPlateHandle = []; % a handle to the PlateSimulator
 handles.analysisMode = 'Completed'; % A standard parameter
 handles.observationStarted = 0; % No observation is started when the program is launched
@@ -1096,3 +1097,21 @@ switch get(hObject,'Value')
     case 1
         handles.imageProcessingParameters.setAutoSaveMasks('on'); % Save binary images automatically 
 end
+
+
+% --- Executes on button press in fromImageTickBox.
+function fromImageTickBox_Callback(hObject, eventdata, handles)
+% hObject    handle to fromImageTickBox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of fromImageTickBox
+handles.cameraAndLensParameters.fromImage = get(handles.fromImageTickBox, 'Value');
+guidata(hObject, handles);
+
+% --- Executes during object creation, after setting all properties.
+function fromImageTickBox_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to fromImageTickBox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+

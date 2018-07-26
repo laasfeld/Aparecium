@@ -59,6 +59,14 @@ classdef Cytation5TIFFImage < handle
             kineticSequence = str2double(this.xmlStruct.ImageReference.KineticSequence);
         end
         
+        function imageWidthMicrons = getImageWidthMicrons(this)
+            imageWidthMicrons = str2double(this.xmlStruct.ImageAcquisition.ImageWidthMicrons);
+        end
+        
+        function imageHeightMicrons = getImageHeightMicrons(this)
+            imageHeightMicrons = str2double(this.xmlStruct.ImageAcquisition.ImageHeightMicrons);
+        end
+        
     end
     
 end

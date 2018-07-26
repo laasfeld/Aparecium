@@ -657,7 +657,7 @@ classdef ImageAnalyzer < handle
                      resultStructure(picOfWell).figureHandles = figHandles;
                      resultStructure(picOfWell).thresholdFunctionHandle = thresholdFunctionHandle;
                      resultStructure(picOfWell).imageName = nameArrayOfWell{picOfWell};
-                     resultStructure(picOfWell).parametersToCalculate = this.parametersToCalculate;;
+                     resultStructure(picOfWell).parametersToCalculate = this.parametersToCalculate;
                  elseif strcmp(ICSEOrMembrane, 'Membrane')
                      
                      resultStructure = analyzeMembranesStatic(nameArrayOfWell{picOfWell}, secondaryNameArrayOfWell{picOfWell}, directoryPath, imageProcessingParams, timeParameters, figHandles, thresholdFunctionHandle, 'Binary', qualityMasks{well});
@@ -863,6 +863,8 @@ classdef ImageAnalyzer < handle
                     image = Cytation5TIFFImage([filePath, picName]);
                     I_org1 = image.getImage();
                     resultStructure.imageTime = image.getImageTime();
+                    resultStructure.imageWidthMicrons = image.getImageWidthMicrons();
+                    resultStructure.imageHeightMicrons = image.getImageHeightMicrons();
                 catch
                     I_org1 = imread([filePath, picName]); 
                     resultStructure.imageTime = 0;
@@ -958,6 +960,8 @@ classdef ImageAnalyzer < handle
                 binaryImageCalculator.calculateImageParameters(bw2, parametersToCalculate, functionHandle);
                 alternativeResultStructure = binaryImageCalculator.resultStructure;
                 alternativeResultStructure.imageTime = resultStructure.imageTime;
+                alternativeResultStructure.imageWidthMicrons = resultStructure.imageWidthMicrons;
+                alternativeResultStructure.imageHeightMicrons = resultStructure.imageHeightMicrons;
                 resultStructure = alternativeResultStructure;
                 switch imageProcessingParameters.useParallelComputing
                     case 'on'

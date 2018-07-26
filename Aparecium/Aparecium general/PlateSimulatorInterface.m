@@ -237,8 +237,8 @@ classdef PlateSimulatorInterface < handle
                            expectingDelta = 1;
                            delta = newDelta;
                         elseif ~isequal(delta, newDelta) && isequal(expectingDelta, 1) 
-                           probableEventCycles(end + 1) = i;
-                           probableEventTimes(end + 1) = cycleTimeMoments(i);
+                           probableEventCycles(end + 1) = i - 1;
+                           probableEventTimes(end + 1) = cycleTimeMoments(i - 1);
                            delta = newDelta;
                            expectingDelta = 0;
                         else

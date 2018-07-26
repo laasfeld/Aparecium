@@ -372,8 +372,22 @@ classdef BinaryImageCalculator < handle
 %             functionHandleIndex = strcmp(this.implementedParameters, parameterName)==1; % find the matching function handle index
 %             functionHandle = functionHandles{functionHandleIndex}; % find the function handle
 %             functionHandle(wellData); % call the function handle
-            magnification = cameraAndLensParameters.magnification;
-            pixelSize = cameraAndLensParameters.pixelSize;
+%           if the the option states that the parameters of image size should be read
+%           from the image then set the proper ratio to magnification and
+%           pixelSize. It is assumed that all images taken from one well
+%           are taken with one camera and one objective lens. Otherwise the averaging
+%           of images would not make too much sense.
+            if isequal(cameraAndLensParameters.fromImage, 1) % in this case maginification and pixelSize values do not correspond to actual values, but the ratio does. In current implementation there should be no difference
+                                                             % but it
+                                                             % could be
+                                                             % reviewed
+                                                             % later
+                magnification = 1;
+                pixelSize = wellData{1}.imageWidthMicrons/wellData{1}.imageWidthPixels;
+            else
+                magnification = cameraAndLensParameters.magnification;
+                pixelSize = cameraAndLensParameters.pixelSize;
+            end
             switch parameterName
                 case 'area'
                     average = BinaryImageCalculator.averageArea(wellData)*(pixelSize/magnification)^2;

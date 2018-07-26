@@ -39,7 +39,7 @@ function varargout = ICSETools(varargin)
 
 % Edit the above text to modify the response to help ICSETools
 
-% Last Modified by GUIDE v2.5 10-Aug-2017 16:11:19
+% Last Modified by GUIDE v2.5 24-Jul-2018 04:59:35
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -83,6 +83,9 @@ handles.midasTableController.addTreatmentColumn(' ', '', ''); % Set up the stand
 handles.apareciumExperimentInput = ApareciumExperimentInput(); % Create a new object that holds information about treatments and wells
 handles.plateSimulatorInterface = PlateSimulatorInterface(); % Create a new object that can commonicate with PlateSimulator which is written in Java
 handles.cameraAndLensParameters = CameraAndLensParameters(); % Create a new object that holds information about the camera and the lens that were used
+handles.cameraAndLensParameters.pixelSize = str2double(get(handles.pixelLength,'String'));
+handles.cameraAndLensParameters.magnification = str2double(get(handles.magnification,'String'));
+handles.cameraAndLensParameters.fromImage = get(handles.fromImageTickBox, 'Value');
 handles.simPlateHandle = []; % a handle to the PlateSimulator
 handles.analysisMode = 'Completed'; % A standard parameter
 handles.observationStarted = 0; % No observation is started when the program is launched
@@ -1088,3 +1091,14 @@ function figure1_ResizeFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ApareciumCommonImporterFunctions.figure1_ResizeFcn(hObject, eventdata, handles);
+
+
+% --- Executes on button press in fromImageTickBox.
+function fromImageTickBox_Callback(hObject, eventdata, handles)
+% hObject    handle to fromImageTickBox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of fromImageTickBox
+handles.cameraAndLensParameters.fromImage = get(handles.fromImageTickBox, 'Value');
+guidata(hObject, handles);
