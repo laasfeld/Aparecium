@@ -416,9 +416,22 @@ classdef MidasTableController < handle
             noOfTreatments = size(treatmentStructure.results{1}, 2);
             wells = reshape(treatmentStructure.resultWells,1,noOfWells);
             treatments = treatmentStructure.results;
+            
+            connectionMatrix = zeros(numel(treatmentStructure.resultWells),1);
+            for row = 1 : noOfWells
+                wellName = this.tableData(row, 2);
+                for i = 1 : numel(treatmentStructure.resultWells)
+                   if strcmp(wellName, treatmentStructure.resultWells{i}{1})
+                      connectionMatrix(row) = i;
+                      break;
+                   end
+                end
+            end
+            
             for block = 1 :  size(this.tableData, 1)/noOfWells;
                 for row = 1 : noOfWells
-                    tempData( (block-1)*noOfWells + row,  1 : noOfTreatments) = treatments{row};
+                    wellName = this.tableData( (block-1) + row, 2);
+                    tempData( (block-1)*noOfWells + row,  1 : noOfTreatments) = treatments{connectionMatrix(row)};
                     %this.tableData( (block-1)*noOfWells + row, this.informativeColumns + 1 : this.informativeColumns + noOfTreatments) = num2cell(treatments(row, :));       
                 end
             end

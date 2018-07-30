@@ -16,7 +16,7 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
     
         function resultStructure = analyzeMembranesStatic(picName, secondaryPicName, filePath, imageProcessingParameters, timeParameters, figureHandles, functionHandle, calculationMethod, qualityMask, parametersToCalculate)
             disp('MembraneImageAnalyzer');
-            resultStructure = ImageAnalyzer.analyseOneImageStatic(picName, filePath, imageProcessingParameters, timeParameters, figureHandles, functionHandle, parametersToCalculate);
+            resultStructure = MembraneImageAnalyzer.analyseOneImageStatic(picName, filePath, imageProcessingParameters, timeParameters, figureHandles, functionHandle, parametersToCalculate);
 
             image = imread([filePath, secondaryPicName]);
             contents = dir(filePath);
@@ -94,7 +94,7 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             end
         end
         
-        function resultStructure = analyseOneImageStatic(picName, filePath, imageProcessingParameters, timeParameters, figureHandles, functionHandle)
+        function resultStructure = analyseOneImageStatic(picName, filePath, imageProcessingParameters, timeParameters, figureHandles, functionHandle, parametersToCalculate)
                 tic
 
                 try
