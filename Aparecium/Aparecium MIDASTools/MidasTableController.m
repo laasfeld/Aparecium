@@ -427,7 +427,7 @@ classdef MidasTableController < handle
                 for row = 1 : noOfWells
                     wellName = this.tableData(row, 2);
                     for i = 1 : numel(treatmentStructure.resultWells)
-                       if strcmp(wellName, treatmentStructure.resultWells{i}{1})
+                       if strcmp(regexprep(wellName,' ', ''), treatmentStructure.resultWells{i}{1})
                           connectionMatrix(row) = i;
                           break;
                        end
