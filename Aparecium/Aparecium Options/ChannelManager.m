@@ -48,7 +48,7 @@ classdef ChannelManager < handle
             for channelToFindIndex = 1 : numel(inputChannels)
                 nameFound = 0;
                 for channelToCompareWithIndex = 1 : numel(channelNames)
-                    if strcmp(inputChannels{channelToFindIndex}, channelNames(channelToCompareWithIndex).channelName)
+                    if strcmp( strtrim(inputChannels{channelToFindIndex}), strtrim(channelNames(channelToCompareWithIndex).channelName))
                        MIDASChannels{channelToFindIndex} = channelNames(channelToCompareWithIndex).MIDASChannelName;
                        nameFound = 1;
                     end

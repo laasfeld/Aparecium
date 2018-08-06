@@ -99,6 +99,8 @@ classdef FileChooser < handle
             kinTime=cell(0,0);
             extFilter = cell(0,0);
             emissionFilter = cell(0,0);
+            emissionFilterChannel = cell(0,0);
+            filterSetupName = cell(0,0);
             alphabet = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
 %             OLDER VERSION OF CODE
 %             try
@@ -143,16 +145,19 @@ classdef FileChooser < handle
                     kinTime{recordIndex}=record.getNumberValue(String('KINTIME'));
                     % get the channel names
                     extFilter{recordIndex} = regexprep(char(record.getStringValue(String('EXFILT'))),' ','');
-                    emissionFilter{recordIndex}=cell(0,0);
+                    emissionFilter{recordIndex} = cell(0,0);
+                    emissionFilterChannel{recordIndex} = cell(0,0);
                     if ~isequal(char(record.getStringValue(String('EMFILT'))),'')
-
                         emissionFilter{recordIndex}{end+1} = regexprep(char(record.getStringValue(String('EMFILT'))),' ','');
+                        emissionFilterChannel{recordIndex}{end + 1} = '';
                     end
                     for letter = alphabet
                         if ~isequal(char(record.getStringValue(String(['EMFILT',letter]))),'')
                             emissionFilter{recordIndex}{end+1} = regexprep(char(record.getStringValue(String(['EMFILT',letter]))),' ','');
+                            emissionFilterChannel{recordIndex}{end + 1} = letter;
                         end
                     end
+                    filterSetupName{recordIndex} = strtrim(char(record.getStringValue(String('OM')))); 
                     loading.setLoadingBarPercent((recordIndex/numberOfRecords)*100);
                 end
             catch
@@ -163,6 +168,8 @@ classdef FileChooser < handle
             fileName = [fileString{selection},'.dbf'];
             fullFilePath = [filePath, fileName];
 
+            parameterStructure.emissionFilterChannel = emissionFilterChannel{selection};
+            parameterStructure.filterSetupName = filterSetupName{selection};
             parameterStructure.emissionFilter = emissionFilter{selection};
             parameterStructure.exitationFilter = extFilter(selection);
             parameterStructure.kineticTime = double(kinTime{selection});

@@ -101,7 +101,12 @@ classdef PheraStarDatabaseReader < handle
         function generateChannelNames(this, parameterStructure)
 
             for channel = 1 : this.experimentDataStructure.numberOfChannels
-                this.experimentDataStructure.channelNames{channel} = [parameterStructure.exitationFilter{1},'/',parameterStructure.emissionFilter{channel}];
+                channelLetter = parameterStructure.emissionFilterChannel{channel};
+                if strcmp(channelLetter, '')
+                   channelLetter = 'A'; % It is for some reason that in the BMG database letter A is omitted and empty string is used instead and channels with letters start with B and so on. In ASCII files the first channel however is still named A. This line fixes this situation. 
+                end
+                this.experimentDataStructure.channelNames{channel} = [parameterStructure.filterSetupName, ', Channel ',channelLetter];
+                %this.experimentDataStructure.channelNames{channel} = [parameterStructure.exitationFilter{1},'/',parameterStructure.emissionFilter{channel}];
             end 
         end
         
