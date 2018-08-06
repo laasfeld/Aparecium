@@ -589,11 +589,11 @@ classdef BinaryImageCalculator < handle
         
         function average = averageSecondaryImageIntensity(resultStructures)
             intensity = 0;
-            totalPixels = 904*1224;% defenetly bind this parameter to the actual image
+            %totalPixels = 904*1224;% defenetly bind this parameter to the actual image
             for imageIndex = 1 : numel(resultStructures)
                  intensity = intensity + resultStructures{imageIndex}.averageSecondaryImageIntensity;
             end
-            average =  intensity/totalPixels;
+            average =  intensity/numel(resultStructures);
         end
         
         function average = averageImageTime(resultStructures)

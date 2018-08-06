@@ -418,13 +418,20 @@ classdef MidasTableController < handle
             treatments = treatmentStructure.results;
             
             connectionMatrix = zeros(numel(treatmentStructure.resultWells),1);
-            for row = 1 : noOfWells
-                wellName = this.tableData(row, 2);
+            if isequal(size(this.tableData, 1), 1) 
                 for i = 1 : numel(treatmentStructure.resultWells)
-                   if strcmp(wellName, treatmentStructure.resultWells{i}{1})
-                      connectionMatrix(row) = i;
-                      break;
-                   end
+                    connectionMatrix(i) = i;
+                end
+
+            else
+                for row = 1 : noOfWells
+                    wellName = this.tableData(row, 2);
+                    for i = 1 : numel(treatmentStructure.resultWells)
+                       if strcmp(wellName, treatmentStructure.resultWells{i}{1})
+                          connectionMatrix(row) = i;
+                          break;
+                       end
+                    end
                 end
             end
             
