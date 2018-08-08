@@ -1,4 +1,4 @@
-function saveConfiguration(handles)
+function result = saveConfiguration(handles)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
     dimensionalityTR = handles.dimensionality; % it is used in uisave, ignore warning
@@ -12,7 +12,12 @@ function saveConfiguration(handles)
         load settings
     end  
     startingPath = settings.Configurations;
-    uisave({'dimensionalityTR','namesTR','valuesTR','unitsTR'},[startingPath,'\','CF-',handles.fileName,'.MAT']);
-
+    [fileName, filePath] = uiputfile([startingPath,'\','CF-',handles.fileName,'.MAT']);
+    if isequal(fileName, 0) || isequal(filePath, 0)
+        result = 0;
+    elseif ~isequal(fileName, 0) && ~isequal(filePath, 0)
+        save( [filePath, fileName], 'dimensionalityTR','namesTR','valuesTR','unitsTR');
+        result = 1;
+    end
 end
 

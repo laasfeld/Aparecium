@@ -27,8 +27,10 @@ classdef ApareciumCommonImporterFunctions
             % hObject    handle to SaveConfigurationFile (see GCBO)
             % eventdata  reserved - to be defined in a future version of MATLAB
             % handles    structure with handles and user data (see GUIDATA)
-            saveConfiguration(handles);
-            successBox('Configuration file saved', 'Success');
+            result = saveConfiguration(handles);
+            if isequal(result, 1)
+                successBox('Configuration file saved', 'Success');
+            end
         end
         
         function ChooseDimensionality_Callback(hObject, eventdata, handles)
