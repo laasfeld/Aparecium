@@ -26,10 +26,19 @@ else
     end  
     startingPath = settings.MIDAS;
     fileName=['MD-',fileName];
-    [fileName,filePath,filterIndex] = uiputfile({'.xls';'.csv'},'Choose the filename',[startingPath,'\',fileName]);
+    [fileName,filePath,filterIndex] = uiputfile({'*.xls';'*.csv'},'Choose the filename',[startingPath,'\',fileName]);
 end
 
-
+if isequal(filterIndex, 3)
+    [unneeded, unneeded2, extension] = fileparts(fileName);
+    if strcmp(extension, '.xls')
+        filterIndex = 1;
+    elseif strcmp(extension, '.csv')
+        filterIndex = 2;
+    else
+        filterIndex = 0;
+    end
+end
 
 if isequal(filterIndex,1)
     try
@@ -47,7 +56,7 @@ elseif isequal(filterIndex,2)
     result = 1;
 elseif isequal(filterIndex, 0) % user selected cancel
    result = 0;
-end
+elseif isequal(filerIndex, 3)
     
 
 end

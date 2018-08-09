@@ -526,7 +526,7 @@ classdef ExcelTableController < ExportPanelController
                 load settings
             end
             startingPath = settings.Excel;
-            [FileName,FilePath,FilterIndex] = uiputfile({'.xls';'.csv'}, '', startingPath);
+            [FileName,FilePath,FilterIndex] = uiputfile({'*.xls';'*.csv'}, '', startingPath);
             
             if isequal(FilterIndex,1)
                 outputFilename = [FilePath, '\', FileName];

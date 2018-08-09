@@ -167,7 +167,7 @@ classdef FileChooser < handle
             [selection, ok] = listdlg('ListString' ,listString,'ListSize',[600 300],'SelectionMode','single','Name','Select experiment to import');
             fileName = [fileString{selection},'.dbf'];
             fullFilePath = [filePath, fileName];
-            fileName = [listString{selection}]; % this is the effective file name that should be used a default for CF and MIDAS file suggestions. For actual file path fullFilePath should be used
+            fileName = regexprep(listString{selection}, ':', ''); % this is the effective file name that should be used a default for CF and MIDAS file suggestions. For actual file path fullFilePath should be used
 
             parameterStructure.emissionFilterChannel = emissionFilterChannel{selection};
             parameterStructure.filterSetupName = filterSetupName{selection};

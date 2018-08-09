@@ -212,8 +212,10 @@ function SaveMIDASFile_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 inputStruct.data = handles.midasTableController.getMidasTable();
 inputStruct.fileName = '';
-saveMidasFile(inputStruct);
-successBox('MIDAS file successfully saved', 'Success');
+result = saveMidasFile(inputStruct);
+if isequal(result, 1)
+    successBox('MIDAS file successfully saved', 'Success');
+end
 
 % --------------------------------------------------------------------
 function options_Callback(hObject, eventdata, handles)
