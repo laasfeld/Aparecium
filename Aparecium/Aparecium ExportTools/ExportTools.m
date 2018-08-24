@@ -1176,6 +1176,7 @@ if exist('groupStructure', 'var') && exist('groupNames', 'var');
         set(handles.groupsOKIndicator, 'String', 'OK', 'BackgroundColor', [0 1 0]);
         set(handles.chooseGraphGroup, 'String', handles.apareciumExperimentInput.getGroups());
         set(handles.savePlateKonfig, 'Enable', 'on');
+        set(handles.numberOfGroupsField, 'String', num2str(numel(groupNames)));
        
     else
         warndlg('It seems that this .mat file defines grouping configuration for a plate of a different size. Groups not loaded.') 
