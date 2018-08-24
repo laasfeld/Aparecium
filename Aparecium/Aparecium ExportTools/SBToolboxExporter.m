@@ -9,6 +9,10 @@ classdef SBToolboxExporter <  ExportPanelController
         outputTableStruct = [];
         groups = [];
         loadingBar = [];
+        prefix = '';
+        suffix = '';
+        outputValue = [];
+        data = [];
     end
     
     methods
@@ -18,6 +22,16 @@ classdef SBToolboxExporter <  ExportPanelController
         
         function addLoadingBar(this, loadingBar)
             this.loadingBar = loadingBar;
+        end
+        
+        function setPrefix(this, prefix)
+            this.prefix = prefix;
+            this.updatePrefixAndSuffixInTable();
+        end
+        
+        function setSuffix(this, suffix)
+           this.suffix = suffix;
+           this.updatePrefixAndSuffixInTable();
         end
         
         function addExperiment(this, experiment, varargin)
@@ -58,7 +72,20 @@ classdef SBToolboxExporter <  ExportPanelController
             data = get(this.experimentParamNameTable, 'Data');
             this.experimentParamsNames = data(:,2);
         end
-
+        
+        function updatePrefixAndSuffixInTable(this)
+            try
+                groupNames = this.experiment.getGroups();
+                for group = 1 : size(this.data, 2)
+                    for subgroup = this.subgroupStartValue : numel(this.data{group})
+                        this.outputTableStruct{group}{subgroup}.path = [this.prefix, this.outputValue,'_Group_',groupNames{group}, '_', this.subgroupNames{group}{subgroup}, this.suffix];
+                    end
+                end
+            catch
+                
+            end
+        end
+        
         function calculateNewTable(this, exportMode, outputVariable)
 
            [data, this.groups] = this.calculationMethod.calculate(this.experiment, this.groupStructure, this.sharedBlankStructure, this.timewiseBlankStructure);
@@ -67,6 +94,8 @@ classdef SBToolboxExporter <  ExportPanelController
            end
            channelNames = this.calculationMethod.getChannelNames();
            data = this.mergeOrAverage(data, exportMode);
+           this.data = data;
+           this.outputValue = outputVariable;
            this.convertDataToSBToolboxFormat(data, this.groups, channelNames, outputVariable, exportMode);
 
         end
@@ -171,8 +200,8 @@ classdef SBToolboxExporter <  ExportPanelController
                 for subgroup = this.subgroupStartValue : numel(this.groups{group})
                     this.loadingBar.setLoadingBarPercent( 100* (((group-1)/numel(this.groups))+(subgroup-1)/(numel(this.groups{group})*numel(this.groups))));
                     outputValue = this.outputTableStruct{group}{subgroup}.outputValue;
-                    mkdir(FilePath,[outputValue, '_Group_', groupNames{group}, '_', this.subgroupNames{group}{subgroup}]);
-                    tempFilePath = [FilePath,'\',outputValue,'_Group_',groupNames{group}, '_', this.subgroupNames{group}{subgroup}];
+                    mkdir(FilePath,[this.prefix, outputValue, '_Group_', groupNames{group}, '_', this.subgroupNames{group}{subgroup}, this.suffix]);
+                    tempFilePath = [FilePath,'\',this.prefix,outputValue,'_Group_',groupNames{group}, '_', this.subgroupNames{group}{subgroup}, this.suffix];
                     outputFilenameMIDAS = [tempFilePath, '\', this.outputTableStruct{group}{subgroup}.path, '.xls'];
                     outputFilenameEXP = [tempFilePath, '\', this.outputTableStruct{group}{subgroup}.path, '.exp'];
                     initialConditions = this.outputTableStruct{group}{subgroup}.initialConditions;
@@ -286,7 +315,7 @@ classdef SBToolboxExporter <  ExportPanelController
                     end
           
                     this.outputTableStruct{group}{subgroup}.SBTable = [Header;experimentData];
-                    this.outputTableStruct{group}{subgroup}.path = [outputValue,'_Group_',groupNames{group}, '_', this.subgroupNames{group}{subgroup}];
+                    this.outputTableStruct{group}{subgroup}.path = [this.prefix, outputValue,'_Group_',groupNames{group}, '_', this.subgroupNames{group}{subgroup}, this.suffix];
                     if isequal(exportMode, 'Merge')
                         this.outputTableStruct{group}{subgroup}.initialConditions = data{group}{subgroup}{1}.initialConditions;
                     elseif isequal(exportMode, 'Average')

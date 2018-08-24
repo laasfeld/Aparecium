@@ -25,7 +25,7 @@ function varargout = ExportTools(varargin)
 
 % Edit the above text to modify the response to help ExportTools
 
-% Last Modified by GUIDE v2.5 01-Nov-2017 22:23:24
+% Last Modified by GUIDE v2.5 21-Aug-2018 17:58:24
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
@@ -96,6 +96,12 @@ handles.copasiPreviewController.setExperimentParamNameTable(handles.copasiParame
 handles.copasiPreviewController.setTableHandle(handles.CopasiTable);
 handles.copasiCalcMode = 'Average';
 
+handles.prismPanelController = PrismPanelController();
+handles.prismPanelController.setXAxisChoosingDropdownHandle(handles.PrismXAxisTreatmentSelection);
+handles.prismPanelController.setTableOrganizationHandle(handles.PrismOrganizationStyle);
+handles.prismPanelController.setTableHandle(handles.PrismTable);
+handles.prismPanelController.setHeaderTableHandle(handles.PrismHeaderTable);
+
 try
     handles.SBExporter.addTimeController(handles.exportTimeMomentController);
 catch
@@ -109,6 +115,7 @@ try
     handles.SBExporter.addTimeController(handles.exportTimeMomentController);
     handles.graphicalPreviewController.addTimeController(handles.exportTimeMomentController);
     handles.copasiPreviewController.addTimeController(handles.exportTimeMomentController);
+    handles.prismPanelController.addTimeController(handles.exportTimeMomentController);
 catch
     disp('Error');
 end
@@ -196,6 +203,7 @@ handles.excelTableController.setSubgroupStartValue(subgroupStartValue);
 handles.SBExporter.setSubgroupStartValue(subgroupStartValue);
 handles.graphicalPreviewController.setSubgroupStartValue(subgroupStartValue);
 handles.copasiPreviewController.setSubgroupStartValue(subgroupStartValue);
+handles.prismPanelController.setSubgroupStartValue(subgroupStartValue);
 
 
 function handles = updateGUIToPreviousExport(handles, figure)
@@ -313,19 +321,21 @@ try
     tab1 = uitab('v0','Parent', previewTabGroup, 'Title', 'Excel preview');
     tab2 = uitab('v0','Parent', previewTabGroup, 'Title', 'SBtoolbox preview');
     tab3 = uitab('v0','Parent', previewTabGroup, 'Title', 'Graphical preview');
-    tab4 = uitab('v0','Parent', previewTabGrouo, 'Title', 'COPASI Preview');
+    tab4 = uitab('v0','Parent', previewTabGroup, 'Title', 'COPASI Preview');
+    tab5 = uitab('v0','Parent', previewTabGroup, 'Title', 'Prism Preview');
 catch
     previewTabGroup = uitabgroup('Parent', handles.exportPreviewPanel);
     tab1 = uitab('Parent', previewTabGroup, 'Title', 'Excel preview');
     tab2 = uitab('Parent', previewTabGroup, 'Title', 'SBtoolbox preview');
     tab3 = uitab('Parent', previewTabGroup, 'Title', 'Graphical preview');
     tab4 = uitab('Parent', previewTabGroup, 'Title', 'COPASI Preview');
+    tab5 = uitab('Parent', previewTabGroup, 'Title', 'Prism Preview');
 end
 try
     set(previewTabGroup, 'BackgroundColor', [225/255 226/255 251/255]);
 catch MException
     if strcmp(MException.message, 'There is no BackgroundColor property on the TabGroup class.')
-        tabs = {tab1, tab2, tab3, tab4};
+        tabs = {tab1, tab2, tab3, tab4, tab5};
         for i = 1 : numel(tabs)
             tabs{i}.BackgroundColor = [225/255 226/255 251/255];
         end
@@ -337,6 +347,7 @@ set(handles.excelPreviewPanel, 'Parent', tab1);
 set(handles.SBtoolboxPreviewPanel, 'Parent', tab2);
 set(handles.graphicalPreview, 'Parent', tab3);
 set(handles.COPASIPreviewPanel, 'Parent', tab4);
+set(handles.PrismPreviewPanel, 'Parent', tab5);
 guidata(hObject, handles);
 
 
@@ -611,6 +622,7 @@ controllers{1} = handles.excelTableController;
 controllers{2} = handles.SBExporter;
 controllers{3} = handles.graphicalPreviewController;
 controllers{4} = handles.copasiPreviewController;
+controllers{5} = handles.prismPanelController;
 
 addParametersToControllers(controllers, handles.apareciumExperimentInput, groupStructure, subgroupNames, sharedBlankStructure, timewiseBlankStructure, handles.excelTableConfiguration)
 
@@ -677,7 +689,8 @@ function applyFormula_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 set(handles.excelTable, 'visible', 'on');
-set(handles.SBTable, 'visible', 'on'); 
+set(handles.SBTable, 'visible', 'on');
+set(handles.PrismTable, 'visible', 'on');
 calculationMethod = CalculationMethod();
 if get(handles.showBlank, 'Value')
     subgroupStartValue = 1;
@@ -710,6 +723,9 @@ handles.graphicalPreviewController.calculateNewGraph();
 % apply formula to copasiPanelController
 handles.copasiPreviewController.setCalculationMethod(calculationMethod);
 handles.copasiPreviewController.calculateNewTable(handles.SBCalcMode, handles.activeFormula{end}.acronyme); %% TODO - change to handles.CopasiCalcMode
+
+handles.prismPanelController.setCalculationMethod(calculationMethod);
+handles.prismPanelController.calculateNewTable(handles.excelTableConfiguration);
 
 guidata(hObject, handles);
 
@@ -1147,6 +1163,7 @@ if exist('groupStructure', 'var') && exist('groupNames', 'var');
         controllers{2} = handles.SBExporter;
         controllers{3} = handles.graphicalPreviewController;
         controllers{4} = handles.copasiPreviewController;
+        controllers{5} = handles.prismPanelController;
         addParametersToControllers(controllers, handles.apareciumExperimentInput, groupStructure, subgroupNames, sharedBlankStructure, timewiseBlankStructure, handles.excelTableConfiguration);            
         
         handles.plateSimulatorInterface.addExperiment(handles.apareciumExperimentInput);
@@ -2037,3 +2054,203 @@ handles.SBExporter.setSubgroupStartValue(subgroupStartValue);
 handles.graphicalPreviewController.setSubgroupStartValue(subgroupStartValue);
 handles.copasiPreviewController.setSubgroupStartValue(subgroupStartValue);
 guidata(hObject, handles)
+
+
+% --- Executes on button press in pushbutton42.
+function pushbutton42_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton42 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in pushbutton43.
+function pushbutton43_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton43 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in pushbutton44.
+function pushbutton44_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton44 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in checkbox8.
+function checkbox8_Callback(hObject, eventdata, handles)
+% hObject    handle to checkbox8 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkbox8
+
+
+% --- Executes on button press in pushbutton45.
+function pushbutton45_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton45 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on selection change in PrismOrganizationStyle.
+function PrismOrganizationStyle_Callback(hObject, eventdata, handles)
+% hObject    handle to PrismOrganizationStyle (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns PrismOrganizationStyle contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from PrismOrganizationStyle
+
+
+% --- Executes during object creation, after setting all properties.
+function PrismOrganizationStyle_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to PrismOrganizationStyle (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in PrismXAxisTreatmentSelection.
+function PrismXAxisTreatmentSelection_Callback(hObject, eventdata, handles)
+% hObject    handle to PrismXAxisTreatmentSelection (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns PrismXAxisTreatmentSelection contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from PrismXAxisTreatmentSelection
+
+
+% --- Executes during object creation, after setting all properties.
+function PrismXAxisTreatmentSelection_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to PrismXAxisTreatmentSelection (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in PrismTableConfigurationChooser.
+function PrismTableConfigurationChooser_Callback(hObject, eventdata, handles)
+% hObject    handle to PrismTableConfigurationChooser (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns PrismTableConfigurationChooser contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from PrismTableConfigurationChooser
+
+
+% --- Executes during object creation, after setting all properties.
+function PrismTableConfigurationChooser_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to PrismTableConfigurationChooser (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in listbox3.
+function listbox3_Callback(hObject, eventdata, handles)
+% hObject    handle to listbox3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns listbox3 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from listbox3
+
+
+% --- Executes during object creation, after setting all properties.
+function listbox3_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to listbox3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: listbox controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in listbox4.
+function listbox4_Callback(hObject, eventdata, handles)
+% hObject    handle to listbox4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns listbox4 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from listbox4
+
+
+% --- Executes during object creation, after setting all properties.
+function listbox4_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to listbox4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: listbox controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function commonNamePrefix_Callback(hObject, eventdata, handles)
+% hObject    handle to commonNamePrefix (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of commonNamePrefix as text
+%        str2double(get(hObject,'String')) returns contents of commonNamePrefix as a double
+handles.SBExporter.setPrefix(get(hObject,'String'));
+guidata(hObject, handles);
+
+% --- Executes during object creation, after setting all properties.
+function commonNamePrefix_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to commonNamePrefix (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function commonNameSuffix_Callback(hObject, eventdata, handles)
+% hObject    handle to commonNameSuffix (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of commonNameSuffix as text
+%        str2double(get(hObject,'String')) returns contents of commonNameSuffix as a double
+handles.SBExporter.setSuffix(get(hObject,'String'));
+guidata(hObject, handles);
+
+% --- Executes during object creation, after setting all properties.
+function commonNameSuffix_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to commonNameSuffix (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
