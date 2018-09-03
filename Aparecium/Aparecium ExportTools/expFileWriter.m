@@ -1,8 +1,36 @@
-function expFileWriter(experimentName, initialConditions, representingWell, concentrationChangeEvent, eventTimes, experimentParamsNames, name)
+function expFileWriter(experimentName, initialConditions, representingWell, changeEvent, eventTimes, experimentTreatmentNames, experimentStateOrParam ,name)
 %UNTITLED2 Writes the .exp file needed for SBToolbox2 experiment import
 %   Detailed explanation goes here
-
+concentrationChangeEvent = cell(size(changeEvent));
+paramChangeEvent = cell(size(changeEvent));
 noOfEvents = size(eventTimes{representingWell},2) - 1;
+
+for well = 1 : numel(changeEvent)
+    concentrationChangeEvent{well} = cell(size(changeEvent{well}));
+    paramChangeEvent{well} = cell(size(changeEvent{well}));
+    for event = 1 : noOfEvents
+        for treatment = 1 : size(changeEvent{1}{1}, 2)
+            if strcmp(experimentStateOrParam{treatment}, 'state')
+                concentrationChangeEvent{well}{event}(end + 1) = changeEvent{well}{event}(treatment);
+            elseif strcmp(experimentStateOrParam{treatment}, 'param')
+                paramChangeEvent{well}{event}(end + 1) = changeEvent{well}{event}(treatment);
+            end
+        end
+    end
+end
+
+experimentStateNames = cell(0, 1);
+experimentParamsNames = cell(0, 1);
+
+for treatment = 1 : numel(experimentTreatmentNames)
+    if strcmp(experimentStateOrParam{treatment}, 'state')
+        experimentStateNames{end + 1} = experimentTreatmentNames{treatment};
+    elseif strcmp(experimentStateOrParam{treatment}, 'param')
+        experimentParamsNames{end + 1} = experimentTreatmentNames{treatment};
+    end
+end
+
+
 noOfEffectiveEvents = 0;
 effectiveEvent = [];
 for event = 2 : noOfEvents + 1
@@ -18,20 +46,54 @@ for event = 2 : noOfEvents + 1
         
     end
 end
+
+
+noOfEffectiveParamEvents = 0;
+effectiveEventWithParams = [];
+for event = 2 : noOfEvents + 1
+    try
+        for treatment = 1 : size(paramChangeEvent{1}{1}, 2)
+            if ~isequal(concentrationChangeEvent{representingWell}{event - 1}(treatment), 0)
+                noOfEffectiveParamEvents = noOfEffectiveParamEvents + 1;
+                effectiveEventWithParams(end + 1) = event;
+                break;
+            end
+        end
+    catch
+        
+    end
+end
     
 eventStrings = cell(noOfEffectiveEvents, 1);
-for event = 1: noOfEffectiveEvents
+
+for event = 1 : noOfEffectiveEvents
     eventStrings{event} = ['time = ',num2str(eventTimes{representingWell}(effectiveEvent(event)))];
-    for treatment = 1: size(concentrationChangeEvent{1}{1},2)
+    for treatment = 1 : size(concentrationChangeEvent{1}{1},2)
         if ~isequal(concentrationChangeEvent{representingWell}{effectiveEvent(event)-1}(treatment), 0)
             if concentrationChangeEvent{representingWell}{effectiveEvent(event)-1}(treatment) > 0
-                eventStrings{event} = [eventStrings{event},', ',experimentParamsNames{treatment},' = ',experimentParamsNames{treatment},' + ',num2str(concentrationChangeEvent{representingWell}{effectiveEvent(event)-1}(treatment))];
+                eventStrings{event} = [eventStrings{event},', ',experimentStateNames{treatment},' = ',experimentStateNames{treatment},' + ',num2str(concentrationChangeEvent{representingWell}{effectiveEvent(event)-1}(treatment))];
             elseif concentrationChangeEvent{representingWell}{effectiveEvent(event)-1}(treatment) < 0
-                eventStrings{event} = [eventStrings{event},', ',experimentParamsNames{treatment},' = ',experimentParamsNames{treatment},' - ',num2str(-concentrationChangeEvent{representingWell}{effectiveEvent(event)-1}(treatment))];
+                eventStrings{event} = [eventStrings{event},', ',experimentStateNames{treatment},' = ',experimentStateNames{treatment},' - ',num2str(-concentrationChangeEvent{representingWell}{effectiveEvent(event)-1}(treatment))];
             end
         end
     end
 end
+
+paramEventStrings = cell(noOfEffectiveParamEvents, 1);
+
+for event = 1 : noOfEffectiveParamEvents
+    paramEventStrings{event} = ['time = ',num2str(eventTimes{representingWell}(effectiveEventWithParams(event)))];
+    for treatment = 1: size(paramChangeEvent{1}{1},2)
+        if ~isequal(paramChangeEvent{representingWell}{effectiveEventWithParams(event)-1}(treatment), 0)
+            if paramChangeEvent{representingWell}{effectiveEventWithParams(event)-1}(treatment) > 0
+                paramEventStrings{event} = [paramEventStrings{event},', ',experimentParamsNames{treatment},' = ',experimentParamsNames{treatment},' + ',num2str(concentrationChangeEvent{representingWell}{effectiveEvent(event)-1}(treatment))];
+            elseif paramChangeEvent{representingWell}{effectiveEventWithParams(event)-1}(treatment) < 0
+                paramEventStrings{event} = [paramEventStrings{event},', ',experimentParamsNames{treatment},' = ',experimentParamsNames{treatment},' - ',num2str(-concentrationChangeEvent{representingWell}{effectiveEvent(event)-1}(treatment))];
+            end
+        end
+    end
+end
+
 
 fid = fopen(name,'wt');
 try
@@ -50,9 +112,13 @@ try
     end
     fprintf(fid,'%s','********** EXPERIMENT PARAMETER CHANGES')
     fprintf(fid,'\n')
+    for event = 1 : noOfEffectiveParamEvents
+        fprintf(fid,'%s',paramEventStrings{event})
+        fprintf(fid,'\n')
+    end
     fprintf(fid,'%s','********** EXPERIMENT STATE CHANGES')
     fprintf(fid,'\n')
-    for event = 1: noOfEffectiveEvents
+    for event = 1 : noOfEffectiveEvents
         fprintf(fid,'%s',eventStrings{event})
         fprintf(fid,'\n')
     end

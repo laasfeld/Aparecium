@@ -5,7 +5,8 @@ classdef SBToolboxExporter <  ExportPanelController
     properties(SetAccess = private)
         tableHandle = [];
         experimentParamsNames = [];
-        experimentParamNameTable = [];
+        experimentStateOrParam = [];
+        experimentParamNameTable = []; % can either be 'state' or 'param'
         outputTableStruct = [];
         groups = [];
         loadingBar = [];
@@ -37,8 +38,11 @@ classdef SBToolboxExporter <  ExportPanelController
         function addExperiment(this, experiment, varargin)
             this.experiment = experiment;
             this.experimentParamsNames = this.experiment.getTreatments();
+            for i = 1 : numel(this.experimentParamsNames)
+               this.experimentStateOrParam{i} = 'state'; 
+            end
             treatments = this.convertToCellArrayOfStrings(this.experiment.getTreatments());
-            data = [treatments', treatments'];
+            data = [treatments', treatments', num2cell(strcmp(this.experimentStateOrParam, 'state')'), num2cell(strcmp(this.experimentStateOrParam, 'param')')];
             set(this.experimentParamNameTable, 'data', data);
         end                          
       
@@ -71,6 +75,25 @@ classdef SBToolboxExporter <  ExportPanelController
         function getNewExperimentParamsNames(this)
             data = get(this.experimentParamNameTable, 'Data');
             this.experimentParamsNames = data(:,2);
+        end
+        
+        function getNewExperimentStateOrParam(this)
+            data = get(this.experimentParamNameTable, 'Data');
+            for i = 1 : numel(data(:, 3))
+                if isequal(data(i, 3), {1}) && strcmp(this.experimentStateOrParam{i}, 'param')
+                    this.experimentStateOrParam{i} = 'state';
+                    data(i, 4) = {false};
+                elseif isequal(data(i, 4), {1}) && strcmp(this.experimentStateOrParam{i}, 'state')
+                    this.experimentStateOrParam{i} = 'param';
+                    data(i, 3) = {false};
+                elseif isequal(data(i, 3), {0}) && isequal(data(i, 4), {0}) && strcmp(this.experimentStateOrParam{i}, 'state')
+                    data(i, 3) = {true};
+                elseif isequal(data(i, 3), {0}) && isequal(data(i, 4), {0}) && strcmp(this.experimentStateOrParam{i}, 'param')
+                    data(i, 4) = {true};
+                end
+            end
+            set(this.experimentParamNameTable, 'Data', data);
+
         end
         
         function updatePrefixAndSuffixInTable(this)
@@ -139,7 +162,11 @@ classdef SBToolboxExporter <  ExportPanelController
                             for subgroupElement = 1 : numel(data{group}{subgroup})
                                 [treatmentsOfWell, concentrationsOfWell] = this.experiment.getTreatmentsOfWell(this.groups{group}{subgroup}{subgroupElement}, 1);
                                 for treatment = 1 : numel(treatments)
-                                    exportData{group}{subgroup}.initialConditions{treatment} = [this.experimentParamsNames{treatment},'(0) = ',num2str(concentrationsOfWell{treatment})];
+                                    if strcmp(this.experimentStateOrParam{treatment}, 'state')
+                                        exportData{group}{subgroup}.initialConditions{treatment} = [this.experimentParamsNames{treatment},'(0) = ',num2str(concentrationsOfWell{treatment})];
+                                    elseif strcmp(this.experimentStateOrParam{treatment}, 'param')
+                                        exportData{group}{subgroup}.initialConditions{treatment} = [this.experimentParamsNames{treatment},' = ',num2str(concentrationsOfWell{treatment})];
+                                    end                                                                      
                                 end
                             end 
                         end
@@ -165,7 +192,11 @@ classdef SBToolboxExporter <  ExportPanelController
                                 
                                 [treatmentsOfWell, concentrationsOfWell] = this.experiment.getTreatmentsOfWell(this.groups{group}{subgroup}{subgroupElement}, 1);
                                 for treatment = 1 : numel(treatments)
-                                    exportData{group}{subgroup}{1}.initialConditions{treatment} = [this.experimentParamsNames{treatment},'(0) = ',num2str(concentrationsOfWell{treatment})];
+                                    if strcmp(this.experimentStateOrParam{treatment}, 'state')
+                                        exportData{group}{subgroup}{1}.initialConditions{treatment} = [this.experimentParamsNames{treatment},'(0) = ',num2str(concentrationsOfWell{treatment})];
+                                    elseif strcmp(this.experimentStateOrParam{treatment}, 'param')
+                                        exportData{group}{subgroup}{1}.initialConditions{treatment} = [this.experimentParamsNames{treatment},' = ',num2str(concentrationsOfWell{treatment})];
+                                    end 
                                 end                            
                             end
                         end
@@ -207,7 +238,7 @@ classdef SBToolboxExporter <  ExportPanelController
                     initialConditions = this.outputTableStruct{group}{subgroup}.initialConditions;
                     representingWellIndex = this.experiment.getIndexOfUsedWell(this.groups{group}{subgroup}{1}); 
                     concentrationChangeEvent = this.experiment.getConcentrationChangeEvents();
-                    expFileWriter(this.outputTableStruct{group}{subgroup}.path, initialConditions, representingWellIndex, concentrationChangeEvent, eventTimes, this.experimentParamsNames, outputFilenameEXP)
+                    expFileWriter(this.outputTableStruct{group}{subgroup}.path, initialConditions, representingWellIndex, concentrationChangeEvent, eventTimes, this.experimentParamsNames, this.experimentStateOrParam, outputFilenameEXP)
                     xlswrite(outputFilenameMIDAS, this.outputTableStruct{group}{subgroup}.SBTable);
                 end
             end

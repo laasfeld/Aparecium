@@ -908,6 +908,7 @@ function parameterNameTable_CellEditCallback(hObject, eventdata, handles)
 %	Error: error string when failed to convert EditData to appropriate value for Data
 % handles    structure with handles and user data (see GUIDATA)
 handles.SBExporter.getNewExperimentParamsNames();
+handles.SBExporter.getNewExperimentStateOrParam();
 applyFormula_Callback(hObject, eventdata, handles);
 guidata(hObject, handles);
 
