@@ -25,7 +25,7 @@ function varargout = ExportTools(varargin)
 
 % Edit the above text to modify the response to help ExportTools
 
-% Last Modified by GUIDE v2.5 21-Aug-2018 17:58:24
+% Last Modified by GUIDE v2.5 03-Oct-2018 20:00:16
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
@@ -414,11 +414,25 @@ updateFormulaList(handles);
 guidata(hObject, handles);
 
 function handles = updateFormulaList( handles)
+
+channelNames = handles.apareciumExperimentInput.getChannelNames();
+for formulaIndex = 1 : numel(handles.activeFormula)
+    channelNames = [GetFunctionOutputArguments(channelNames, handles.activeFormula{formulaIndex}.acronyme), channelNames];  
+end
+set(handles.SBIncludedMeasurements, 'String', channelNames);
+
 activeFormulaAcronymes{1} = '';%in case there are no formulae
 for formulaIndex = 1 : numel(handles.activeFormula)
    activeFormulaAcronymes{formulaIndex} = handles.activeFormula{formulaIndex}.acronyme;
 end
+
 set(handles.formulaListBox, 'String', activeFormulaAcronymes);
+[warnMsg, warnId] = lastwarn;
+if strcmp(warnId, 'MATLAB:hg:uicontrol:ValueMustBeWithinStringRange')
+    set(handles.SBIncludedMeasurements, 'Value', 1);
+end
+
+
 selectedLines = get(handles.formulaListBox, 'Value');
 contents = get(handles.formulaListBox, 'String');
 if isequal(numel(selectedLines), 1) 
@@ -478,7 +492,7 @@ function customFormula_Callback(hObject, eventdata, handles)
 channelNames = handles.apareciumExperimentInput.getChannelNames();
 acronyme = '';
 for formulaIndex = 1 : numel(handles.activeFormula)
-    [channelNames] = GetFunctionOutputArguments( channelNames, handles.activeFormula{formulaIndex}.acronyme);  
+    channelNames = [GetFunctionOutputArguments(channelNames, handles.activeFormula{formulaIndex}.acronyme), channelNames];  
 end
 [formula, acronyme] = calc(channelNames);
 if isequal(strcmp(formula, ''), 0) && isequal(strcmp(acronyme, ''), 0) 
@@ -707,7 +721,12 @@ set(handles.tableConfigurationChooser, 'enable', 'on');
 
 calculationMethod.addFormulae(handles.activeFormula);
 handles.SBExporter.setCalculationMethod(calculationMethod);
-handles.SBExporter.calculateNewTable(handles.SBCalcMode, handles.activeFormula{end}.acronyme);
+
+possibleVariables = get(handles.SBIncludedMeasurements, 'String');
+chosenVariables = get(handles.SBIncludedMeasurements, 'Value');
+outputVariables = possibleVariables(chosenVariables);
+
+handles.SBExporter.calculateNewTable(handles.SBCalcMode, outputVariables);
 set(handles.chooseSBGroup, 'String', handles.apareciumExperimentInput.getGroups());
 handles.SBExporter.showTableData(1, 2);
 subgroupNames = handles.SBExporter.getSubgroupNamesOfGroup(1);
@@ -2256,3 +2275,28 @@ function commonNameSuffix_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on selection change in SBIncludedMeasurements.
+function SBIncludedMeasurements_Callback(hObject, eventdata, handles)
+% hObject    handle to SBIncludedMeasurements (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns SBIncludedMeasurements contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from SBIncludedMeasurements
+applyFormula_Callback(hObject, eventdata, handles);
+
+% --- Executes during object creation, after setting all properties.
+function SBIncludedMeasurements_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to SBIncludedMeasurements (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: listbox controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+set(hObject, 'max', 2);% this allows selection of multiple lines
+guidata(hObject, handles);

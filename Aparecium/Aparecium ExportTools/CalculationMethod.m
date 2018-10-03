@@ -47,7 +47,8 @@ classdef CalculationMethod < handle
                        for group = 1 : numel(this.groups)
                            for subgroup = numel(this.groups{group}): -1 : this.subgroupStartValue
                               for well = 1 : numel(this.groups{group}{subgroup})
-                                  for channel = 1 : numel(this.channelNames)
+                                  insertionStructure = cell(0,0);
+                                  for channel = numel(this.channelNames):-1:1
                                      
                                      valuesToBeBlanked = this.measurementStructure{group}{subgroup}{well}{channel};
                                      for blankWell = 1 : numel(this.measurementStructure{group}{1})
@@ -55,23 +56,26 @@ classdef CalculationMethod < handle
                                      end
                                      if exist('blankValues', 'var')
                                         formula = [functionName, '(valuesToBeBlanked, blankValues)'];
-                                        resultStructure{group}{subgroup}{well}{channel} = eval(formula);
+                                        %resultStructure{group}{subgroup}{well}{channel} = eval(formula);
+                                        insertionStructure = [eval(formula),insertionStructure];
+                                        %this.measurementStructure{group}{subgroup}{well} = [eval(formula), this.measurementStructure{group}{subgroup}{well}];
                                      else
                                          errordlg('One of the groups had no blank value. Cannot perform blank correction!')
                                          error('One of the groups had no blank value. Cannot perform blank correction!')
                                      end
                                   end
+                                  this.measurementStructure{group}{subgroup}{well} = [insertionStructure, this.measurementStructure{group}{subgroup}{well}];
                               end
                            end
                        end 
-                       this.measurementStructure = resultStructure;
+                       %this.measurementStructure = resultStructure;
                    elseif strcmp(acronyme, 'Blank normalize')
                        resultStructure = cell(numel(this.groups), 1);
                        warningDisplayed = 0;
                        for group = 1 : numel(this.groups)
                            for subgroup = this.subgroupStartValue : numel(this.groups{group})
                               for well = 1 : numel(this.groups{group}{subgroup})
-                                  for channel = 1 : numel(this.channelNames)
+                                  for channel = numel(this.channelNames):-1:1
                                      blankValues = [];
                                      if ~isempty(this.measurementStructure{group}{1})
                                          valuesToBeBlanked = this.measurementStructure{group}{subgroup}{well}{channel};
@@ -80,7 +84,8 @@ classdef CalculationMethod < handle
                                          end
                                          if exist('blankValues', 'var')
                                             formula = [functionName, '(valuesToBeBlanked, blankValues)'];
-                                            resultStructure{group}{subgroup}{well}{channel} = eval(formula);
+                                            %resultStructure{group}{subgroup}{well}{channel} = eval(formula);
+                                            this.measurementStructure{group}{subgroup}{well} = [eval(formula), this.measurementStructure{group}{subgroup}{well}];
                                          else                                         
                                              errordlg('One of the groups had no blank value. Cannot perform blank normalization!')
                                              error('One of the groups had no blank value. Cannot perform blank normalization!')
@@ -96,7 +101,7 @@ classdef CalculationMethod < handle
                               end
                            end        
                        end 
-                       this.measurementStructure = resultStructure;
+                       %this.measurementStructure = resultStructure;
                        
                   elseif strcmp(acronyme, 'Timewise blank normalize')
                        resultStructure = cell(numel(this.groups), 1); 
@@ -105,14 +110,15 @@ classdef CalculationMethod < handle
                            for subgroup = this.subgroupStartValue : numel(this.groups{group})
                               if ~isempty(this.measurementStructure{group}{subgroup})
                                   for well = 1 : numel(this.groups{group}{subgroup})
-                                      for channel = 1 : numel(this.channelNames)
+                                      for channel = numel(this.channelNames):-1:1
                                          blankValues = [];
 
                                          valuesToBeBlanked = this.measurementStructure{group}{subgroup}{well}{channel};
                                          blankValues =  valuesToBeBlanked(this.timewiseBlankStructure{group}{subgroup}(well, :));
                                          if exist('blankValues', 'var')
                                             formula = [functionName, '(valuesToBeBlanked, blankValues)'];
-                                            resultStructure{group}{subgroup}{well}{channel} = eval(formula);
+                                            %resultStructure{group}{subgroup}{well}{channel} = eval(formula);
+                                            this.measurementStructure{group}{subgroup}{well} = [eval(formula), this.measurementStructure{group}{subgroup}{well}]; 
                                          else                                         
                                              errordlg('One of the wells had no blank value. Cannot perform timewise blank normalization!')
                                              error('One of the wells had no blank value. Cannot perform timewise blank normalization!')
@@ -124,23 +130,39 @@ classdef CalculationMethod < handle
                               end
                            end        
                        end 
-                       this.measurementStructure = resultStructure;
+                       %this.measurementStructure = resultStructure;
                        
                    elseif strcmp(acronyme, 'FA') || strcmp(acronyme, 'TFI')
+                       
+                       blankHasBeenCalculated = 0;
+                       for formulaIndex = 1 : calculationStep
+                          if strcmp(this.formulae{formulaIndex}.acronyme, 'Blank correct')
+                              blankHasBeenCalculated = 1;
+                          end
+                       end
+                       
+                       if isequal(blankHasBeenCalculated, 1)
+                           blankedChannelNames = GetFunctionOutputArguments(experiment.getChannelNames(), 'Blank correct');
+                       else
+                           
+                       end
+                       
+                       
+                       
                        resultStructure = cell(numel(this.groups), 1);                     
                        for group = 1 : numel(this.groups)
                            resultStructure{group} = cell(numel(this.groups{group}), 1);
                            for subgroup = this.subgroupStartValue : numel(this.groups{group})
                               resultStructure{group}{subgroup} = cell(numel(this.groups{group}{subgroup}), 1); 
                               for well = 1 : numel(this.groups{group}{subgroup})                 
-                                 parallelIntensity = this.measurementStructure{group}{subgroup}{well}{1}; % ignore warning, it is used in eval
-                                 perpendicularIntensity = this.measurementStructure{group}{subgroup}{well}{2}; % ignore warning, it is used in eval
+                                 parallelIntensity = this.measurementStructure{group}{subgroup}{well}{end-1}; % ignore warning, it is used in eval
+                                 perpendicularIntensity = this.measurementStructure{group}{subgroup}{well}{end}; % ignore warning, it is used in eval
                                  formula = [functionName, '(parallelIntensity, perpendicularIntensity)'];
-                                 resultStructure{group}{subgroup}{well}{1} = eval(formula);
+                                 %this.measurementStructure{group}{subgroup}{well}{end+1} = eval(formula);
+                                 this.measurementStructure{group}{subgroup}{well} = [eval(formula), this.measurementStructure{group}{subgroup}{well}]; 
                               end
                           end
-                       end    
-                       this.measurementStructure = resultStructure;
+                       end                           
                        %this.channelNames = GetFunctionOutputArguments(this.channelNames, acronyme);
                    elseif strcmp(acronyme, 'Timewise blank correction')
                        resultStructure = cell(numel(this.groups), 1); 
@@ -149,14 +171,15 @@ classdef CalculationMethod < handle
                            for subgroup = this.subgroupStartValue : numel(this.groups{group})
                               if ~isempty(this.measurementStructure{group}{subgroup})
                                   for well = 1 : numel(this.groups{group}{subgroup})
-                                      for channel = 1 : numel(this.channelNames)
+                                      for channel = numel(this.channelNames):-1:1
                                          blankValues = [];
 
                                          valuesToBeBlanked = this.measurementStructure{group}{subgroup}{well}{channel};
                                          blankValues =  valuesToBeBlanked(this.timewiseBlankStructure{group}{subgroup}(well, :));
                                          if exist('blankValues', 'var')
                                             formula = [functionName, '(valuesToBeBlanked, blankValues)'];
-                                            resultStructure{group}{subgroup}{well}{channel} = eval(formula);
+                                            %resultStructure{group}{subgroup}{well}{channel} = eval(formula);
+                                            this.measurementStructure{group}{subgroup}{well} = [eval(formula), this.measurementStructure{group}{subgroup}{well}]; 
                                          else                                         
                                              errordlg('One of the wells had no blank value. Cannot perform timewise blank correction!')
                                              error('One of the wells had no blank value. Cannot perform timewise blank correction!')
@@ -168,7 +191,7 @@ classdef CalculationMethod < handle
                               end
                            end        
                        end 
-                       this.measurementStructure = resultStructure;
+                       %this.measurementStructure = resultStructure;
                    else
                        [usedChannels, usedChannelNames] = this.findUsedChannels(calculationStep);
                        %replace spaces since spaces will break inline and
@@ -187,17 +210,18 @@ classdef CalculationMethod < handle
                                     inlineInput{channel} = this.measurementStructure{group}{subgroup}{well}{usedChannels(channel)};
                                  end
                                  try
-                                    resultStructure{group}{subgroup}{well}{1} = f(inlineInput{:});
+                                    this.measurementStructure{group}{subgroup}{well} = [f(inlineInput{:}), this.measurementStructure{group}{subgroup}{well}]; 
+                                    %resultStructure{group}{subgroup}{well}{1} = f(inlineInput{:});
                                  catch
                                      'Error in calculation';
                                  end
                               end
                           end
                        end
-                       this.measurementStructure = resultStructure;
+                       %this.measurementStructure = resultStructure;
                        %this.channelNames = GetFunctionOutputArguments(this.channelNames, acronyme);
                    end  
-                   this.channelNames = GetFunctionOutputArguments(this.channelNames, acronyme);
+                   this.channelNames = [GetFunctionOutputArguments(this.channelNames, acronyme), this.channelNames];
                 end
             
             else
@@ -268,6 +292,7 @@ classdef CalculationMethod < handle
         end
         
         function generateMeasurementsStructure(this, experiment)
+            this.measurementStructure = [];
             for group = 1 : numel(this.groups)
                 for subgroup = 1 : numel(this.groups{group}) % NB this must start from 1 and not from this.subgroupStartValue since otherwise blanks are not correctly calculated
                     for well = 1 : numel(this.groups{group}{subgroup})

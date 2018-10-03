@@ -118,7 +118,11 @@ classdef SBToolboxExporter <  ExportPanelController
            channelNames = this.calculationMethod.getChannelNames();
            data = this.mergeOrAverage(data, exportMode);
            this.data = data;
-           this.outputValue = outputVariable;
+           this.outputValue = outputVariable{1};
+           for i = 2 : numel(outputVariable)
+              this.outputValue = [this.outputValue, '_', outputVariable{i}]; 
+           end
+           
            this.convertDataToSBToolboxFormat(data, this.groups, channelNames, outputVariable, exportMode);
 
         end
@@ -133,71 +137,77 @@ classdef SBToolboxExporter <  ExportPanelController
             timePoints = this.timeController.getCycleTimes();
             switch exportMode
                 case 'Average'
-                    for group = 1 : size(data, 2)
+                    for group = 1 : numel(data)
                         for subgroup = this.subgroupStartValue : numel(data{group})
-                            measurements = [];
-                            for subgroupElement = 1 : numel(data{group}{subgroup})
-                                measurements = [measurements, cell2mat(data{group}{subgroup}{subgroupElement})];
-                            end
-                            cycles = this.experiment.getNumberOfCycles();
-                            exportData{group}{subgroup}.minimum = min(measurements', [], 1)';
-                            exportData{group}{subgroup}.maximum = max(measurements', [], 1)';
-                            exportData{group}{subgroup}.average = mean(measurements', 1)';
-                            %exportData{group}{subgroup}.timePoints = this.experiment.getCycleTimeMoments();
-                            time = [];
-                            if this.experiment.getFastKinetics()
+                            
+                            for channel = 1 : numel(data{group}{subgroup}{1})
+                                measurements = [];
                                 for subgroupElement = 1 : numel(data{group}{subgroup})
-                                    wellIndex = this.experiment.getIndexOfUsedWell(this.groups{group}{subgroup}{subgroupElement}); 
-                                    time = [time; timePoints(wellIndex, :)];
+                                    measurements = [measurements, data{group}{subgroup}{subgroupElement}{channel}];
                                 end
-                            else
+                                cycles = this.experiment.getNumberOfCycles();
+                                exportData{group}{subgroup}.minimum{channel} = min(measurements', [], 1)';
+                                exportData{group}{subgroup}.maximum{channel} = max(measurements', [], 1)';
+                                exportData{group}{subgroup}.average{channel} = mean(measurements', 1)';
+                                %exportData{group}{subgroup}.timePoints = this.experiment.getCycleTimeMoments();
+                                time = [];
+                                if this.experiment.getFastKinetics()
+                                    for subgroupElement = 1 : numel(data{group}{subgroup})
+                                        wellIndex = this.experiment.getIndexOfUsedWell(this.groups{group}{subgroup}{subgroupElement}); 
+                                        time = [time; timePoints(wellIndex, :)];
+                                    end
+                                else
+                                    for subgroupElement = 1 : numel(data{group}{subgroup})
+                                        %wellIndex = this.experiment.getIndexOfUsedWell(this.groups{group}{subgroup}{subgroupElement}); 
+                                        time = [time; timePoints(1, :)];
+                                    end 
+
+                                end
+                                exportData{group}{subgroup}.timePoints = mean(time, 1);
+                                treatments = this.experiment.getTreatments();
                                 for subgroupElement = 1 : numel(data{group}{subgroup})
-                                    %wellIndex = this.experiment.getIndexOfUsedWell(this.groups{group}{subgroup}{subgroupElement}); 
-                                    time = [time; timePoints(1, :)];
-                                end 
-                                
-                            end
-                            exportData{group}{subgroup}.timePoints = mean(time, 1);
-                            treatments = this.experiment.getTreatments();
-                            for subgroupElement = 1 : numel(data{group}{subgroup})
-                                [treatmentsOfWell, concentrationsOfWell] = this.experiment.getTreatmentsOfWell(this.groups{group}{subgroup}{subgroupElement}, 1);
-                                for treatment = 1 : numel(treatments)
-                                    if strcmp(this.experimentStateOrParam{treatment}, 'state')
-                                        exportData{group}{subgroup}.initialConditions{treatment} = [this.experimentParamsNames{treatment},'(0) = ',num2str(concentrationsOfWell{treatment})];
-                                    elseif strcmp(this.experimentStateOrParam{treatment}, 'param')
-                                        exportData{group}{subgroup}.initialConditions{treatment} = [this.experimentParamsNames{treatment},' = ',num2str(concentrationsOfWell{treatment})];
-                                    end                                                                      
+                                    [treatmentsOfWell, concentrationsOfWell] = this.experiment.getTreatmentsOfWell(this.groups{group}{subgroup}{subgroupElement}, 1);
+                                    for treatment = 1 : numel(treatments)
+                                        if strcmp(this.experimentStateOrParam{treatment}, 'state')
+                                            exportData{group}{subgroup}.initialConditions{treatment} = [this.experimentParamsNames{treatment},'(0) = ',num2str(concentrationsOfWell{treatment})];
+                                        elseif strcmp(this.experimentStateOrParam{treatment}, 'param')
+                                            exportData{group}{subgroup}.initialConditions{treatment} = [this.experimentParamsNames{treatment},' = ',num2str(concentrationsOfWell{treatment})];
+                                        end                                                                      
+                                    end
                                 end
-                            end 
+                            end
                         end
                     end
                 case 'Merge'
-                    for group = 1 : size(data, 2)
+                    for group = 1 : numel(data)
                         for subgroup = this.subgroupStartValue : numel(data{group})
-                            measurements = [];
-                            for subgroupElement = 1 : numel(data{group}{subgroup})
-                                measurements = cell2mat(data{group}{subgroup}{subgroupElement});
-                                cycles = this.experiment.getNumberOfCycles();
-                                exportData{group}{subgroup}{subgroupElement}.minimum = measurements;
-                                exportData{group}{subgroup}{subgroupElement}.maximum = measurements;
-                                exportData{group}{subgroup}{subgroupElement}.average = measurements;
-                                %exportData{group}{subgroup}.timePoints = this.experiment.getCycleTimeMoments();
-                                wellIndex = this.experiment.getIndexOfUsedWell(this.groups{group}{subgroup}{subgroupElement}); 
-                                if this.experiment.getFastKinetics()
-                                    exportData{group}{subgroup}{subgroupElement}.timePoints = timePoints(wellIndex, :);
-                                else
-                                    exportData{group}{subgroup}{subgroupElement}.timePoints = timePoints(1, :);
+                            
+                            for channel = 1 : numel(data{group}{subgroup}{1})
+                                measurements = [];
+                                for subgroupElement = 1 : numel(data{group}{subgroup})
+                                    measurements = data{group}{subgroup}{subgroupElement}{channel};
+                                    cycles = this.experiment.getNumberOfCycles();
+                                    exportData{group}{subgroup}{subgroupElement}.minimum{channel} = measurements;
+                                    exportData{group}{subgroup}{subgroupElement}.maximum{channel} = measurements;
+                                    exportData{group}{subgroup}{subgroupElement}.average{channel} = measurements;
+                                    %exportData{group}{subgroup}.timePoints = this.experiment.getCycleTimeMoments();
+                                    wellIndex = this.experiment.getIndexOfUsedWell(this.groups{group}{subgroup}{subgroupElement}); 
+                                    if this.experiment.getFastKinetics()
+                                        exportData{group}{subgroup}{subgroupElement}.timePoints = timePoints(wellIndex, :);
+                                    else
+                                        exportData{group}{subgroup}{subgroupElement}.timePoints = timePoints(1, :);
+                                    end
+                                    treatments = this.experiment.getTreatments();
+
+                                    [treatmentsOfWell, concentrationsOfWell] = this.experiment.getTreatmentsOfWell(this.groups{group}{subgroup}{subgroupElement}, 1);
+                                    for treatment = 1 : numel(treatments)
+                                        if strcmp(this.experimentStateOrParam{treatment}, 'state')
+                                            exportData{group}{subgroup}{1}.initialConditions{treatment} = [this.experimentParamsNames{treatment},'(0) = ',num2str(concentrationsOfWell{treatment})];
+                                        elseif strcmp(this.experimentStateOrParam{treatment}, 'param')
+                                            exportData{group}{subgroup}{1}.initialConditions{treatment} = [this.experimentParamsNames{treatment},' = ',num2str(concentrationsOfWell{treatment})];
+                                        end 
+                                    end                            
                                 end
-                                treatments = this.experiment.getTreatments();
-                                
-                                [treatmentsOfWell, concentrationsOfWell] = this.experiment.getTreatmentsOfWell(this.groups{group}{subgroup}{subgroupElement}, 1);
-                                for treatment = 1 : numel(treatments)
-                                    if strcmp(this.experimentStateOrParam{treatment}, 'state')
-                                        exportData{group}{subgroup}{1}.initialConditions{treatment} = [this.experimentParamsNames{treatment},'(0) = ',num2str(concentrationsOfWell{treatment})];
-                                    elseif strcmp(this.experimentStateOrParam{treatment}, 'param')
-                                        exportData{group}{subgroup}{1}.initialConditions{treatment} = [this.experimentParamsNames{treatment},' = ',num2str(concentrationsOfWell{treatment})];
-                                    end 
-                                end                            
                             end
                         end
                     end                
@@ -206,7 +216,7 @@ classdef SBToolboxExporter <  ExportPanelController
         
         function showTableData(this, group, subgroup)
             data = this.outputTableStruct{group}{subgroup}.SBTable;
-            set(this.tableHandle, 'Data', data, 'ColumnEditable', [false true true true true]);
+            set(this.tableHandle, 'Data', data, 'ColumnEditable', [false true(1,size(data, 2)-1)]);
         end
         
         function sendTableToWorkspace(this, group, subgroup)            
@@ -281,17 +291,31 @@ classdef SBToolboxExporter <  ExportPanelController
         function convertDataToSBToolboxFormat(this, data, groups, channelNames, outputValue, exportMode)
             groupNames = this.experiment.getGroups();
             fastKinetics = this.experiment.getFastKinetics();
+            requestedChannelIndices = [];
+            possibleChannelNames = this.calculationMethod.getChannelNames();
+            for index = 1 : numel(outputValue)
+               requestedChannelIndices(end + 1) = find(strcmp(possibleChannelNames, outputValue{index}) == 1);
+            end
+            
             for group = 1 : size(data, 2)
                 for subgroup = this.subgroupStartValue : numel(data{group})
                     this.outputTableStruct{group}{subgroup}.success = 0;
                     
-                    nameInfo = [outputValue,'_Group_',groupNames{group}, '_', this.subgroupNames{group}{subgroup}];
+                    nameInfo = outputValue{1};
+                    for i = 2 : numel(outputValue)
+                        nameInfo = [nameInfo,'_',outputValue{2}];
+                    end
+                    nameInfo = [nameInfo,'_Group_',groupNames{group}, '_', this.subgroupNames{group}{subgroup}];
                     
                     noteInfo={'no user defined notes'};
-                    componentNotes=[{'note for time'},{['note for ',outputValue]},{['note for ',outputValue,'+']},{['note for ',outputValue,'+']}];
-                    components=[{'time'},{outputValue},{[outputValue,'+']},{[outputValue,'-']}];
+                    componentNotes = {'note for time'};
+                    components = {'time'};
+                    for channelIndex = 1 : numel(outputValue)
+                        componentNotes=[componentNotes,{['note for ',outputValue{channelIndex}]},{['note for ',outputValue{channelIndex},'+']},{['note for ',outputValue{channelIndex},'+']}];
+                        components=[components, {outputValue{channelIndex}},{[outputValue{channelIndex},'+']},{[outputValue{channelIndex},'-']}];
+                    end
                     %components=[{strcat('time/', this.timeController.getTimeUnit())},{outputValue},{[outputValue,'+']},{[outputValue,'-']}];
-                    Header(4, 5) = {''};
+                    Header = cell(4, numel(components) + 1);
                     Header(1, 1) = {'Name'};
                     Header(1, 2) = {nameInfo};
                     Header(2, 1) = {'Notes'};
@@ -319,14 +343,19 @@ classdef SBToolboxExporter <  ExportPanelController
                         end
                         experimentData = cell(numberOfRows, 5);
                         experimentData(1,1) = {'Values'};
-                        for timeIndex = 1 : numberOfCycles; % for now, assume that all wells were measured for equal number of cycles
-                             for subgroupElement = 1 : numel(this.groups{group}{subgroup})
-                                row = row + 1;
-                                experimentData{row, 2} = data{group}{subgroup}{subgroupElement}.timePoints(cyclesInUse(timeIndex));
-                                experimentData{row, 3} = data{group}{subgroup}{subgroupElement}.average(cyclesInUse(timeIndex));
-                                experimentData{row, 4} = data{group}{subgroup}{subgroupElement}.maximum(cyclesInUse(timeIndex));
-                                experimentData{row, 5} = data{group}{subgroup}{subgroupElement}.minimum(cyclesInUse(timeIndex)); 
-                             end
+                        for channelIndex = 1 : numel(outputValue)
+                            row = 0;
+                            for timeIndex = 1 : numberOfCycles; % for now, assume that all wells were measured for equal number of cycles
+                                 for subgroupElement = 1 : numel(this.groups{group}{subgroup})
+                                    row = row + 1;
+                                    if isequal(channelIndex, 1)
+                                        experimentData{row, 2} = data{group}{subgroup}{subgroupElement}.timePoints(cyclesInUse(timeIndex));
+                                    end
+                                    experimentData{row, (channelIndex - 1)*3+3} = data{group}{subgroup}{subgroupElement}.average{requestedChannelIndices(channelIndex)}(cyclesInUse(timeIndex));
+                                    experimentData{row, (channelIndex - 1)*3+4} = data{group}{subgroup}{subgroupElement}.maximum{requestedChannelIndices(channelIndex)}(cyclesInUse(timeIndex));
+                                    experimentData{row, (channelIndex - 1)*3+5} = data{group}{subgroup}{subgroupElement}.minimum{requestedChannelIndices(channelIndex)}(cyclesInUse(timeIndex)); 
+                                 end
+                            end
                         end
                     elseif isequal(exportMode, 'Average')
                         try
@@ -334,11 +363,16 @@ classdef SBToolboxExporter <  ExportPanelController
                             timepoints = numel(time);
                             experimentData = cell(numberOfCycles, 5);
                             experimentData(1,1) = {'Values'};
-                            for timeIndex = 1 : numberOfCycles
-                                experimentData(timeIndex,2) = {time(cyclesInUse(timeIndex))};
-                                experimentData(timeIndex,3) = {data{group}{subgroup}.average(cyclesInUse(timeIndex))};
-                                experimentData(timeIndex,4) = {data{group}{subgroup}.maximum(cyclesInUse(timeIndex))};
-                                experimentData(timeIndex,5) = {data{group}{subgroup}.minimum(cyclesInUse(timeIndex))};           
+                            for channelIndex = 1 : numel(outputValue)
+                                for timeIndex = 1 : numberOfCycles
+                                    if isequal(channelIndex, 1)
+                                        experimentData(timeIndex,2) = {time(cyclesInUse(timeIndex))};
+                                    end
+                                    
+                                    experimentData(timeIndex,(channelIndex - 1)*3+3) = {data{group}{subgroup}.average{requestedChannelIndices(channelIndex)}(cyclesInUse(timeIndex))};
+                                    experimentData(timeIndex,(channelIndex - 1)*3+4) = {data{group}{subgroup}.maximum{requestedChannelIndices(channelIndex)}(cyclesInUse(timeIndex))};
+                                    experimentData(timeIndex,(channelIndex - 1)*3+5) = {data{group}{subgroup}.minimum{requestedChannelIndices(channelIndex)}(cyclesInUse(timeIndex))};   
+                                end
                             end
                         catch MException
                            disp(['Could not create table for group ', num2str(group),  ' ', this.subgroupNames{group}{subgroup}]);   
@@ -346,7 +380,7 @@ classdef SBToolboxExporter <  ExportPanelController
                     end
           
                     this.outputTableStruct{group}{subgroup}.SBTable = [Header;experimentData];
-                    this.outputTableStruct{group}{subgroup}.path = [this.prefix, outputValue,'_Group_',groupNames{group}, '_', this.subgroupNames{group}{subgroup}, this.suffix];
+                    this.outputTableStruct{group}{subgroup}.path = [this.prefix, nameInfo, this.suffix];
                     if isequal(exportMode, 'Merge')
                         this.outputTableStruct{group}{subgroup}.initialConditions = data{group}{subgroup}{1}.initialConditions;
                     elseif isequal(exportMode, 'Average')
