@@ -10,6 +10,7 @@ classdef ExportTimeMomentController < handle
         fastKinetics 
         timeUnitConversionConstant = 1;
         timeUnit = 's';
+        outputTimeUnitDropdownHandle
     end
     
     methods
@@ -23,6 +24,10 @@ classdef ExportTimeMomentController < handle
         
         function constant = getUnitConversionConstant(this)
             constant = this.timeUnitConversionConstant;
+        end
+        
+        function setOutputTimeUnitDrowdownHandle(this, outputTimeUnitDropdownHandle)
+           this.outputTimeUnitDropdownHandle = outputTimeUnitDropdownHandle;
         end
         
         function setTimeUnit(this, timeUnit)
@@ -67,6 +72,31 @@ classdef ExportTimeMomentController < handle
            this.listBoxHandle = listBoxHandle;
            this.cycleTimes = this.experiment.getCycleTimeMoments()*this.timeUnitConversionConstant;
            this.updateTable();
+           set(this.listBoxHandle, 'Value', 1);
+        end
+        
+        function changeOutputTimeUnitDropdownHandle(this, outputTimeUnitDropdownHandle)
+           try
+                oldValue = get(this.outputTimeUnitDropdownHandle, 'Value');
+           catch MException
+               if strcmp(MException.message, 'Invalid or deleted object.') % switching from Advanced controller to ExportTools. Rely on the unit value instead
+                   switch this.timeUnit
+                        case 'ms'
+                            oldValue = 1;
+                        case 's'
+                            oldValue = 2;
+                        case 'min'
+                            oldValue = 3;
+                        case 'h'
+                            oldValue = 4;
+                   end                  
+               else
+                   error('Could not change the time unit value');
+                   errordlg('Could not change the time unit value');
+               end
+           end
+           this.outputTimeUnitDropdownHandle = outputTimeUnitDropdownHandle;
+           set(this.outputTimeUnitDropdownHandle, 'Value', oldValue);
         end
         
         function updateToFastKinetics(this)

@@ -69,6 +69,7 @@ handles.loadingBar = loadingBar();
     handles = MidasToApareciumExperimentInput(handles.midasTableController, handles);
     handles.exportTimeMomentController = ExportTimeMomentController(handles.apareciumExperimentInput);
     handles.exportTimeMomentController.setCycleListHandle(handles.timeRemoval);
+    handles.exportTimeMomentController.setOutputTimeUnitDrowdownHandle(handles.outputTimeUnitDropdown);
 %catch
     %warndlg('Error loading MIDAS file to export tools. Check if the file is in correct format or consult with Aparecium developers.');
 %end
@@ -510,8 +511,17 @@ function loadFormulaFile_Callback(hObject, eventdata, handles)
 fileChooser = FileChooser;
 [fileName, filePath] = fileChooser.chooseFCFFile();
 load([filePath, fileName], 'activeFormula', 'channelNames');
-if exist('activeFormula', 'var') && exist('channelNames', 'var') 
-    channelNames = removeRedundantChannels(channelNames, activeFormula{1}.formula);
+if exist('activeFormula', 'var') && exist('channelNames', 'var')
+    try
+        channelNames = removeRedundantChannels(channelNames, activeFormula{1}.formula);
+    catch MException
+        if strcmp(MException.message,'Reference to non-existent field ''formula''.')
+            % its ok, first formula is blank 
+        else
+           % add throw error code here 
+        end
+        
+    end
     if isequal(channelNames, handles.apareciumExperimentInput.getChannelNames());
         handles.activeFormula = activeFormula;
         updateFormulaList(handles);
@@ -1894,6 +1904,7 @@ function pushbutton37_Callback(hObject, eventdata, handles)
 
 AdvancedTimeChooser(handles.exportTimeMomentController);
 handles.exportTimeMomentController.changeCycleListHandle(handles.timeRemoval);
+handles.exportTimeMomentController.changeOutputTimeUnitDropdownHandle(handles.outputTimeUnitDropdown);
 guidata(hObject, handles);
 
 % --- Executes on selection change in popupmenu10.

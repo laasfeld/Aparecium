@@ -60,6 +60,7 @@ handles.startingIndex = 1;
 handles.interval = 1;
 handles.exportTimeMomentController = exportTimeMomentController;
 handles.exportTimeMomentController.changeCycleListHandle(handles.timeRemoval);
+handles.exportTimeMomentController.changeOutputTimeUnitDropdownHandle(handles.outputTimeUnitDropdown);
 handles.exportTimeMomentController.updateTable();
 
 handles.startingIndex = 1;
