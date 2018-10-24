@@ -868,13 +868,21 @@ classdef ExcelTableController < ExportPanelController
                             if isequal(timeIndex, 1)
                                 Table(timeIndex).XColumn.Subcolumn(subgroup - (this.subgroupStartValue - 1)).d = concentrationList(subgroup - (this.subgroupStartValue - 1));
                             end
-
-                            for subgroupElement = 1 : size(groups{group}{subgroup}, 1)
+                            
+                            maxNumberOfSubgroupElements = -1; % consider turning this into a separate function because it is repeating, possibly to ExportPanelController
+                            for groupIndex = 1 : numel(groups)
+                                maxNumberOfSubgroupElements = max(max(cellfun(@numel,data{groupIndex})), maxNumberOfSubgroupElements); 
+                            end
+                            
+                            for subgroupElement = 1 : maxNumberOfSubgroupElements
                                 if isequal(subgroupElement, 1)
                                     Table(timeIndex).YColumn(subgroupElement).Title = timeMoments(cyclesInUse(timeIndex));
                                 end
-
-                                Table(timeIndex).YColumn(subgroupElement).Subcolumn(subgroup - (this.subgroupStartValue - 1)).d = data{group}{subgroup}{subgroupElement}{1}(cyclesInUse(timeIndex));
+                                if subgroupElement <= size(groups{group}{subgroup}, 1)
+                                    Table(timeIndex).YColumn(subgroupElement).Subcolumn(subgroup - (this.subgroupStartValue - 1)).d = data{group}{subgroup}{subgroupElement}{1}(cyclesInUse(timeIndex));
+                                else
+                                    Table(timeIndex).YColumn(subgroupElement).Subcolumn(subgroup - (this.subgroupStartValue - 1)).d = NaN;
+                                end
                             end
 
                         end
