@@ -57,8 +57,13 @@ classdef ICSEImageAnalyzer < ImageAnalyzer
                 binaryImageCalculator.calculateImageParameters(bw2, parametersToCalculate, functionHandle);
                 resultStructure = binaryImageCalculator.resultStructure;
                 resultStructure.imageTime = imageTime;
-                resultStructure.imageWidthMicrons = imageWidthMicrons;
-                resultStructure.imageHeightMicrons = imageHeightMicrons;
+                try
+                    resultStructure.imageWidthMicrons = imageWidthMicrons;
+                    resultStructure.imageHeightMicrons = imageHeightMicrons;
+                catch
+                    resultStructure.imageWidthMicrons = nan;
+                    resultStructure.imageHeightMicrons = nan;
+                end
                 resultStructure.imageWidthPixels = size(I_org, 2);
                 resultStructure.imageHeightPixels = size(I_org, 1);
                 clear image I_org1 I_org
