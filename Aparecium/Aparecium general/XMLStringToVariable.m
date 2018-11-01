@@ -6,10 +6,22 @@ options.store_class = 0;
 options.store_size = 0;
 d = dir('ApareciumTempXMLFile.xml');
 if isequal(numel(d), 0)
-    fileID = fopen('ApareciumTempXMLFile.xml','w');
-    fprintf(fileID, regexprep(regexprep(variable, '%', '%%'), '\\', '\\\'));
-    fclose(fileID);
-    xmlStruct = tinyxml2_wrap('load', 'ApareciumTempXMLFile.xml');
+    try
+        fileID = fopen('ApareciumTempXMLFile.xml','w');
+        fprintf(fileID, regexprep(regexprep(variable, '%', '%%'), '\\', '\\\'));
+        fclose(fileID);
+        xmlStruct = tinyxml2_wrap('load', 'ApareciumTempXMLFile.xml');
+        delete('ApareciumTempXMLFile.xml');
+    catch MException
+        delete('ApareciumTempXMLFile.xml');
+        try
+            xmlStruct = XMLStringToVariable(variable);
+        catch MException
+            errordlg('Something went wrong with xml file reading. Try deleting ApareciumTempXMLFile.xml manually and try again')
+        end
+    end
+else
+    pause(1) % if some other process is accessing the file give it time to use it
     delete('ApareciumTempXMLFile.xml');
-end
+    xmlStruct = XMLStringToVariable(variable);
 end

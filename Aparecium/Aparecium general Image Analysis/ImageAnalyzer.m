@@ -630,7 +630,7 @@ classdef ImageAnalyzer < handle
             imageProcessingParams = this.imageProcessingParameters;
             timeParameters.totalTimeElapsed = this.totalTimeElapsed;
             timeParameters.analysisStartTime = this.analysisStartTime;
-            figHandles = this.figureHandles;
+            figHandles = []%this.figureHandles;
             nameArrayOfWell = nameArray(imagesOfWell);
             ICSEOrMembrane = this.ICSEOrMembrane;
             qualityMasks = [];
