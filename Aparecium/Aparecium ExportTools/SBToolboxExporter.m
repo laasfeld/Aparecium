@@ -342,7 +342,6 @@ classdef SBToolboxExporter <  ExportPanelController
                             end
                         end
                         experimentData = cell(numberOfRows, 5);
-                        experimentData(1,1) = {'Values'};
                         for channelIndex = 1 : numel(outputValue)
                             row = 0;
                             for timeIndex = 1 : numberOfCycles; % for now, assume that all wells were measured for equal number of cycles
@@ -378,6 +377,11 @@ classdef SBToolboxExporter <  ExportPanelController
                            disp(['Could not create table for group ', num2str(group),  ' ', this.subgroupNames{group}{subgroup}]);   
                         end
                     end
+                    
+                    % loop and remove all measurement times where all
+                    % measurement values are NaN
+                    experimentData(isnan(nansum(cell2mat(experimentData(:, 3:end)), 2)), :) = [];
+                    experimentData(1,1) = {'Values'};
           
                     this.outputTableStruct{group}{subgroup}.SBTable = [Header;experimentData];
                     this.outputTableStruct{group}{subgroup}.path = [this.prefix, nameInfo, this.suffix];
