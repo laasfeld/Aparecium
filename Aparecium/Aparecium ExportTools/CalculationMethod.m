@@ -143,20 +143,25 @@ classdef CalculationMethod < handle
                        
                        if isequal(blankHasBeenCalculated, 1)
                            blankedChannelNames = GetFunctionOutputArguments(experiment.getChannelNames(), 'Blank correct');
-                       else
-                           
+                           parallelIndex = find(strcmp(this.channelNames, blankedChannelNames{1}) == 1);
+                           perpIndex = find(strcmp(this.channelNames, blankedChannelNames{2}) == 1);
                        end
                        
-                       
+                                          
                        
                        resultStructure = cell(numel(this.groups), 1);                     
                        for group = 1 : numel(this.groups)
                            resultStructure{group} = cell(numel(this.groups{group}), 1);
                            for subgroup = this.subgroupStartValue : numel(this.groups{group})
                               resultStructure{group}{subgroup} = cell(numel(this.groups{group}{subgroup}), 1); 
-                              for well = 1 : numel(this.groups{group}{subgroup})                 
-                                 parallelIntensity = this.measurementStructure{group}{subgroup}{well}{end-1}; % ignore warning, it is used in eval
-                                 perpendicularIntensity = this.measurementStructure{group}{subgroup}{well}{end}; % ignore warning, it is used in eval
+                              for well = 1 : numel(this.groups{group}{subgroup}) 
+                                 if isequal(blankHasBeenCalculated, 0)
+                                    parallelIntensity = this.measurementStructure{group}{subgroup}{well}{end-1}; % ignore warning, it is used in eval
+                                    perpendicularIntensity = this.measurementStructure{group}{subgroup}{well}{end}; % ignore warning, it is used in eval
+                                 else
+                                    parallelIntensity = this.measurementStructure{group}{subgroup}{well}{parallelIndex}; % ignore warning, it is used in eval
+                                    perpendicularIntensity = this.measurementStructure{group}{subgroup}{well}{perpIndex}; % ignore warning, it is used in eval
+                                 end
                                  formula = [functionName, '(parallelIntensity, perpendicularIntensity)'];
                                  %this.measurementStructure{group}{subgroup}{well}{end+1} = eval(formula);
                                  this.measurementStructure{group}{subgroup}{well} = [eval(formula), this.measurementStructure{group}{subgroup}{well}]; 
@@ -227,7 +232,7 @@ classdef CalculationMethod < handle
             else
                 warndlg('No formula chosen, calculations have not been performed, please enter a valid formula using the calculation formula panel');
             end
-            result = this.measurementStructure';
+            result = this.measurementStructure;
             groups = this.groups;
         end
         

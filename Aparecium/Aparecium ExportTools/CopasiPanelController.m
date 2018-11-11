@@ -49,6 +49,7 @@ classdef CopasiPanelController < ExportPanelController
         end
         
         function convertDataToCopasiFormat(this, data, groups, channelNames, outputValue, exportMode)
+            return % buggy, this function is turned off 24.10.2018
             finalTable = cell(1,1);
             rowCounter = 1;
             headerWritten = 0;
