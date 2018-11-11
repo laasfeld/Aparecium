@@ -42,7 +42,8 @@ classdef SBToolboxExporter <  ExportPanelController
                this.experimentStateOrParam{i} = 'state'; 
             end
             treatments = this.convertToCellArrayOfStrings(this.experiment.getTreatments());
-            data = [treatments', treatments', num2cell(strcmp(this.experimentStateOrParam, 'state')'), num2cell(strcmp(this.experimentStateOrParam, 'param')')];
+            userDefNames = MIDAS2SBNameManager.getMIDASChannelNames(treatments);
+            data = [treatments', userDefNames', num2cell(strcmp(this.experimentStateOrParam, 'state')'), num2cell(strcmp(this.experimentStateOrParam, 'param')'), num2cell(true(numel(treatments), 1))];
             set(this.experimentParamNameTable, 'data', data);
         end                          
       
@@ -390,7 +391,10 @@ classdef SBToolboxExporter <  ExportPanelController
                     elseif isequal(exportMode, 'Average')
                         this.outputTableStruct{group}{subgroup}.initialConditions = data{group}{subgroup}.initialConditions;
                     end
-                    this.outputTableStruct{group}{subgroup}.outputValue = outputValue;
+                    this.outputTableStruct{group}{subgroup}.outputValue = '';
+                    for i = 1 : numel(outputValue)
+                        this.outputTableStruct{group}{subgroup}.outputValue = [this.outputTableStruct{group}{subgroup}.outputValue, outputValue{i}];
+                    end
                     this.outputTableStruct{group}{subgroup}.groups = groups;
                     this.outputTableStruct{group}{subgroup}.group = group;
                     this.outputTableStruct{group}{subgroup}.subgroup = subgroup;
