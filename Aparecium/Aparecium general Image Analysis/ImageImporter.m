@@ -319,20 +319,34 @@ classdef ImageImporter < handle
         function wellID = sortWellID(wellID)% sorts the cell array according to cell naming logic instead of standard string and number logic. 
             oneLetterArray = cell(0,0);
             twoLetterArray = cell(0,0);
+            swapBackWells = cell(0,0);
+            swapBackOriginals = cell(0,0);
             for i = 1 : numel(wellID)
-                if isequal(numel(regexp(wellID{i},'([A-Z]{1,2})', 'match', 'once')), 1);
+                if isequal(numel(regexp(wellID{i},'([A-Z]{1,2})', 'match', 'once')), 1) && isequal(numel(regexp(wellID{i},'([0-9]{1,2})', 'match', 'once')), 2);
                     oneLetterArray{end + 1} = wellID{i};
-                elseif isequal(numel(regexp(wellID{i},'([A-Z]{1,2})', 'match', 'once')), 2);
+                elseif isequal(numel(regexp(wellID{i},'([A-Z]{1,2})', 'match', 'once')), 2) && isequal(numel(regexp(wellID{i},'([0-9]{1,2})', 'match', 'once')), 2);
                     twoLetterArray{end + 1} = wellID{i};
+                elseif isequal(numel(regexp(wellID{i},'([A-Z]{1,2})', 'match', 'once')), 1) && isequal(numel(regexp(wellID{i},'([0-9]{1,2})', 'match', 'once')), 1);
+                    oneLetterArray{end + 1} = [wellID{i}(1), '0',wellID{i}(2)];
+                    swapBackWells{end + 1} = [wellID{i}(1), '0',wellID{i}(2)];
+                    swapBackOriginals{end + 1} = wellID{i}; 
+                elseif isequal(numel(regexp(wellID{i},'([A-Z]{1,2})', 'match', 'once')), 2) && isequal(numel(regexp(wellID{i},'([0-9]{1,2})', 'match', 'once')), 1);
+                    twoLetterArray{end + 1} = [wellID{i}(1:2), '0',wellID{i}(2)];
+                    swapBackWells{end + 1} = [wellID{i}(1), '0',wellID{i}(2)];
+                    swapBackOriginals{end + 1} = wellID{i}; 
                 end
             end
-            
-            oneLetterArray = ImageImporter.sortWellNumbers(oneLetterArray);
-            twoLetterArray = ImageImporter.sortWellNumbers(twoLetterArray);
+            swapBackWells = unique(swapBackWells);
+            oneLetterArray = ImageImporter.sortWellNumbers(unique(oneLetterArray));
+            twoLetterArray = ImageImporter.sortWellNumbers(unique(twoLetterArray));
             
             oneLetterArray = unique(oneLetterArray);
             twoLetterArray = unique(twoLetterArray);
             wellID = [oneLetterArray, twoLetterArray];
+            for index = 1 : numel(swapBackWells)
+                swapIndex = strcmp(wellID, swapBackWells(index));
+                wellID{swapIndex} = swapBackOriginals{index};
+            end
         end
         
         function wellID = sortWellNumbers(wellID) % this function will not sort the wellID-s by name, use sortWellID for sorting both ways

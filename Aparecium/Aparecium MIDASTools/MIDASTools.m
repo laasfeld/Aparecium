@@ -22,7 +22,7 @@ function varargout = MIDASTools(varargin)
 
 % Edit the above text to modify the response to help MIDASTools
 
-% Last Modified by GUIDE v2.5 04-Dec-2017 17:34:36
+% Last Modified by GUIDE v2.5 05-Nov-2018 15:46:03
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -75,7 +75,13 @@ catch
         
     end
 end
-%letitsnow(handles.figure1, 1); just a holyday easteregg
+handles.dimensionality = [];
+handles.apareciumExperimentInput = ApareciumExperimentInput();
+handles.plateSimulatorInterface = PlateSimulatorInterface();
+handles.plateSimulatorInterface.attemptMidasInitialize = 1;
+handles = ExperimentConfigurationPanelFunc(handles);
+set(handles.ExperimentConfigurationPanel, 'Position', [0.37	0.1056 0.244	0.8816]);
+%LetItSnow(); %just a holyday easteregg
 % Update handles structure
 set(handles.stackTable,'Data',[]);
 guidata(hObject, handles);
@@ -204,6 +210,23 @@ loadPrimaryMIDASFile_Callback(hObject, eventdata, handles);
 successBox('MIDAS file successfully loaded', 'Success');
 set(handles.mainMIDASTable, 'visible', 'on');
 set(handles.MIDASInformationText, 'String', ['MIDAS file ', handles.midasTableController.fileName, ' loaded']);
+initializeExperimentConfigurationPanel(handles);
+
+function initializeExperimentConfigurationPanel(handles)
+handles =  MidasToApareciumExperimentInput(handles.midasTableController, handles);
+handles.apareciumExperimentInput.setMode('addTreatments');
+handles.midasTableController.setDataEqualToEventData(); % MIDAS is loaded with all data as events data but some operations are carried out on table data.
+set(handles.ChooseDimensionality, 'Value', handles.apareciumExperimentInput.getNumberOfTreatments());
+handles.dimensionality = handles.apareciumExperimentInput.getNumberOfTreatments();
+treatmentsTableData = handles.apareciumExperimentInput.getTreatmentsTableData();
+set(handles.treatments_Table, 'Data', treatmentsTableData);
+channels = handles.apareciumExperimentInput.getChannelNames();
+channelsTableData = [channels', channels'];
+set(handles.channels_Table, 'Data', channelsTableData);
+drawnow();
+pause(0.05);
+guidata(handles.figure1, handles);
+
 
 % --- Executes on button press in SaveMIDASFile.
 function SaveMIDASFile_Callback(hObject, eventdata, handles)
@@ -291,3 +314,20 @@ function convertToSeparateTimepoints_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles.midasTableController.convertToStandardMIDASTable();
+
+
+% --- Executes on button press in convert.
+function convert_Callback(hObject, eventdata, handles)
+% hObject    handle to convert (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+results = TreatmentAndMeasurementConverter(get(handles.treatments_Table, 'data'));
+handles.midasTableController.replaceTreatmentValuesFromTreatmentAndMeasurementConverter(results);
+handles = MidasToApareciumExperimentInput(handles.midasTableController, handles);
+handles.apareciumExperimentInput.setMode('addTreatments');
+treatmentsTableData = handles.apareciumExperimentInput.getTreatmentsTableData();
+set(handles.treatments_Table, 'data', treatmentsTableData);
+drawnow();
+pause(0.05);
+guidata(hObject, handles);
+

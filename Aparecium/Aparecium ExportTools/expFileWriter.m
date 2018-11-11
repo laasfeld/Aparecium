@@ -71,9 +71,17 @@ for event = 1 : noOfEffectiveEvents
     for treatment = 1 : size(concentrationChangeEvent{1}{1},2)
         if ~isequal(concentrationChangeEvent{representingWell}{effectiveEvent(event)-1}(treatment), 0)
             if concentrationChangeEvent{representingWell}{effectiveEvent(event)-1}(treatment) > 0
-                eventStrings{event} = [eventStrings{event},', ',experimentStateNames{treatment},' = ',experimentStateNames{treatment},' + ',num2str(concentrationChangeEvent{representingWell}{effectiveEvent(event)-1}(treatment))];
+                if iscell(experimentStateNames{treatment})
+                    eventStrings{event} = [eventStrings{event},', ',experimentStateNames{treatment}{1},' = ',experimentStateNames{treatment}{1},' + ',num2str(concentrationChangeEvent{representingWell}{effectiveEvent(event)-1}(treatment))];
+                else
+                    eventStrings{event} = [eventStrings{event},', ',experimentStateNames{treatment},' = ',experimentStateNames{treatment},' + ',num2str(concentrationChangeEvent{representingWell}{effectiveEvent(event)-1}(treatment))];
+                end
             elseif concentrationChangeEvent{representingWell}{effectiveEvent(event)-1}(treatment) < 0
-                eventStrings{event} = [eventStrings{event},', ',experimentStateNames{treatment},' = ',experimentStateNames{treatment},' - ',num2str(-concentrationChangeEvent{representingWell}{effectiveEvent(event)-1}(treatment))];
+                if iscell(experimentStateNames{treatment})
+                    eventStrings{event} = [eventStrings{event},', ',experimentStateNames{treatment}{1},' = ',experimentStateNames{treatment}{1},' - ',num2str(concentrationChangeEvent{representingWell}{effectiveEvent(event)-1}(treatment))];
+                else
+                    eventStrings{event} = [eventStrings{event},', ',experimentStateNames{treatment},' = ',experimentStateNames{treatment},' - ',num2str(concentrationChangeEvent{representingWell}{effectiveEvent(event)-1}(treatment))];
+                end
             end
         end
     end
@@ -86,9 +94,17 @@ for event = 1 : noOfEffectiveParamEvents
     for treatment = 1: size(paramChangeEvent{1}{1},2)
         if ~isequal(paramChangeEvent{representingWell}{effectiveEventWithParams(event)-1}(treatment), 0)
             if paramChangeEvent{representingWell}{effectiveEventWithParams(event)-1}(treatment) > 0
-                paramEventStrings{event} = [paramEventStrings{event},', ',experimentParamsNames{treatment},' = ',experimentParamsNames{treatment},' + ',num2str(concentrationChangeEvent{representingWell}{effectiveEvent(event)-1}(treatment))];
+                if iscell(experimentStateNames{treatment})
+                    paramEventStrings{event} = [paramEventStrings{event},', ',experimentParamsNames{treatment}{1},' = ',experimentParamsNames{treatment}{1},' + ',num2str(concentrationChangeEvent{representingWell}{effectiveEvent(event)-1}(treatment))];
+                else                        
+                    paramEventStrings{event} = [paramEventStrings{event},', ',experimentParamsNames{treatment},' = ',experimentParamsNames{treatment},' + ',num2str(concentrationChangeEvent{representingWell}{effectiveEvent(event)-1}(treatment))];
+                end
             elseif paramChangeEvent{representingWell}{effectiveEventWithParams(event)-1}(treatment) < 0
-                paramEventStrings{event} = [paramEventStrings{event},', ',experimentParamsNames{treatment},' = ',experimentParamsNames{treatment},' - ',num2str(-concentrationChangeEvent{representingWell}{effectiveEvent(event)-1}(treatment))];
+                if iscell(experimentStateNames{treatment})
+                    paramEventStrings{event} = [paramEventStrings{event},', ',experimentParamsNames{treatment}{1},' = ',experimentParamsNames{treatment}{1},' - ',num2str(-concentrationChangeEvent{representingWell}{effectiveEvent(event)-1}(treatment))];
+                else 
+                    paramEventStrings{event} = [paramEventStrings{event},', ',experimentParamsNames{treatment},' = ',experimentParamsNames{treatment},' - ',num2str(-concentrationChangeEvent{representingWell}{effectiveEvent(event)-1}(treatment))];
+                end
             end
         end
     end

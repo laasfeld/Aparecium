@@ -8,6 +8,7 @@ classdef PlateSimulatorInterface < handle
         heightOfFrame = 720;
         isPlateSimulatorInitialized = 0;
         installationAlreadyAttempted = 0;
+        attemptMidasInitialize = 0;
     end
     methods
         function this = PlateSimulatorInterface()
@@ -260,10 +261,10 @@ classdef PlateSimulatorInterface < handle
         function finalJavaArray = convertCellToJava2dimStringArray(concentrations)
             load javapath
             import java.lang.*;
-            jArray = cell(size(concentrations, 2),1);
-            for treatment = 1 : size(concentrations, 2);
-               jArray{treatment} = javaArray('java.lang.String', size(concentrations{treatment},2));
-               for concentration = 1 : size(concentrations{treatment},2)
+            jArray = cell(numel(concentrations),1);
+            for treatment = 1 : numel(concentrations);
+               jArray{treatment} = javaArray('java.lang.String', numel(concentrations{treatment}));
+               for concentration = 1 : numel(concentrations{treatment})
                    if isnumeric(concentrations{treatment}(concentration))
                        jArray{treatment}(concentration) = java.lang.String(num2str(concentrations{treatment}(concentration)));
                    else
@@ -280,10 +281,10 @@ classdef PlateSimulatorInterface < handle
                    end
                end
             end
-            finalJavaArray = javaArray('java.lang.String', size(concentrations, 2), 1);
+            finalJavaArray = javaArray('java.lang.String', numel(concentrations), 1);
             finalJavaArray(1) = jArray{1};
-            if(size(concentrations, 2) > 1) 
-                for treatment = 2 : size(concentrations, 2)
+            if(numel(concentrations) > 1) 
+                for treatment = 2 : numel(concentrations)
                     finalJavaArray(treatment) = jArray{treatment};
                 end
             end

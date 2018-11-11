@@ -3,6 +3,7 @@ classdef ApareciumCommonImporterFunctions
     %   Detailed explanation goes here
     
     properties
+    
     end
     
     methods (Static)
@@ -125,6 +126,10 @@ classdef ApareciumCommonImporterFunctions
             % handles    structure with handles and user data (see GUIDATA)
             handles.plateSimulatorInterface.addExperiment(handles.apareciumExperimentInput);
             handles.simPlateHandle = handles.plateSimulatorInterface.generatePlateSimulator(handles);
+            if isequal(handles.apareciumExperimentInput.hasChanged, 0) && isequal(handles.plateSimulatorInterface.attemptMidasInitialize, 1)
+                treatmentStructure = handles.midasTableController.getTreatmentStructure();
+                handles.plateSimulatorInterface.regeneratePlateSimulatorFromTreatmentStructure(treatmentStructure);
+            end
             handles = ApareciumCommonImporterFunctions.setUIModeToPlateSim(handles);
             ApareciumCommonImporterFunctions.figure1_ResizeFcn(handles.figure1, eventdata, handles);
             guidata(hObject, handles);
@@ -143,25 +148,38 @@ classdef ApareciumCommonImporterFunctions
             % hObject    handle to simPlateDone (see GCBO)
             % eventdata  reserved - to be defined in a future version of MATLAB
             % handles    structure with handles and user data (see GUIDATA)
-            set(handles.loadFilePanel, 'visible', 'on');
-            set(handles.MIDASPreviewPanel, 'visible', 'on');
-            set(handles.ExperimentConfigurationPanel, 'visible', 'on');
+            children = handles.figure1.Children;
+            for i = 1 : numel(children)
+                type = children(i).Type;
+                if strcmp(type, 'uipanel')
+                   set(children(i), 'visible', 'on'); 
+                end
+            end
             set(handles.figure1, 'Color', [225/255, 226/255, 251/255]);
             pause(0.1) % makes the transition slightly smoother
             set(handles.simPlateHandle, 'visible', 'off');
             
             treatmentStructure = handles.plateSimulatorInterface.getTreatmentStructure();
             handles.midasTableController.updateTreatments(treatmentStructure);
-        end
+        end      
         
         function handles = setUIModeToPlateSim(handles)
-            set(handles.loadFilePanel, 'visible', 'off');
-            set(handles.MIDASPreviewPanel, 'visible', 'off');
-            set(handles.ExperimentConfigurationPanel, 'visible', 'off');
+            % hide all panels
+            children = handles.figure1.Children;
+            for i = 1 : numel(children)
+                type = children(i).Type;
+                if strcmp(type, 'uipanel')
+                   set(children(i), 'visible', 'off'); 
+                end
+            end
+            
+            %set(handles.loadFilePanel, 'visible', 'off');
+            %set(handles.MIDASPreviewPanel, 'visible', 'off');
+            %set(handles.ExperimentConfigurationPanel, 'visible', 'off');
             set(handles.figure1, 'Color', 'white');
             doneCallbackHandle = @ApareciumCommonImporterFunctions.simPlateDone_Callback;            
             doneHandler(handles.plateSimulatorInterface.PlateSimulator.done, handles, doneCallbackHandle);
-        end
+        end        
         
         function includeEventToMIDAS_Callback(hObject, eventdata, handles)
             % hObject    handle to includeEventToMIDAS (see GCBO)

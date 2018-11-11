@@ -93,9 +93,12 @@ classdef MidasTableController < handle
 %                         this.rawExcelNumericalData(a, b) = this.eventData{a, this.informativeColumns + b};
 %                     end
 %                 end
-%             end
-            
-            
+%             end    
+        end
+        
+        function setDataEqualToEventData(this)
+            % use with caution
+            this.tableData = this.eventData;
         end
            
         function recalculateTimeShift(this, timeShift)
@@ -120,7 +123,7 @@ classdef MidasTableController < handle
             end
             %%%%%%%%%%%%%%%%%% IMPRTANT %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %since MIDAS format by default does not allow to use units for
-            %time conveniently then in MIDAS file no unit is uses and
+            %time conveniently then in MIDAS file no unit is used and
             %second as the SI base unit for time is always used.
             outputUnit = 's';
             switch outputUnit
@@ -403,6 +406,10 @@ classdef MidasTableController < handle
             end
         end
         
+        function cycleBeginningRow = findFirstRowWithTime(this, time)
+           cycleBeginningRow = find(cell2mat(this.eventData(:, this.informativeColumns + this.treatmentColumns + 1))==time, 1);
+        end
+        
         function doNotUseEvents(this)
             this.includeEvents = 0;
             this.addData();
@@ -628,7 +635,74 @@ classdef MidasTableController < handle
             end
             this.MIDASMode = 'DA:ALL';
         end
-    end
-    
+        
+        function treatmentStructure = getTreatmentStructure(this)
+            
+            %locate event times
+            inputStructure.data = this.getRawExcelNumericalData();
+            inputStructure.noOfWells = numel(this.getWellID());
+            inputStructure.noOfCycles = size(this.getRawExcelNumericalData(), 1)/inputStructure.noOfWells;
+            inputStructure.numberOfChannels = this.measurementColumns;
+            [concChangeEvent, eventTimes] = eventReader(inputStructure);
+            noEvents = cellfun(@isempty, eventTimes);
+            if isequal(sum(noEvents), numel(noEvents))
+                % no events so we can simplify
+                treatmentStructure.eventTimes = this.eventData{1, this.informativeColumns + this.treatmentColumns + 1}; % check if it hold when time shift is used
+                resultWells = this.getWellID()';
+                results = cell(1, numel(resultWells));
+                for i = 1 : numel(resultWells)
+                   resultWells{i} = {resultWells{i}};
+                   results{i} = cell2mat(this.eventData(i, this.informativeColumns + 1: this.informativeColumns + this.treatmentColumns));
+                end
+                eventStructure = cell(1,1);
+                eventStructure{1} = results;
+                treatmentStructure.eventStruct = eventStructure;               
+                treatmentStructure.resultWells = resultWells;
+                treatmentStructure.results = results;
+                
+            else
+               % unimplemented for now
+                treatmentStructure.eventTimes = this.eventData{1, this.informativeColumns + this.treatmentColumns + 1}; % check if it hold when time shift is used
+                resultWells = ImageImporter.sortWellID(this.getWellID()');
+                results = cell(1, numel(resultWells));
+                for i = 1 : numel(resultWells)
+                   resultWells{i} = {resultWells{i}};
+                   results{i} = cell2mat(this.eventData(i, this.informativeColumns + 1: this.informativeColumns + this.treatmentColumns));
+                end
+                eventStructure = cell(numel(eventTimes{1}), 1);
+                for eventIndex = 1 : numel(eventTimes{1})
+                    eventResults = cell(1, numel(resultWells));
+                    startingRow = this.findFirstRowWithTime(eventTimes{1}(eventIndex));
+                    for i = 1 : numel(resultWells)
+                       eventResults{i} = cell2mat(this.eventData(startingRow + i - 1, this.informativeColumns + 1: this.informativeColumns + this.treatmentColumns));
+                    end
+                    eventStructure{eventIndex} = eventResults;
+                end
+                treatmentStructure.eventTimes = eventTimes{1}';
+                treatmentStructure.eventStruct = eventStructure;               
+                treatmentStructure.resultWells = resultWells;
+                treatmentStructure.results = results;
+            end           
+        end
+        
+        function replaceTreatmentValuesFromTreatmentAndMeasurementConverter(this, results)
+            originalValues = results{1};
+            newValues = results{3};
+            for row = 1 : size(this.eventData, 1)
+               for col = 1 : this.treatmentColumns
+                   for value = 1 : size(originalValues, 1)
+                       if ~isempty(originalValues{value, col})
+                           if isequal(this.eventData{row, col + this.informativeColumns}, str2double(originalValues{value, col}))
+                               this.eventData{row, col + this.informativeColumns} = str2double(newValues{value, col});
+                               break;
+                           end
+                       end
+                   end
+               end
+            end
+            this.setDataEqualToEventData
+            this.showTable();
+        end
+    end    
 end
 

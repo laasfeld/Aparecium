@@ -77,8 +77,10 @@ units = [];
 treatments = cell(noOfWells, numel(wellIDColumn)/noOfWells, 0);
 for i = 1 : size(columnHeaders, 2)
     if(isequal(strfind(columnHeaders(i),'TR:'),{1}));%% checks if the particular column contains treatment data
-        namesTR{end+1} = regexprep(columnHeaders(i), 'TR:', '');%% adds the name of the data to last index of variable namesTR
-        units{end+1} = ' ';
+        treatmentNameWithUnit = regexprep(columnHeaders(i), 'TR:', '');
+        underscoreIndices = cell2mat(strfind(treatmentNameWithUnit, '_'));
+        namesTR{end+1} = {treatmentNameWithUnit{1}(1 : underscoreIndices(end) - 1)};%% adds the name of the data to last index of variable namesTR
+        units{end+1} = treatmentNameWithUnit{1}(underscoreIndices(end) + 1  : end);
         treatmentColumn = cellstr(num2str(cell2mat(midasTableController.getEventTableColumnData(i))));
         if isequal(numel(treatmentColumn), numel(midasTableController.getEventTableColumnData(i)))
             treatments(:,:,end+1) = reshape(treatmentColumn, noOfWells, numberOfCycles);
@@ -131,7 +133,7 @@ for row = 1 : width
 end
 concentrations = cell(noOfTreatments, 1);
 for treatment = 1 : noOfTreatments
-    uniqueConcentrations = unique(finalTreatments( :, :, :, treatment));
+    uniqueConcentrations = unique(strtrim(finalTreatments( :, :, :, treatment)));
     for conc = 1 : numel(uniqueConcentrations)
        uniqueConcentrations{conc} = str2num(uniqueConcentrations{conc}); 
     end

@@ -326,5 +326,24 @@ classdef ApareciumExperimentInput < handle
             this.treatments = newTreatments;
             this.units = newUnits;
         end
+        
+        function data = getTreatmentsTableData(this)
+            data = cell(this.getNumberOfTreatments(), 5);
+            for treatment = 1 : this.getNumberOfTreatments()
+                data(treatment, 1) = this.treatments{treatment};
+                concs = this.concentrations{treatment};
+                concString = [];
+                if numel(concs) > 0
+                   concString = num2str(concs(1));
+                end
+                for concIndex = 2 : numel(concs)
+                   concString = [concString, ' ', num2str(concs(concIndex))]; 
+                end
+                data{treatment, 2} = concString;
+                data{treatment, 3} = this.units{treatment};
+                data{treatment, 4} = false;
+                data{treatment, 5} = false;
+            end
+        end
     end
 end
