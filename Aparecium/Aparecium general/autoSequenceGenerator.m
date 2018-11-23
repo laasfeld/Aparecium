@@ -137,7 +137,7 @@ function edit1_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit1 as text
 %        str2double(get(hObject,'String')) returns contents of edit1 as a double
-handles.firstValue = str2double(get(hObject,'String'));
+handles.firstValue = str2double(regexprep(get(hObject,'String'),',','.'));
 logFirstValue = num2str(log10(handles.firstValue));
 set(handles.edit4, 'String', logFirstValue);
 guidata(hObject, handles);
@@ -163,7 +163,7 @@ function edit2_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit2 as text
 %        str2double(get(hObject,'String')) returns contents of edit2 as a double
-handles.step = str2double(get(hObject,'String'));
+handles.step = str2double(regexprep(get(hObject,'String'),',','.'));
 dilutionFactor = 1/handles.step;
 set(handles.edit5, 'String', num2str(dilutionFactor));
 guidata(hObject, handles);
@@ -315,7 +315,7 @@ function edit3_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit3 as text
 %        str2double(get(hObject,'String')) returns contents of edit3 as a double
-handles.numberOfValues = str2double(get(hObject,'String'));
+handles.numberOfValues = round(str2double(regexprep(get(hObject,'String'),',','.')));
 guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
@@ -375,7 +375,7 @@ function edit4_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit4 as text
 %        str2double(get(hObject,'String')) returns contents of edit4 as a double
-log10Value = str2double(get(hObject,'String'));
+log10Value = str2double(regexprep(get(hObject,'String'),',','.'));
 handles.firstValue = power(10, log10Value);
 set(handles.edit1, 'String', num2str(handles.firstValue));
 guidata(hObject, handles);
@@ -401,7 +401,7 @@ function edit5_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit5 as text
 %        str2double(get(hObject,'String')) returns contents of edit5 as a double
-dilutionFactor = str2double(get(hObject,'String'));
+dilutionFactor = str2double(regexprep(get(hObject,'String'),',','.'));
 handles.step = 1/dilutionFactor;
 set(handles.edit2,'String', num2str(handles.step));
 guidata(hObject, handles);

@@ -25,7 +25,7 @@ function varargout = ExportTools(varargin)
 
 % Edit the above text to modify the response to help ExportTools
 
-% Last Modified by GUIDE v2.5 03-Oct-2018 20:00:16
+% Last Modified by GUIDE v2.5 12-Nov-2018 13:06:45
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
@@ -938,6 +938,7 @@ function parameterNameTable_CellEditCallback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles.SBExporter.getNewExperimentParamsNames();
 handles.SBExporter.getNewExperimentStateOrParam();
+handles.SBExporter.getNewExperimentIncludes();
 applyFormula_Callback(hObject, eventdata, handles);
 guidata(hObject, handles);
 
@@ -2311,3 +2312,24 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 set(hObject, 'max', 2);% this allows selection of multiple lines
 guidata(hObject, handles);
+
+
+% --- Executes on button press in saveNameMapping.
+function saveNameMapping_Callback(hObject, eventdata, handles)
+% hObject    handle to saveNameMapping (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+parameterNameData = get(handles.parameterNameTable, 'data');
+SBParamNames = parameterNameData(:, 2);
+originalParamNames = parameterNameData(:, 1);
+stateOrParam = parameterNameData(:, 3); %indicates state
+defaultInclude = parameterNameData(:, 5);
+
+for param = 1 : numel(SBParamNames)
+   if stateOrParam{param}
+        stateOrParamString = 'state';
+   else
+        stateOrParamString = 'param';
+   end
+   MIDAS2SBNameManager.addNewChannel(originalParamNames{param}, SBParamNames{param}, stateOrParamString, defaultInclude{param}); 
+end

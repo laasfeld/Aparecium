@@ -7,6 +7,7 @@ classdef SBToolboxExporter <  ExportPanelController
         experimentParamsNames = [];
         experimentStateOrParam = [];
         experimentParamNameTable = []; % can either be 'state' or 'param'
+        includeParameter = [];
         outputTableStruct = [];
         groups = [];
         loadingBar = [];
@@ -43,7 +44,9 @@ classdef SBToolboxExporter <  ExportPanelController
             end
             treatments = this.convertToCellArrayOfStrings(this.experiment.getTreatments());
             userDefNames = MIDAS2SBNameManager.getMIDASChannelNames(treatments);
-            data = [treatments', userDefNames', num2cell(strcmp(this.experimentStateOrParam, 'state')'), num2cell(strcmp(this.experimentStateOrParam, 'param')'), num2cell(true(numel(treatments), 1))];
+            stateOrParam = MIDAS2SBNameManager.getDefaultStateOrParam(treatments);
+            include = MIDAS2SBNameManager.getDefaultInclude(treatments);
+            data = [treatments', userDefNames', num2cell(strcmp(stateOrParam, 'state')'), num2cell(strcmp(stateOrParam, 'param')'), include'];
             set(this.experimentParamNameTable, 'data', data);
         end                          
       
@@ -94,7 +97,14 @@ classdef SBToolboxExporter <  ExportPanelController
                 end
             end
             set(this.experimentParamNameTable, 'Data', data);
-
+        end
+        
+        function getNewExperimentIncludes(this)
+            data = get(this.experimentParamNameTable, 'Data');
+            for i = 1 : numel(data(:, 5))               
+                this.includeParameter{i} = data(i, 5);
+            end
+            set(this.experimentParamNameTable, 'Data', data);
         end
         
         function updatePrefixAndSuffixInTable(this)

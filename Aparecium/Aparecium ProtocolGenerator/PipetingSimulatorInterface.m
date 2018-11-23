@@ -95,7 +95,7 @@ classdef PipetingSimulatorInterface < handle
 
             end
             this.PipetingSimulator.setVisible(true);
-            [a, simPlateHandle] = javacomponent(this.PipetingSimulator, [0, -72 , 1300, 700], handles.figure1);
+            [a, simPlateHandle] = javacomponent(this.PipetingSimulator, [0, 0 , 1300, 700], handles.figure1);
             this.isPlateSimulatorInitialized = 1;
             this.consistencyChecker = PipetingSimulatorConsistencyChecker(this.experiment);
         end

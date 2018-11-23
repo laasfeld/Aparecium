@@ -67,6 +67,10 @@ classdef Cytation5TIFFImage < handle
             imageHeightMicrons = str2double(this.xmlStruct.ImageAcquisition.ImageHeightMicrons);
         end
         
+        function metadata = getMetadata(this)
+           metadata = this.imageData{4};
+        end
+        
     end
     
     

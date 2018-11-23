@@ -127,6 +127,9 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                         catch
                             bw2 = zeros(size(I_orgTrue, 1), size(I_orgTrue, 2));
                         end
+                    case imageProcessingParameters.FromBinary
+                        I_orgTrue = I_org(:,:,1); 
+                        bw2 = getBinaryOfImage([filePath, picName]);
                 end
 
               
@@ -135,8 +138,13 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                 binaryImageCalculator.calculateImageParameters(bw2, parametersToCalculate, functionHandle);
                 resultStructure = binaryImageCalculator.resultStructure;
                 resultStructure.imageTime = imageTime;
-                resultStructure.imageWidthMicrons = imageWidthMicrons;
-                resultStructure.imageHeightMicrons = imageHeightMicrons;
+                try
+                    resultStructure.imageWidthMicrons = imageWidthMicrons;
+                    resultStructure.imageHeightMicrons = imageHeightMicrons;
+                catch
+                    resultStructure.imageWidthMicrons = nan;
+                    resultStructure.imageHeightMicrons = nan;
+                end
                 resultStructure.imageWidthPixels = size(I_org, 2);
                 resultStructure.imageHeightPixels = size(I_org, 1);
                 switch imageProcessingParameters.useParallelComputing

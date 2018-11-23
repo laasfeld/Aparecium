@@ -456,6 +456,7 @@ classdef MidasTableController < handle
             else
                 
             end
+            this.useEvents();
         end
         
         function readMidasFile(this, fullFilePath)

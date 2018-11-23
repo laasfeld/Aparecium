@@ -22,7 +22,7 @@ function varargout = SettingsUI(varargin)
 
 % Edit the above text to modify the response to help SettingsUI
 
-% Last Modified by GUIDE v2.5 06-Jul-2018 20:55:47
+% Last Modified by GUIDE v2.5 12-Oct-2018 10:28:31
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -669,3 +669,11 @@ function userPathOption_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of userPathOption
+
+
+% --- Executes on button press in SBStateNameOptions.
+function SBStateNameOptions_Callback(hObject, eventdata, handles)
+% hObject    handle to SBStateNameOptions (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+SBStateNameOptions()
