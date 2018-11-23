@@ -238,6 +238,9 @@ classdef MidasTableController < handle
         function deleteTreatmentColumnByIndex(this, treatmentIndex)
             this.columnHeaders(this.informativeColumns + treatmentIndex) = [];
             this.tableData(:, this.informativeColumns + treatmentIndex) = [];
+            if ~isempty(this.eventData)
+                this.eventData(:, this.informativeColumns + treatmentIndex) = [];
+            end              
             this.treatmentColumns = this.treatmentColumns - 1;
             this.addData();
         end
