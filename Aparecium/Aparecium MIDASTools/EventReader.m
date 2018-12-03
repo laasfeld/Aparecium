@@ -1,3 +1,4 @@
+%% consider deleting this function, it is probably deprecated and replaced by eventReader
 function [ concChangeEvent, eventTimes ] = EventReader(handles)
 
 data = handles.data;

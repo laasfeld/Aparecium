@@ -20,7 +20,7 @@ classdef ExperimentProtocol < handle
         MIDASFileName
         listOfExports = cell(0, 1);
         protocolOutput
-        exampleMIDASTableController = MidasTableController('empty');
+        exampleMIDASTableController = MidasTableController('example');
         exampleExperimentDataStructure
         treatmentStructure
         excelProtocol

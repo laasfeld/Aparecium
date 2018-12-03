@@ -15,6 +15,7 @@ classdef SBToolboxExporter <  ExportPanelController
         suffix = '';
         outputValue = [];
         data = [];
+        ultacorrect = 1;
     end
     
     methods
@@ -355,7 +356,16 @@ classdef SBToolboxExporter <  ExportPanelController
                         experimentData = cell(numberOfRows, 5);
                         for channelIndex = 1 : numel(outputValue)
                             row = 0;
-                            for timeIndex = 1 : numberOfCycles; % for now, assume that all wells were measured for equal number of cycles
+                            
+                            if isequal(this.ultacorrect, 1)
+                                row = row + 1;
+                                experimentData{row, 2} = 0;
+                                experimentData{row, (channelIndex - 1)*3+3} = 0;
+                                experimentData{row, (channelIndex - 1)*3+4} = 0;
+                                experimentData{row, (channelIndex - 1)*3+5} = 0; 
+                            end
+                            
+                            for timeIndex = 1 : numberOfCycles; % for now, assume that all wells were measured for equal number of cycles                          
                                  for subgroupElement = 1 : numel(this.groups{group}{subgroup})
                                     row = row + 1;
                                     if isequal(channelIndex, 1)
@@ -374,14 +384,23 @@ classdef SBToolboxExporter <  ExportPanelController
                             experimentData = cell(numberOfCycles, 5);
                             experimentData(1,1) = {'Values'};
                             for channelIndex = 1 : numel(outputValue)
+                                row = 0;
+                                if isequal(this.ultacorrect, 1)
+                                    row = row + 1;
+                                    experimentData{row, 2} = 0;
+                                    experimentData{row, (channelIndex - 1)*3+3} = 0;
+                                    experimentData{row, (channelIndex - 1)*3+4} = 0;
+                                    experimentData{row, (channelIndex - 1)*3+5} = 0; 
+                                end
+                                
                                 for timeIndex = 1 : numberOfCycles
                                     if isequal(channelIndex, 1)
-                                        experimentData(timeIndex,2) = {time(cyclesInUse(timeIndex))};
+                                        experimentData(timeIndex+this.ultacorrect,2) = {time(cyclesInUse(timeIndex))};
                                     end
                                     
-                                    experimentData(timeIndex,(channelIndex - 1)*3+3) = {data{group}{subgroup}.average{requestedChannelIndices(channelIndex)}(cyclesInUse(timeIndex))};
-                                    experimentData(timeIndex,(channelIndex - 1)*3+4) = {data{group}{subgroup}.maximum{requestedChannelIndices(channelIndex)}(cyclesInUse(timeIndex))};
-                                    experimentData(timeIndex,(channelIndex - 1)*3+5) = {data{group}{subgroup}.minimum{requestedChannelIndices(channelIndex)}(cyclesInUse(timeIndex))};   
+                                    experimentData(timeIndex+this.ultacorrect,(channelIndex - 1)*3+3) = {data{group}{subgroup}.average{requestedChannelIndices(channelIndex)}(cyclesInUse(timeIndex))};
+                                    experimentData(timeIndex+this.ultacorrect,(channelIndex - 1)*3+4) = {data{group}{subgroup}.maximum{requestedChannelIndices(channelIndex)}(cyclesInUse(timeIndex))};
+                                    experimentData(timeIndex+this.ultacorrect,(channelIndex - 1)*3+5) = {data{group}{subgroup}.minimum{requestedChannelIndices(channelIndex)}(cyclesInUse(timeIndex))};   
                                 end
                             end
                         catch MException

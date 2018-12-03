@@ -16,14 +16,26 @@ function [ concChangeEvent, eventTimes ] = eventReader(handles)
     for timepoint = 1:timepoints
        eventData(:,:) = data(:,timepoint,:);
        for well = 1:noOfWells
-          for channel = 1:noOfChannels
-             if isequal(num2str(eventData(well,end+1-channel)),'NaN')
-                 isevent{well} = true;
+          % first event
+         if isempty(eventList{well})
+             isevent{well} = true;
+         else
+             newConcs = eventData(well,1 : size(data,3)-noOfChannels-1);
+             deltaConcentrations = diff([eventList{well}{end}; newConcs]);
+             somethingChanged = ~all(deltaConcentrations == 0);
+             if somethingChanged
+                 for channel = 1:noOfChannels
+                     if isequal(num2str(eventData(well,end+1-channel)),'NaN')                
+                         isevent{well} = true;
+                     else
+                         isevent{well} = false;
+                         break;
+                     end
+                 end
              else
                  isevent{well} = false;
-                 break;
              end
-          end
+         end
        end
        for well = 1:noOfWells
             if isequal(isevent{well},1)

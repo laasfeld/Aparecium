@@ -25,6 +25,7 @@ classdef MidasTableController < handle
         activeUpdate = 'on';
         rawExcelNumericalData = [];
         fullFilePath = [];
+        isExampleTable = false;
         
     end
     
@@ -36,7 +37,10 @@ classdef MidasTableController < handle
         
         function this = MidasTableController(midasTableHandle)
             if isequal(midasTableHandle, 'empty')
-               this.activeUpdate = 'off';
+                this.activeUpdate = 'off';
+            elseif isequal(midasTableHandle, 'example')
+                this.activeUpdate = 'off';
+                this.isExampleTable = true;
             else
                 this.midasTableHandle = midasTableHandle;
             end
@@ -459,7 +463,12 @@ classdef MidasTableController < handle
             else
                 
             end
-            this.useEvents();
+            
+            if this.isExampleTable
+                
+            else            
+                this.useEvents();
+            end
         end
         
         function readMidasFile(this, fullFilePath)
@@ -649,30 +658,22 @@ classdef MidasTableController < handle
             inputStructure.numberOfChannels = this.measurementColumns;
             [concChangeEvent, eventTimes] = eventReader(inputStructure);
             noEvents = cellfun(@isempty, eventTimes);
+            
+            treatmentStructure.eventTimes = this.eventData{1, this.informativeColumns + this.treatmentColumns + 1}; % check if it hold when time shift is used
+            resultWells = ImageImporter.sortWellID(this.getWellID()');
+            results = cell(1, numel(resultWells));
+            for i = 1 : numel(resultWells)
+               resultWells{i} = {resultWells{i}};
+               results{i} = cell2mat(this.eventData(i, this.informativeColumns + 1: this.informativeColumns + this.treatmentColumns));
+            end
             if isequal(sum(noEvents), numel(noEvents))
                 % no events so we can simplify
-                treatmentStructure.eventTimes = this.eventData{1, this.informativeColumns + this.treatmentColumns + 1}; % check if it hold when time shift is used
-                resultWells = this.getWellID()';
-                results = cell(1, numel(resultWells));
-                for i = 1 : numel(resultWells)
-                   resultWells{i} = {resultWells{i}};
-                   results{i} = cell2mat(this.eventData(i, this.informativeColumns + 1: this.informativeColumns + this.treatmentColumns));
-                end
                 eventStructure = cell(1,1);
                 eventStructure{1} = results;
                 treatmentStructure.eventStruct = eventStructure;               
                 treatmentStructure.resultWells = resultWells;
-                treatmentStructure.results = results;
-                
-            else
-               % unimplemented for now
-                treatmentStructure.eventTimes = this.eventData{1, this.informativeColumns + this.treatmentColumns + 1}; % check if it hold when time shift is used
-                resultWells = ImageImporter.sortWellID(this.getWellID()');
-                results = cell(1, numel(resultWells));
-                for i = 1 : numel(resultWells)
-                   resultWells{i} = {resultWells{i}};
-                   results{i} = cell2mat(this.eventData(i, this.informativeColumns + 1: this.informativeColumns + this.treatmentColumns));
-                end
+                treatmentStructure.results = results;               
+            else                       
                 eventStructure = cell(numel(eventTimes{1}), 1);
                 for eventIndex = 1 : numel(eventTimes{1})
                     eventResults = cell(1, numel(resultWells));

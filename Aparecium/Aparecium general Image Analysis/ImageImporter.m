@@ -337,6 +337,7 @@ classdef ImageImporter < handle
                 end
             end
             swapBackWells = unique(swapBackWells);
+            swapBackOriginals = unique(swapBackOriginals, 'stable');
             oneLetterArray = ImageImporter.sortWellNumbers(unique(oneLetterArray));
             twoLetterArray = ImageImporter.sortWellNumbers(unique(twoLetterArray));
             

@@ -320,6 +320,7 @@ classdef volumeLinearEquationsSolver < handle
             for variableIndex = 1 : numel(knownValues)
                 variables{variableIndex} = symvar(knownValues{variableIndex});
                 values{variableIndex} = num2str(double(solve(knownValues{variableIndex})));
+
             end
             
             for equationGroupIndex = 1 : numel(equations)
@@ -380,7 +381,7 @@ classdef volumeLinearEquationsSolver < handle
                           solutions.(variables{1}) = value;
                        end
 
-                        try
+                       try
                              for variableIndex = 1 : numel(variables)
                                 variable = variables{variableIndex};
                                 value = char(solutions.(variable));
