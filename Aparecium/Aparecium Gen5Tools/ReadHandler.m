@@ -259,7 +259,10 @@ for readIndex = 1 : numel(handles.experimentDataStructureArray)
                    handles.experimentDataStructure.timeOfMeasurements = [timesOfFirstRead; correctedTimesOfSecondRead];
                    if isequal(handles.experimentDataStructure.wellID, handles.experimentDataStructureArray{readIndex}.wellID)
                         handles.experimentDataStructure.timeOfFastKineticsMeasurements = [fastKineticTimesOfFirstRead; correctedFastKineticTimesOfSecondRead];
-                   end 
+                   else
+                        handles.experimentDataStructure.timeOfFastKineticsMeasurements = [fastKineticTimesOfFirstRead; nan(size(correctedFastKineticTimesOfSecondRead, 1), size(fastKineticTimesOfFirstRead, 2))];
+                        handles.experimentDataStructureArray{readIndex}.timeOfFastKineticsMeasurements = [nan(size(fastKineticTimesOfFirstRead, 1), size(correctedFastKineticTimesOfSecondRead, 2)); correctedFastKineticTimesOfSecondRead];
+                   end
                       %disp('Fast kinetics concatenation failed'); 
                       %disp(error);
 
@@ -274,7 +277,10 @@ for readIndex = 1 : numel(handles.experimentDataStructureArray)
                    handles.experimentDataStructure.timeOfMeasurements = [timesOfFirstRead; correctedTimesOfSecondRead];
                    if isequal(handles.experimentDataStructure.wellID, handles.experimentDataStructureArray{readIndex}.wellID)
                         handles.experimentDataStructure.timeOfFastKineticsMeasurements = [fastKineticTimesOfFirstRead; correctedFastKineticTimesOfSecondRead];
-                   end 
+                   else
+                        handles.experimentDataStructure.timeOfFastKineticsMeasurements = [fastKineticTimesOfFirstRead; nan(size(correctedFastKineticTimesOfSecondRead, 1), size(fastKineticTimesOfFirstRead, 2))];
+                        handles.experimentDataStructureArray{readIndex}.timeOfFastKineticsMeasurements = [nan(size(fastKineticTimesOfFirstRead, 1), size(correctedFastKineticTimesOfSecondRead, 2)); correctedFastKineticTimesOfSecondRead];
+                   end
                end
                
                if isequal(handles.experimentDataStructure.wellID, handles.experimentDataStructureArray{readIndex}.wellID)
@@ -372,10 +378,10 @@ emptyMeasurements(:) = NaN;
 for wellIndex = 1 : numel(allUniqueWells)    
    if wellIsPresentInExperiment(dataStruct, allUniqueWells{wellIndex})
        endDataStruct.measurements{wellIndex} = dataStruct.measurements{findWellIndex(dataStruct, allUniqueWells{wellIndex})};
-       endDataStruct.timeOfFastKineticsMeasurements(wellIndex) = dataStruct.timeOfFastKineticsMeasurements(findWellIndex(dataStruct, allUniqueWells{wellIndex})); 
+       endDataStruct.timeOfFastKineticsMeasurements(:,wellIndex) = dataStruct.timeOfFastKineticsMeasurements(:, findWellIndex(dataStruct, allUniqueWells{wellIndex}));%dataStruct.timeOfFastKineticsMeasurements(findWellIndex(dataStruct, allUniqueWells{wellIndex})); 
    else
        endDataStruct.measurements{wellIndex} = emptyMeasurements;
-       endDataStruct.timeOfFastKineticsMeasurements(wellIndex) = NaN;
+       endDataStruct.timeOfFastKineticsMeasurements(:, wellIndex) = nan(size(dataStruct.timeOfFastKineticsMeasurements, 1), 1);%NaN
    end
 end
 

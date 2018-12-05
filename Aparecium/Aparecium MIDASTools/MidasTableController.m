@@ -673,17 +673,23 @@ classdef MidasTableController < handle
                 treatmentStructure.eventStruct = eventStructure;               
                 treatmentStructure.resultWells = resultWells;
                 treatmentStructure.results = results;               
-            else                       
-                eventStructure = cell(numel(eventTimes{1}), 1);
-                for eventIndex = 1 : numel(eventTimes{1})
+            else
+                combined = []; 
+                for well = 1 : numel(eventTimes)
+                    combined = [combined, eventTimes{well}];
+                end
+                uniqueEventTimes = unique(combined);
+                combinedNumberOfEvents = numel(uniqueEventTimes);
+                eventStructure = cell(combinedNumberOfEvents, 1);
+                for eventIndex = 1 : combinedNumberOfEvents
                     eventResults = cell(1, numel(resultWells));
-                    startingRow = this.findFirstRowWithTime(eventTimes{1}(eventIndex));
+                    startingRow = this.findFirstRowWithTime(uniqueEventTimes(eventIndex));
                     for i = 1 : numel(resultWells)
                        eventResults{i} = cell2mat(this.eventData(startingRow + i - 1, this.informativeColumns + 1: this.informativeColumns + this.treatmentColumns));
                     end
                     eventStructure{eventIndex} = eventResults;
                 end
-                treatmentStructure.eventTimes = eventTimes{1}';
+                treatmentStructure.eventTimes = uniqueEventTimes';
                 treatmentStructure.eventStruct = eventStructure;               
                 treatmentStructure.resultWells = resultWells;
                 treatmentStructure.results = results;
