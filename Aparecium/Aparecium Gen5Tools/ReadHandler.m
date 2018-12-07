@@ -248,20 +248,21 @@ for readIndex = 1 : numel(handles.experimentDataStructureArray)
                         %warndlg('Channels in all reads were not same, this may cause an error or unexpected results!');
                     end
                end
+               secondRead = handles.experimentDataStructureArray{readIndex};
                if channelsAreSame
                    timesOfFirstRead = handles.experimentDataStructure.timeOfMeasurements;
                    fastKineticTimesOfFirstRead = handles.experimentDataStructure.timeOfFastKineticsMeasurements;
-                   timesOfSecondRead = handles.experimentDataStructureArray{readIndex}.timeOfMeasurements;
-                   fastKineticTimesOfSecondRead = handles.experimentDataStructureArray{readIndex}.timeOfFastKineticsMeasurements;
+                   timesOfSecondRead = secondRead.timeOfMeasurements;
+                   fastKineticTimesOfSecondRead = secondRead.timeOfFastKineticsMeasurements;
                    timeShift = tableData{readIndex, 5};
                    correctedTimesOfSecondRead = timesOfSecondRead + timeShift;
                    correctedFastKineticTimesOfSecondRead = fastKineticTimesOfSecondRead + timeShift;
                    handles.experimentDataStructure.timeOfMeasurements = [timesOfFirstRead; correctedTimesOfSecondRead];
-                   if isequal(handles.experimentDataStructure.wellID, handles.experimentDataStructureArray{readIndex}.wellID)
+                   if isequal(handles.experimentDataStructure.wellID, secondRead.wellID)
                         handles.experimentDataStructure.timeOfFastKineticsMeasurements = [fastKineticTimesOfFirstRead; correctedFastKineticTimesOfSecondRead];
                    else
                         handles.experimentDataStructure.timeOfFastKineticsMeasurements = [fastKineticTimesOfFirstRead; nan(size(correctedFastKineticTimesOfSecondRead, 1), size(fastKineticTimesOfFirstRead, 2))];
-                        handles.experimentDataStructureArray{readIndex}.timeOfFastKineticsMeasurements = [nan(size(fastKineticTimesOfFirstRead, 1), size(correctedFastKineticTimesOfSecondRead, 2)); correctedFastKineticTimesOfSecondRead];
+                        secondRead.timeOfFastKineticsMeasurements = [nan(size(fastKineticTimesOfFirstRead, 1), size(correctedFastKineticTimesOfSecondRead, 2)); correctedFastKineticTimesOfSecondRead];
                    end
                       %disp('Fast kinetics concatenation failed'); 
                       %disp(error);
@@ -269,35 +270,35 @@ for readIndex = 1 : numel(handles.experimentDataStructureArray)
                else
                    timesOfFirstRead = handles.experimentDataStructure.timeOfMeasurements;
                    fastKineticTimesOfFirstRead = handles.experimentDataStructure.timeOfFastKineticsMeasurements;
-                   timesOfSecondRead = handles.experimentDataStructureArray{readIndex}.timeOfMeasurements;
-                   fastKineticTimesOfSecondRead = handles.experimentDataStructureArray{readIndex}.timeOfFastKineticsMeasurements;
+                   timesOfSecondRead = secondRead.timeOfMeasurements;
+                   fastKineticTimesOfSecondRead = secondRead.timeOfFastKineticsMeasurements;
                    timeShift = tableData{readIndex, 5};
                    correctedTimesOfSecondRead = timesOfSecondRead + timeShift;
                    correctedFastKineticTimesOfSecondRead = fastKineticTimesOfSecondRead + timeShift;
                    handles.experimentDataStructure.timeOfMeasurements = [timesOfFirstRead; correctedTimesOfSecondRead];
-                   if isequal(handles.experimentDataStructure.wellID, handles.experimentDataStructureArray{readIndex}.wellID)
+                   if isequal(handles.experimentDataStructure.wellID, secondRead.wellID)
                         handles.experimentDataStructure.timeOfFastKineticsMeasurements = [fastKineticTimesOfFirstRead; correctedFastKineticTimesOfSecondRead];
                    else
                         handles.experimentDataStructure.timeOfFastKineticsMeasurements = [fastKineticTimesOfFirstRead; nan(size(correctedFastKineticTimesOfSecondRead, 1), size(fastKineticTimesOfFirstRead, 2))];
-                        handles.experimentDataStructureArray{readIndex}.timeOfFastKineticsMeasurements = [nan(size(fastKineticTimesOfFirstRead, 1), size(correctedFastKineticTimesOfSecondRead, 2)); correctedFastKineticTimesOfSecondRead];
+                        secondRead.timeOfFastKineticsMeasurements = [nan(size(fastKineticTimesOfFirstRead, 1), size(correctedFastKineticTimesOfSecondRead, 2)); correctedFastKineticTimesOfSecondRead];
                    end
                end
                
-               if isequal(handles.experimentDataStructure.wellID, handles.experimentDataStructureArray{readIndex}.wellID)
+               if isequal(handles.experimentDataStructure.wellID, secondRead.wellID)
                   for wellIndex = 1 : numel(handles.experimentDataStructure.wellID)
                       measurementsOfFirstRead = handles.experimentDataStructure.measurements{wellIndex};
-                      measurementsOfSecondRead = handles.experimentDataStructureArray{readIndex}.measurements{wellIndex};
+                      measurementsOfSecondRead = secondRead.measurements{wellIndex};
                       mergedMeasurements = [measurementsOfFirstRead; measurementsOfSecondRead];
                       handles.experimentDataStructure.measurements{wellIndex} = mergedMeasurements;
                   end
                else
-                   [handles.experimentDataStructure, handles.experimentDataStructureArray{readIndex}] = mergeReadsOfDifferentWells(handles.experimentDataStructure, handles.experimentDataStructureArray{readIndex});
+                   [handles.experimentDataStructure, secondRead] = mergeReadsOfDifferentWells(handles.experimentDataStructure, secondRead);
                    handles.experimentDataStructure = standardizeWellOrder(handles.experimentDataStructure);
-                   handles.experimentDataStructureArray{readIndex} = standardizeWellOrder(handles.experimentDataStructureArray{readIndex});
+                   secondRead = standardizeWellOrder(secondRead);
                    
                    for wellIndex = 1 : numel(handles.experimentDataStructure.wellID)
                        measurementsOfFirstRead = handles.experimentDataStructure.measurements{wellIndex};
-                       measurementsOfSecondRead = handles.experimentDataStructureArray{readIndex}.measurements{wellIndex};
+                       measurementsOfSecondRead = secondRead.measurements{wellIndex};
                        mergedMeasurements = [measurementsOfFirstRead; measurementsOfSecondRead];
                        handles.experimentDataStructure.measurements{wellIndex} = mergedMeasurements;
                    end               
@@ -314,6 +315,10 @@ allWells = [dataStruct1.wellID, dataStruct2.wellID];
 allUniqueWells = unique(allWells);
 dataStruct1 = addNonMeasuredWells(dataStruct1, allUniqueWells);
 dataStruct2 = addNonMeasuredWells(dataStruct2, allUniqueWells);
+combinedFastKineticsMeasurements = max(cat(3, dataStruct1.timeOfFastKineticsMeasurements, dataStruct2.timeOfFastKineticsMeasurements),[],3);
+dataStruct1.timeOfFastKineticsMeasurements = combinedFastKineticsMeasurements;
+%dataStruct2.timeOfFastKineticsMeasurements = combinedFastKineticsMeasurements;
+
 
 function [read1] = mergeGen5ReadsOfDifferentWells(read1, read2)
 wellID1 = cell(numel(read1.wellID), 1);
