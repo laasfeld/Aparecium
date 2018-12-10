@@ -103,9 +103,16 @@ classdef NeoASCIIReader < handle
             this.goToBeginningOfTheFile();
             line = this.getNextLine();
             this.lastLineOfFile = 1;
-            while this.notAtEndOfTheFile(line)
+            procedureDetailsFound = false; % in case two or more experiments or plates have been exported to the same file, it is possible that end of quality part of file is not actual end of file
+            while this.notAtEndOfTheFile(line) 
                 this.lastLineOfFile = this.lastLineOfFile + 1;
                 line = this.getNextLine();
+                if ~isempty(strfind(line, 'Procedure Details')) && procedureDetailsFound
+                    this.lastLineOfFile = this.lastLineOfFile - 2;
+                    break;
+                elseif ~isempty(strfind(line, 'Procedure Details'))
+                    procedureDetailsFound = true;
+                end
             end
         end
         
@@ -175,7 +182,7 @@ classdef NeoASCIIReader < handle
                 end
             end
             this.totalNumberOfReads = readIndex;
-        end
+        end        
         
         function findMeasurements(this) % this function is long and has a lot of code duplications, refactor if possible
             this.mapMeasurementLines();
@@ -183,6 +190,9 @@ classdef NeoASCIIReader < handle
             activeReadIndex = 0;
             while activeReadIndex < this.totalNumberOfReads
                 activeReadIndex = activeReadIndex + 1;
+                if sortedListOfReads{activeReadIndex}.getIsAppendsIndex > 1 % this read will take it´s measurements from the first read of the append, no need to go through with the loop
+                   continue; 
+                end
                 %disp(activeReadIndex);
                 if (~strcmp(sortedListOfReads{activeReadIndex}.readType, 'Fluorescence Spectrum')&&~strcmp(sortedListOfReads{activeReadIndex}.readType, 'Image Endpoint')&&~strcmp(sortedListOfReads{activeReadIndex}.readType, 'Image Montage'))
                     channelNames = cell(0, 0);
@@ -196,11 +206,11 @@ classdef NeoASCIIReader < handle
                     if sortedListOfReads{activeReadIndex}.isKineticRead
                         for lineIndex = startingLine : endingLine
                             line = this.getNextLine();
-                            if size(strfind(line, sortedListOfReads{activeReadIndex}.readName), 1) && ~size(strfind(line, 'Time'), 1) % old comparator size(strfind(line, 'Read'), 1) && ~size(strfind(line, 'Time'), 1)
+                            if size(strfind(line, sortedListOfReads{activeReadIndex}.readName), 1)  && ~size(strfind(line, 'Time'), 1)  % old comparator size(strfind(line, 'Read'), 1) && ~size(strfind(line, 'Time'), 1)
                                 timePoint = 0;
                                 channelNames{end + 1} = regexprep(line, sortedListOfReads{activeReadIndex}.readName, '');
                                 activeChannel = activeChannel + 1;
-                            elseif isequal(this.totalNumberOfReads, 1)  && this.lineIsNotEmpty(line) && ~size(strfind(line, '	'), 1)
+                            elseif (isequal(this.totalNumberOfReads, 1) || isequal(sortedListOfReads{activeReadIndex}.getIsAppendsIndex, 1))  && this.lineIsNotEmpty(line) && ~size(strfind(line, '	'), 1)
                                 timePoint = 0;
                                 channelNames{end + 1} = line;
                                 activeChannel = activeChannel + 1;
@@ -261,7 +271,7 @@ classdef NeoASCIIReader < handle
                             line = this.getNextLine();
                             if size(strfind(line, sortedListOfReads{activeReadIndex}.readName), 1) && ~size(strfind(line, '	'), 1) % old comparator size(strfind(line, 'Read'), 1) && ~size(strfind(line, '	'), 1)
                                 channelNames{end + 1} = regexprep(line, sortedListOfReads{activeReadIndex}.readName, '');                            
-                            elseif isequal(this.totalNumberOfReads, 1)  && this.lineIsNotEmpty(line) && ~size(strfind(line, '	'), 1)
+                            elseif (isequal(this.totalNumberOfReads, 1) || isequal(sortedListOfReads{activeReadIndex}.getIsAppendsIndex, 1))  && this.lineIsNotEmpty(line) && ~size(strfind(line, '	'), 1)
                                 channelNames{end + 1} = line;
                             elseif strfind(line, 'Actual Temperature:')
                                 temperature = regexprep(line, 'Actual Temperature:	', '');
@@ -473,14 +483,28 @@ classdef NeoASCIIReader < handle
                             sortedListOfReads{activeReadIndex}.setMeasurements(measurements(:,prevCounter+1 :counter,:));
                             sortedListOfReads{activeReadIndex}.setWellIDs(wellID);
                             sortedListOfReads{activeReadIndex}.channels = channelNames;
-                            sortedListOfReads{activeReadIndex}.removeUnmeasuredWells();
+                            sortedListOfReads{activeReadIndex}.removeUnmeasuredWells();                           
                             activeReadIndex = activeReadIndex + 1;
                             
                         end
                         clear measurements time temperature
                     end
-                        
-
+                end
+            end
+            
+            activeReadIndex = 0;
+            while activeReadIndex < this.totalNumberOfReads
+                activeReadIndex = activeReadIndex + 1;
+                if isequal(sortedListOfReads{activeReadIndex}.getIsAppendsIndex, 1) % this read will take it´s measurements from the first read of the append, no need to go through with the loop
+                   leadingRead = sortedListOfReads{activeReadIndex}; 
+                elseif sortedListOfReads{activeReadIndex}.getIsAppendsIndex > 1
+                   measurements = leadingRead.getAndDeleteAppendMeasurements(sortedListOfReads{activeReadIndex}.getNumberOfCycles());
+                   temperature = leadingRead.getAndDeleteAppendTemperatures(sortedListOfReads{activeReadIndex}.getNumberOfCycles());
+                   time   = leadingRead.getAndDeleteTimepoints(sortedListOfReads{activeReadIndex}.getNumberOfCycles());
+                   sortedListOfReads{activeReadIndex}.setMeasurements(measurements);
+                   sortedListOfReads{activeReadIndex}.setWellIDs(leadingRead.getWellIDs());
+                   sortedListOfReads{activeReadIndex}.setTimepoints(time);
+                   sortedListOfReads{activeReadIndex}.setTemperature(temperature);
                 end
             end
         end
@@ -505,7 +529,9 @@ classdef NeoASCIIReader < handle
 %                 keepReadsWithIndices(this, keepIndices);
 %                 sortedListOfReads = this.generateSortedListOfReads();
 %             end
-            for activeReadIndex = 1 : numel(sortedListOfReads)
+            activeReadIndex = 0;
+            while activeReadIndex < numel(sortedListOfReads)
+                activeReadIndex = activeReadIndex + 1;
                 if(activeReadIndex > numel(sortedListOfReads))
                    break;  % currently, number of reads may change upon user input so this is a quick failsafe
                 end
@@ -534,7 +560,7 @@ classdef NeoASCIIReader < handle
                             end
                         end
 
-                        while endStringNotFound
+                        while endStringNotFound && this.nextLine <= this.lastLineOfFile
                             line = this.getNextLine();
                             currentLine = currentLine + 1;
                             if activeReadIndex < numel(sortedListOfReads) && ~isequal(line, -1)
@@ -549,7 +575,7 @@ classdef NeoASCIIReader < handle
                                         sortedListOfReads{activeReadIndex}.lastLineOfMeasurements = currentLine - 6;
                                     end
                                 end
-                            elseif isequal(line, -1)     
+                            elseif isequal(line, -1) || isequal(this.nextLine, this.lastLineOfFile)    
                                 endStringNotFound = 0; 
                                 sortedListOfReads{activeReadIndex}.lastLineOfMeasurements = this.lastLineOfFile - 2;
                                 endOfFileReached = 1;
@@ -571,12 +597,9 @@ classdef NeoASCIIReader < handle
                                 if strfind(line, 'Actual Temperature')
                                     startStringNotFound = 0;
                                 end
-
-
-
                             end
                             sortedListOfReads{activeReadIndex}.firstLineOfMeasurements = currentLine;
-                            while endStringNotFound
+                            while endStringNotFound && this.nextLine <= this.lastLineOfFile
                                 line = this.getNextLine();
                                 currentLine = currentLine + 1;
                                 if activeReadIndex < numel(sortedListOfReads) && ~isequal(line, -1)
@@ -591,7 +614,7 @@ classdef NeoASCIIReader < handle
                                             sortedListOfReads{activeReadIndex}.lastLineOfMeasurements = currentLine - 6;
                                         end
                                     end
-                                elseif isequal(line, -1)     
+                                elseif isequal(line, -1) || isequal(this.nextLine, this.lastLineOfFile)     
                                    endStringNotFound = 0; 
                                    sortedListOfReads{activeReadIndex}.lastLineOfMeasurements = this.lastLineOfFile - 2; 
                                    endOfFileReached = 1;
@@ -643,7 +666,7 @@ classdef NeoASCIIReader < handle
                         end
                     end
                     
-                    while endStringNotFound
+                    while endStringNotFound && this.nextLine <= this.lastLineOfFile
                         line = this.getNextLine();
                         currentLine = currentLine + 1;
                         if activeReadIndex < numel(sortedListOfReads) && ~isequal(line, -1)
@@ -658,7 +681,7 @@ classdef NeoASCIIReader < handle
                                     sortedListOfReads{activeReadIndex}.lastLineOfMeasurements = currentLine - 6;
                                 end
                             end
-                        elseif isequal(line, -1)     
+                        elseif isequal(line, -1) || isequal(this.nextLine, this.lastLineOfFile)    
                            endStringNotFound = 0; 
                            sortedListOfReads{activeReadIndex}.lastLineOfMeasurements = this.lastLineOfFile - 2;
                            endOfFileReached = 1;
@@ -668,9 +691,36 @@ classdef NeoASCIIReader < handle
                         end
                     end
                 end
+                sortedListOfReads{activeReadIndex}.calculateCyclesByLineCount();
+                if(~isequal(sortedListOfReads{activeReadIndex}.cyclesByLineCount, sortedListOfReads{activeReadIndex}.numberOfCycles))
+                   % this read starts an appended list of reads
+                   sortedListOfReads{activeReadIndex}.setIsAppendsIndex(1);
+                   extraCycles = sortedListOfReads{activeReadIndex}.cyclesByLineCount - sortedListOfReads{activeReadIndex}.numberOfCycles;
+                   counter = 1;
+                   for checkReadIndex = activeReadIndex + 1 : numel(sortedListOfReads)
+                       if ( sortedListOfReads{checkReadIndex}.numberOfCycles < extraCycles)
+                           extraCycles = extraCycles - sortedListOfReads{checkReadIndex}.numberOfCycles;
+                           counter = counter + 1;
+                           sortedListOfReads{checkReadIndex}.setIsAppendsIndex(counter);
+                           
+                       elseif isequal(sortedListOfReads{checkReadIndex}.numberOfCycles, extraCycles)
+                           extraCycles = extraCycles - sortedListOfReads{checkReadIndex}.numberOfCycles;
+                           counter = counter + 1;
+                           sortedListOfReads{checkReadIndex}.setIsAppendsIndex(counter);
+                           break;
+                       else
+                          error('Could not process file. Reads in append do not match up'); 
+                       end
+                   end
+                   if ~isequal(extraCycles, 0)
+                      error('Could not process file. Reads in append do not match up') 
+                   end                  
+                   activeReadIndex = activeReadIndex + counter - 1;
+                end
                 if isequal(endOfFileReached, 1)
                    break; 
                 end
+                
             end
             warning('on', 'MATLAB:nonIntegerTruncatedInConversionToChar');
         end
@@ -734,6 +784,7 @@ classdef NeoASCIIReader < handle
         
         function goToBeginningOfTheFile(this)
             fseek(this.fileHandle, 0, 'bof');
+            this.nextLine = 1;
         end                     
         
         function initializeFileHandle(this)

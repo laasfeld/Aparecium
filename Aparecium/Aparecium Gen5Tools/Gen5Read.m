@@ -17,8 +17,10 @@ classdef Gen5Read < handle
         firstLineOfMeasurements
         lastLineOfMeasurements
         readWasEmpty = 'No'
-        
+        cyclesByLineCount             
         fastKineticsMeasurementsTimepoints
+        appendsIndex = 0; % 0 if not part of appended reads
+        
     end
     
     methods
@@ -100,6 +102,10 @@ classdef Gen5Read < handle
             this.wellID = IDs;
         end
         
+        function wellIDs = getWellIDs(this)
+            wellIDs = this.wellID;
+        end
+        
         function setReadWasEmpty(this, yesOrNo)
            this.readWasEmpty = yesOrNo; 
         end
@@ -147,6 +153,10 @@ classdef Gen5Read < handle
            readName = this.readName; 
         end
         
+        function calculateCyclesByLineCount(this)
+            this.cyclesByLineCount = ((this.lastLineOfMeasurements - this.firstLineOfMeasurements)-numel(this.channels)*3)/numel(this.channels);
+        end
+        
         function experimentDataStructure = toExperimentDataStructure(read)
            rawWellID = read.wellID;
            wellID = cell(1, 0);
@@ -187,6 +197,29 @@ classdef Gen5Read < handle
                 end
                 experimentDataStructure.measurements{wellIndex} = measurementsAsDouble;
             end
-        end       
+        end
+        
+        function appendsIndex = getIsAppendsIndex(this)
+            appendsIndex = this.appendsIndex;
+        end
+        
+        function setIsAppendsIndex(this, appendsIndex)
+            this.appendsIndex = appendsIndex;
+        end
+        
+        function measurements = getAndDeleteAppendMeasurements(this, nrOfCycles)
+            measurements = this.measurements(:,this.numberOfCycles + 1: nrOfCycles + this.numberOfCycles, :);
+            this.measurements(:,this.numberOfCycles + 1: nrOfCycles + this.numberOfCycles, :) = [];
+        end
+        
+        function temperatures = getAndDeleteAppendTemperatures(this, nrOfCycles)
+            temperatures = this.temperature(:, this.numberOfCycles + 1: nrOfCycles + this.numberOfCycles);
+            this.temperature(:, this.numberOfCycles + 1: nrOfCycles + this.numberOfCycles) = [];
+        end
+        
+        function timepoints = getAndDeleteTimepoints(this, nrOfCycles)
+            timepoints = this.measurementTimepoints(this.numberOfCycles + 1: nrOfCycles + this.numberOfCycles);
+            this.measurementTimepoints(this.numberOfCycles + 1: nrOfCycles + this.numberOfCycles) = [];
+        end
     end    
 end
