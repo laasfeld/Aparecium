@@ -15,12 +15,20 @@ classdef SBToolboxExporter <  ExportPanelController
         suffix = '';
         outputValue = [];
         data = [];
-        ultacorrect = 1;
+        ultracorrect = 0;
     end
     
     methods
         function this = SBToolboxExporter()
             
+        end
+        
+        function setUltracorrect(this, value)
+           this.ultracorrect = value; 
+        end
+        
+        function ultracorrect = getUltracorrect(this)
+           ultracorrect = this.ultracorrect; 
         end
         
         function addLoadingBar(this, loadingBar)
@@ -228,7 +236,12 @@ classdef SBToolboxExporter <  ExportPanelController
         
         function showTableData(this, group, subgroup)
             data = this.outputTableStruct{group}{subgroup}.SBTable;
-            set(this.tableHandle, 'Data', data, 'ColumnEditable', [false true(1,size(data, 2)-1)]);
+            this.tableHandle.setData(data);
+            this.tableHandle.setEditable(0, false);
+            for column = 1 : size(data, 2)-1
+                this.tableHandle.setEditable(column, true);
+            end
+            %set(this.tableHandle, 'Data', data, 'ColumnEditable', [false true(1,size(data, 2)-1)]);
         end
         
         function sendTableToWorkspace(this, group, subgroup)            
@@ -357,7 +370,7 @@ classdef SBToolboxExporter <  ExportPanelController
                         for channelIndex = 1 : numel(outputValue)
                             row = 0;
                             
-                            if isequal(this.ultacorrect, 1)
+                            if isequal(this.ultracorrect, 1)
                                 row = row + 1;
                                 experimentData{row, 2} = 0;
                                 experimentData{row, (channelIndex - 1)*3+3} = 0;
@@ -385,7 +398,7 @@ classdef SBToolboxExporter <  ExportPanelController
                             experimentData(1,1) = {'Values'};
                             for channelIndex = 1 : numel(outputValue)
                                 row = 0;
-                                if isequal(this.ultacorrect, 1)
+                                if isequal(this.ultracorrect, 1)
                                     row = row + 1;
                                     experimentData{row, 2} = 0;
                                     experimentData{row, (channelIndex - 1)*3+3} = 0;
@@ -395,12 +408,12 @@ classdef SBToolboxExporter <  ExportPanelController
                                 
                                 for timeIndex = 1 : numberOfCycles
                                     if isequal(channelIndex, 1)
-                                        experimentData(timeIndex+this.ultacorrect,2) = {time(cyclesInUse(timeIndex))};
+                                        experimentData(timeIndex+this.ultracorrect,2) = {time(cyclesInUse(timeIndex))};
                                     end
                                     
-                                    experimentData(timeIndex+this.ultacorrect,(channelIndex - 1)*3+3) = {data{group}{subgroup}.average{requestedChannelIndices(channelIndex)}(cyclesInUse(timeIndex))};
-                                    experimentData(timeIndex+this.ultacorrect,(channelIndex - 1)*3+4) = {data{group}{subgroup}.maximum{requestedChannelIndices(channelIndex)}(cyclesInUse(timeIndex))};
-                                    experimentData(timeIndex+this.ultacorrect,(channelIndex - 1)*3+5) = {data{group}{subgroup}.minimum{requestedChannelIndices(channelIndex)}(cyclesInUse(timeIndex))};   
+                                    experimentData(timeIndex+this.ultracorrect,(channelIndex - 1)*3+3) = {data{group}{subgroup}.average{requestedChannelIndices(channelIndex)}(cyclesInUse(timeIndex))};
+                                    experimentData(timeIndex+this.ultracorrect,(channelIndex - 1)*3+4) = {data{group}{subgroup}.maximum{requestedChannelIndices(channelIndex)}(cyclesInUse(timeIndex))};
+                                    experimentData(timeIndex+this.ultracorrect,(channelIndex - 1)*3+5) = {data{group}{subgroup}.minimum{requestedChannelIndices(channelIndex)}(cyclesInUse(timeIndex))};   
                                 end
                             end
                         catch MException

@@ -476,7 +476,7 @@ classdef PrismPanelController < ExportPanelController
             end
             
             set(this.headerTableHandle, 'ColumnName', this.HeaderTableHeaderNames{1});
-            set(this.headerTableHandle, 'Data', this.HeaderTableVisualData{1});
+            this.headerTableHandle.setData(this.HeaderTableVisualData{1});
             
             Header(4, numberOfWells + 1) = {''};% make proper size header
             Header(4,1) = {'time'};% set the time column

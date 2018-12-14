@@ -122,6 +122,8 @@ classdef MidasTableController < handle
 
                 case 'min' 
                     timeMoments = timeMoments*60;
+                case 'm'
+                    timeMoments = timeMoments*60;
                 case 'h'
                     timeMoments = timeMoments*3600;
             end
@@ -136,6 +138,8 @@ classdef MidasTableController < handle
                 case 's'
 
                 case 'min' 
+                    timeMoments = timeMoments/60;
+                case 'm'
                     timeMoments = timeMoments/60;
                 case 'h'
                     timeMoments = timeMoments/3600;
@@ -298,7 +302,7 @@ classdef MidasTableController < handle
         function addData(this)
             if isequal(this.activeUpdate, 'on')
                 set(this.midasTableHandle, 'columnName', this.columnHeaders);
-                set(this.midasTableHandle, 'Data', this.tableData); 
+                this.midasTableHandle.setData(this.tableData); 
             end
         end
         
@@ -313,7 +317,7 @@ classdef MidasTableController < handle
         function addEventsData(this)
             if isequal(this.activeUpdate, 'on')
                 set(this.midasTableHandle, 'columnName', this.columnHeaders);
-                set(this.midasTableHandle, 'Data', this.eventData); 
+                this.midasTableHandle.setData(this.eventData); 
             end
         end
         

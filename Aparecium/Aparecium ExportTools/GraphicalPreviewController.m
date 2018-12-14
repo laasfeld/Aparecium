@@ -170,10 +170,10 @@ classdef GraphicalPreviewController < ExportPanelController
                 xAxis = reshape(xAxis, numel(xAxis), 1);
                 yAxis = reshape(yAxis, numel(yAxis), 1);
                 try
-                    plot(xAxis, yAxis, 'Marker', this.markers{group}, 'Line', 'none', 'MarkerEdgeColor',[red green blue]);
+                    plot(xAxis, yAxis, 'Marker', this.markers{mod(group, numel(this.markers))}, 'Line', 'none', 'MarkerEdgeColor',[red green blue]);
                 catch MException
                     if strcmp(MException.message, 'There is no Line property on the Line class.') 
-                        plot(xAxis, yAxis, this.markers{group}, 'MarkerEdgeColor',[red green blue]);
+                        plot(xAxis, yAxis, this.markers{mod(group, numel(this.markers))}, 'MarkerEdgeColor',[red green blue]);
                     end
                 end
 
@@ -218,10 +218,10 @@ classdef GraphicalPreviewController < ExportPanelController
                 xAxis = reshape(xAxis, numel(xAxis), 1);
                 yAxis = reshape(yAxis, numel(yAxis), 1);
                 try
-                    plot(xAxis, yAxis, 'Marker', this.markers{group}, 'Line', 'none', 'MarkerEdgeColor',[red green blue]);
+                    plot(xAxis, yAxis, 'Marker', this.markers{mod(group, numel(this.markers))}, 'Line', 'none', 'MarkerEdgeColor',[red green blue]);
                 catch MException
                     if strcmp(MException.message, 'There is no Line property on the Line class.') 
-                        plot(xAxis, yAxis, this.markers{group}, 'MarkerEdgeColor',[red green blue]);
+                        plot(xAxis, yAxis, this.markers{mod(group, numel(this.markers))}, 'MarkerEdgeColor',[red green blue]);
                     end
                 end
 

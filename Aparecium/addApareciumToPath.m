@@ -32,6 +32,8 @@ try
     javaaddpath(strcat(thisPath,'\bfmatlab\bioformats_package.jar'), '-end')
     javaaddpath(strcat(thisPath,'\Aparecium Java\Sim plate.jar'), '-end')
     javaaddpath(strcat(thisPath,'\Aparecium Java\modified-dans-dbf.jar'), '-end')
+    javaaddpath(strcat(thisPath,'\createTable\TableSorter.jar'), '-end')
+    javaaddpath(strcat(thisPath,'\createTable\ColoredFieldCellRenderer.zip'), '-end')
 catch
     warndlg('Error loading java packages, some features might not work');
 end
