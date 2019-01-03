@@ -58,18 +58,20 @@ set(0,'defaultuicontrolfontname','MS Sans Serif', 'defaultuicontrolfontsize', 8)
 handles.output = hObject;
 handles.fileChooser = FileChooser();
 handles.midasControllerArray = cell(0,0);
+handles.mainMIDASTable = createMIDAS_table(handles.MIDASTablePanel);
 try
-    handles.midasTableController = varargin{1};
+    handles.midasTableController = varargin{1};    
     handles.midasTableController.setMidasTableHandle(handles.mainMIDASTable);
     handles.midasTableController.showTable();
-    set(handles.mainMIDASTable, 'visible', 'on');
+    handles.mainMIDASTable.setVisible('on');
     set(handles.MIDASInformationText, 'String', ['MIDAS file ', handles.midasTableController.fileName, ' loaded']);
+    handles.fileName = handles.midasTableController.fileName;
 catch
     try
-        if strcmp(varargin{2}, 'fromMidasTable')
+        if isequal(numel(varargin), 2) && strcmp(varargin{2}, 'fromMidasTable')
             warndlg('Error loading midasTableController');
-        else
-
+        else            
+            handles.midasTableController = MidasTableController(handles.mainMIDASTable);
         end
     catch
         
@@ -188,8 +190,10 @@ handles.midasTableController = mergeMIDASFiles(handles.stackTableController, han
 handles.midasTableController.setMidasTableHandle(handles.mainMIDASTable);
 handles.midasTableController.showTable();
 handles.midasTableController.setEventDataEqualToData();
-set(handles.mainMIDASTable, 'visible', 'on');
+handles.mainMIDASTable.setVisible('on');
 set(handles.MIDASInformationText, 'String', ['MIDAS file ', handles.midasTableController.fileName, ' loaded']);
+handles.fileName = handles.midasTableController.fileName;
+initializeExperimentConfigurationPanel(handles);
 guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
@@ -208,8 +212,9 @@ function LoadPrimaryMIDAS_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 loadPrimaryMIDASFile_Callback(hObject, eventdata, handles);
 successBox('MIDAS file successfully loaded', 'Success');
-set(handles.mainMIDASTable, 'visible', 'on');
+handles.mainMIDASTable.setVisible('on');
 set(handles.MIDASInformationText, 'String', ['MIDAS file ', handles.midasTableController.fileName, ' loaded']);
+handles.fileName = handles.midasTableController.fileName;
 initializeExperimentConfigurationPanel(handles);
 
 function initializeExperimentConfigurationPanel(handles)
@@ -217,7 +222,7 @@ handles =  MidasToApareciumExperimentInput(handles.midasTableController, handles
 handles.apareciumExperimentInput.setMode('addTreatments');
 handles.midasTableController.setDataEqualToEventData(); % MIDAS is loaded with all data as events data but some operations are carried out on table data.
 set(handles.ChooseDimensionality, 'Value', handles.apareciumExperimentInput.getNumberOfTreatments());
-handles.dimensionality = handles.apareciumExperimentInput.getNumberOfTreatments();
+handles = changeDimensionality(handles, handles.apareciumExperimentInput.getNumberOfTreatments());
 treatmentsTableData = handles.apareciumExperimentInput.getTreatmentsTableData();
 set(handles.treatments_Table, 'Data', treatmentsTableData);
 channels = handles.apareciumExperimentInput.getChannelNames();

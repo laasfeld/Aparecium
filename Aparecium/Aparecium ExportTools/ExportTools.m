@@ -25,7 +25,7 @@ function varargout = ExportTools(varargin)
 
 % Edit the above text to modify the response to help ExportTools
 
-% Last Modified by GUIDE v2.5 12-Nov-2018 13:06:45
+% Last Modified by GUIDE v2.5 14-Dec-2018 16:07:50
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
@@ -78,10 +78,15 @@ handles.numberOfGroups = 1;
 groupNameTable_CellEditCallback(hObject, eventdata, handles);
 handles.previewTabGroup = [];
 handles.previewTabGroup = createTabs(hObject, handles);
+handles.excelTable = createTable(handles.ExcelTablePanel, {}, zeros(0,0), 'Buttons', 'off', 'Visible', 'on');
+setAutoResizeOff(handles.excelTable);
+handles.excelTableController = ExcelTableController();
+handles.excelTableController.setTableHandle(handles.excelTable);
 
 handles.SBExporter = SBToolboxExporter();
 handles.SBExporter.addLoadingBar(handles.loadingBar);
 handles.SBExporter.setExperimentParamNameTable(handles.parameterNameTable);
+handles.SBTable = createTable(handles.SBTablePanel, {}, zeros(0,0), 'Buttons', 'off', 'Visible', 'off');
 handles.SBExporter.setTableHandle(handles.SBTable);
 handles.SBCalcMode = 'Average';
 
@@ -94,12 +99,17 @@ handles.graphicalPreviewController.setAxisMinMaxBoxes(handles.XAxisUpperBound, h
 
 handles.copasiPreviewController = CopasiPanelController();
 handles.copasiPreviewController.setExperimentParamNameTable(handles.copasiParameterNameTable);
+handles.CopasiTable = createTable(handles.CopasiTablePanel, {}, zeros(0,0), 'Buttons', 'off', 'Visible', 'off');
 handles.copasiPreviewController.setTableHandle(handles.CopasiTable);
 handles.copasiCalcMode = 'Average';
 
 handles.prismPanelController = PrismPanelController();
 handles.prismPanelController.setXAxisChoosingDropdownHandle(handles.PrismXAxisTreatmentSelection);
 handles.prismPanelController.setTableOrganizationHandle(handles.PrismOrganizationStyle);
+handles.PrismTable = createTable(handles.PrismTablePanel, {}, zeros(0,0), 'Buttons', 'off', 'Visible', 'off');
+handles.PrismHeaderTable = createTable(handles.PrismHeaderTablePanel, {}, zeros(0,0), 'Buttons', 'off', 'Visible', 'off');
+setAutoResizeOff(handles.PrismTable);
+setAutoResizeOff(handles.PrismHeaderTable);
 handles.prismPanelController.setTableHandle(handles.PrismTable);
 handles.prismPanelController.setHeaderTableHandle(handles.PrismHeaderTable);
 
@@ -206,6 +216,9 @@ handles.graphicalPreviewController.setSubgroupStartValue(subgroupStartValue);
 handles.copasiPreviewController.setSubgroupStartValue(subgroupStartValue);
 handles.prismPanelController.setSubgroupStartValue(subgroupStartValue);
 
+function setAutoResizeOff(table)
+jtable = table.getTable;
+jtable.setAutoResizeMode(jtable.AUTO_RESIZE_OFF)
 
 function handles = updateGUIToPreviousExport(handles, figure)
 set(handles.exportName, 'String', handles.exportToEdit.exportName);
@@ -319,19 +332,20 @@ guidata(handles.figure1, handles);
 function previewTabGroup = createTabs(hObject, handles)
 try
     previewTabGroup = uitabgroup('v0','Parent', handles.exportPreviewPanel);
-    tab1 = uitab('v0','Parent', previewTabGroup, 'Title', 'Excel preview');
-    tab2 = uitab('v0','Parent', previewTabGroup, 'Title', 'SBtoolbox preview');
-    tab3 = uitab('v0','Parent', previewTabGroup, 'Title', 'Graphical preview');
-    tab4 = uitab('v0','Parent', previewTabGroup, 'Title', 'COPASI Preview');
-    tab5 = uitab('v0','Parent', previewTabGroup, 'Title', 'Prism Preview');
+    tab1 = uitab('v0','Parent', previewTabGroup, 'Title', 'Excel preview', 'Tag', 'ExcelPreview');
+    tab2 = uitab('v0','Parent', previewTabGroup, 'Title', 'SBtoolbox preview', 'Tag', 'SBPreview');
+    tab3 = uitab('v0','Parent', previewTabGroup, 'Title', 'Graphical preview', 'Tag', 'GraphicalPreview');
+    tab4 = uitab('v0','Parent', previewTabGroup, 'Title', 'COPASI Preview', 'Tag', 'CopasiPreview');
+    tab5 = uitab('v0','Parent', previewTabGroup, 'Title', 'Prism Preview', 'Tag', 'PrismPreview');
 catch
     previewTabGroup = uitabgroup('Parent', handles.exportPreviewPanel);
-    tab1 = uitab('Parent', previewTabGroup, 'Title', 'Excel preview');
-    tab2 = uitab('Parent', previewTabGroup, 'Title', 'SBtoolbox preview');
-    tab3 = uitab('Parent', previewTabGroup, 'Title', 'Graphical preview');
-    tab4 = uitab('Parent', previewTabGroup, 'Title', 'COPASI Preview');
-    tab5 = uitab('Parent', previewTabGroup, 'Title', 'Prism Preview');
+    tab1 = uitab('Parent', previewTabGroup, 'Title', 'Excel preview', 'Tag', 'ExcelPreview');
+    tab2 = uitab('Parent', previewTabGroup, 'Title', 'SBtoolbox preview', 'Tag', 'SBPreview');
+    tab3 = uitab('Parent', previewTabGroup, 'Title', 'Graphical preview', 'Tag', 'GraphicalPreview');
+    tab4 = uitab('Parent', previewTabGroup, 'Title', 'COPASI Preview', 'Tag', 'CopasiPreview');
+    tab5 = uitab('Parent', previewTabGroup, 'Title', 'Prism Preview', 'Tag', 'PrismPreview');
 end
+previewTabGroup.SelectionChangedFcn = @tabChangeListener;
 try
     set(previewTabGroup, 'BackgroundColor', [225/255 226/255 251/255]);
 catch MException
@@ -350,6 +364,7 @@ set(handles.graphicalPreview, 'Parent', tab3);
 set(handles.COPASIPreviewPanel, 'Parent', tab4);
 set(handles.PrismPreviewPanel, 'Parent', tab5);
 guidata(hObject, handles);
+
 
 
 % --- Executes on button press in pushbutton1.
@@ -712,9 +727,7 @@ function applyFormula_Callback(hObject, eventdata, handles)
 % hObject    handle to applyFormula (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-set(handles.excelTable, 'visible', 'on');
-set(handles.SBTable, 'visible', 'on');
-set(handles.PrismTable, 'visible', 'on');
+
 calculationMethod = CalculationMethod();
 if get(handles.showBlank, 'Value')
     subgroupStartValue = 1;
@@ -729,7 +742,7 @@ handles.excelTableController.calculateNewTable(handles.excelTableConfiguration);
 
 set(handles.tableConfigurationChooser, 'enable', 'on');
 
-calculationMethod.addFormulae(handles.activeFormula);
+%calculationMethod.addFormulae(handles.activeFormula);
 handles.SBExporter.setCalculationMethod(calculationMethod);
 
 possibleVariables = get(handles.SBIncludedMeasurements, 'String');
@@ -759,7 +772,7 @@ handles.prismPanelController.calculateNewTable(handles.excelTableConfiguration);
 guidata(hObject, handles);
 
 function applyFormulaToExcelPreview(hObject, eventdata, handles)
-set(handles.excelTable, 'visible', 'on');
+
 
 calculationMethod = CalculationMethod();
 if get(handles.showBlank, 'Value')
@@ -813,8 +826,7 @@ function excelTable_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to excelTable (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-handles.excelTableController = ExcelTableController();
-handles.excelTableController.setTableHandle(hObject);
+
 guidata(hObject, handles);
 
 
@@ -1684,10 +1696,11 @@ function excelTable_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-disp([eventdata.Modifier, '', eventdata.Key])
-if strcmp(eventdata.Key, 'c') && strcmp(eventdata.Modifier, 'control')
-    handles.excelTableController.customCopy();
-end
+% disp([eventdata.Modifier, '', eventdata.Key])
+% if strcmp(eventdata.Key, 'c') && strcmp(eventdata.Modifier, 'control')
+%     handles.excelTableController.customCopy();
+% end
+
 
 
 % --- Executes on button press in sendExcelToWorkspace.
@@ -2333,3 +2346,13 @@ for param = 1 : numel(SBParamNames)
    end
    MIDAS2SBNameManager.addNewChannel(originalParamNames{param}, SBParamNames{param}, stateOrParamString, defaultInclude{param}); 
 end
+
+
+% --- Executes on button press in fastKineticsModel.
+function fastKineticsModel_Callback(hObject, eventdata, handles)
+% hObject    handle to fastKineticsModel (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.SBExporter.setUltracorrect(get(hObject, 'Value'));
+% Hint: get(hObject,'Value') returns toggle state of fastKineticsModel
+guidata(hObject, handles);

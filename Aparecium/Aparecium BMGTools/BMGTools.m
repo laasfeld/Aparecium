@@ -66,7 +66,8 @@ handles.outputChannelNames = [];
 handles.treatments_TableData = {'', '', ''}; 
 handles.MIDAS_tableData = [];
 handles.MIDAS_tableData = {};
-handles.midasTableController;
+handles.MIDAS_table = createMIDAS_table(handles.MIDASTablePanel);
+handles.midasTableController = MidasTableController(handles.MIDAS_table);
 handles.apareciumExperimentInput = ApareciumExperimentInput();
 handles.plateSimulatorInterface = PlateSimulatorInterface();
 handles.simPlateHandle = [];
@@ -138,7 +139,7 @@ if allow
     [fullFilePath, fileName] = fileChooser.userChoosePheraStarASCIIFile();
     handles.pheraStarAsciiReader.readFile(fullFilePath);
     handles.fileName = fileName;
-    set(handles.MIDAS_table,'visible', 'on');
+    handles.MIDAS_table.setVisible('on');
     set(handles.MIDASInformationText,'String', ['PheraSTAR ASCII file ', fileName, ' loaded']);
     handles.experimentDataStructure = handles.pheraStarAsciiReader.experimentDataStructure;
     rawData = sendDataToMidasTable(handles.pheraStarAsciiReader.experimentDataStructure, handles.dimensionality);

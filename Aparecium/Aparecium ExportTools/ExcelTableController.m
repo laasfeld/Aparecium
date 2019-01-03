@@ -185,10 +185,15 @@ classdef ExcelTableController < ExportPanelController
             end
             colorgen = @(color,text) ['<html><table border=0 width=200 bgcolor=',color,'  ><TR><TD>',text,'</TD></TR> </table></html>'];
             colorgenBlank = @(color,text) ['<html><table border=0 width=200 bgcolor=',color,' color=',color,' ><TR><TD>',text,'</TD></TR> </table></html>'];
+            cr = ColoredFieldCellRenderer(java.awt.Color.white);
+            cr.setDisabled(true);
             maxNumberOfSubgroupElements = -1;
             for groupIndex = 1 : numel(groups)
                maxNumberOfSubgroupElements = max(max(cellfun(@numel,data{groupIndex})), maxNumberOfSubgroupElements); 
             end
+            counter = 0;
+            crShift = size(Header, 2);
+            control = cell(size(Header, 1), 204);
             for group = 1 : size(data, 2)
                 for subgroup = this.subgroupStartValue : numel(data{group})
                     for timeIndex = 1 : numberOfCycles
@@ -196,20 +201,33 @@ classdef ExcelTableController < ExportPanelController
                             switch mod(timeIndex + group, 2)
                                 case 0
                                     colorCode = 'E4EFF7';
+                                    colorRGB = [228	239	247]/255;
                                 case 1
                                     colorCode = 'E8D8E4';
+                                    colorRGB = [232	216	228]/255;
                             end
                             if subgroupElement <= size(groups{group}{subgroup}, 1)
                                 if isequal(subgroupElement,1)
                                     experimentData(1,col) = {num2str(timeMoments(cyclesInUse(timeIndex)))};
-                                    visualExperimentData(1,col) = {num2str(timeMoments(cyclesInUse(timeIndex)))};
+                                    %visualExperimentData(1,col) = {num2str(timeMoments(cyclesInUse(timeIndex)))};
+                                    cr.setCellBgColor(0, col - 1 + crShift, java.awt.Color(1, 1, 1));
+                                    cr.setCellFgColor(0, col - 1 + crShift, java.awt.Color(0, 0, 0));
+                                    counter = counter + 1;
+                                    control{1, col + crShift} = 1; 
                                 end
                                 experimentData(row, col) = {data{group}{subgroup}{subgroupElement}{1}(cyclesInUse(timeIndex))};
-                                visualExperimentData(row, col) = {colorgen(colorCode, num2str(data{group}{subgroup}{subgroupElement}{1}(cyclesInUse(timeIndex))))};
-                                
+                                %visualExperimentData(row, col) = {colorgen(colorCode, num2str(data{group}{subgroup}{subgroupElement}{1}(cyclesInUse(timeIndex))))};
+                                cr.setCellBgColor(row - 1, col - 1 + crShift, java.awt.Color(colorRGB(1), colorRGB(2), colorRGB(3)));
+                                cr.setCellFgColor(row - 1, col - 1 + crShift, java.awt.Color(0, 0, 0));
+                                counter = counter + 1;
+                                control{row, col + crShift} = 1;
                             else
                                 experimentData(row, col) = {[]};
-                                visualExperimentData(row, col) = {colorgenBlank(colorCode, 't')};
+                                %visualExperimentData(row, col) = {colorgenBlank(colorCode, 't')};
+                                cr.setCellBgColor(row - 1, col - 1 + crShift, java.awt.Color(1, 1, 1));
+                                cr.setCellFgColor(row - 1, col - 1 + crShift, java.awt.Color(0, 0, 0));
+                                counter = counter + 1;
+                                control{row, col + crShift} = 1;
                             end
                             
                             col = col + 1;                            
@@ -220,11 +238,27 @@ classdef ExcelTableController < ExportPanelController
                     col = 1;
                 end
             end
+            
+            for row = 1 : size(Header, 1)
+                for col = 1 : size(Header, 2)
+                    counter = counter + 1;
+                    cr.setCellBgColor(row - 1, col - 1, java.awt.Color(1, 1, 1));
+                    cr.setCellFgColor(row - 1, col - 1, java.awt.Color(1, 0, 0));
+                    control{row, col} = 1;
+                end
+            end
 
             tableData = [Header, experimentData];
-            visualData = [Header, visualExperimentData];
+            %visualData = [Header, visualExperimentData];
             this.setTableData(tableData);
-            this.setVisualTableData(visualData);
+            jtable = this.tableHandle.getTable;        
+            this.setVisualTableData(tableData);
+            %set(this.tableHandle,'ColumnFormat',[]);
+            for colIdx = 1 : size(tableData, 2)
+                %disp([num2str(colIdx),' /',num2str(size(tableData, 2))])                
+                jtable.getColumnModel.getColumn(colIdx-1).setCellRenderer(cr);
+            end
+            
             
         end
         
@@ -515,7 +549,7 @@ classdef ExcelTableController < ExportPanelController
         end
         
         function setVisualTableData(this, visualTableData)
-           set(this.tableHandle, 'Data', visualTableData);  
+           this.tableHandle.setData(visualTableData);  
         end      
         
         function exportWithDialogue(this)

@@ -3,7 +3,7 @@ function [ MIDASTableController1, MIDASTableController2 ] = guaranteeAllWellsPre
 %   Detailed explanation goes here
 wellIDOfFirstTable = MIDASTableController1.getWellID();
 wellIDOfSecondTable = MIDASTableController2.getWellID();
-allSortedWellIDs = union(wellIDOfFirstTable, wellIDOfSecondTable);
+allSortedWellIDs = ImageImporter.sortWellID(union(wellIDOfFirstTable, wellIDOfSecondTable))';
 addMissingRows(MIDASTableController1, wellIDOfFirstTable, allSortedWellIDs);
 addMissingRows(MIDASTableController2, wellIDOfSecondTable, allSortedWellIDs);
 end

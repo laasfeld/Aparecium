@@ -22,7 +22,7 @@ function varargout = PerkinElmerTools(varargin)
 
 % Edit the above text to modify the response to help PerkinElmerTools
 
-% Last Modified by GUIDE v2.5 10-Aug-2017 17:19:38
+% Last Modified by GUIDE v2.5 10-Dec-2018 18:54:20
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -62,8 +62,10 @@ handles.fastKinetics = [];
 handles.outputChannelNames = [];
 handles.treatments_TableData = {'', '', ''}; 
 handles.MIDAS_tableData = [];
-handles.MIDAS_tableData = {};
-handles.midasTableController;
+handles.MIDAS_table = createMIDAS_table(handles.MIDASTablePanel);
+handles.midasTableController = MidasTableController(handles.MIDAS_table);
+handles.midasTableController.startWithOneMeasurementColumn();
+handles.midasTableController.addTreatmentColumn(' ', '', '');
 handles.apareciumExperimentInput = ApareciumExperimentInput();
 handles.plateSimulatorInterface = PlateSimulatorInterface();
 handles.simPlateHandle = [];
@@ -122,7 +124,7 @@ fileChooser = FileChooser();
 [fullFilePath, fileName] = fileChooser.userChoosePerkinElmerExcel();
 handles.perkinElmerReader.readFile(fullFilePath);
 handles.fileName = regexprep(fileName, '.txt', '');
-set(handles.MIDAS_table,'visible', 'on');
+handles.MIDAS_table.setVisible('on');
 set(handles.MIDASInformationText,'String', ['PerkinElmer file ', fileName, ' loaded']);
 handles.experimentDataStructure = handles.perkinElmerReader.experimentDataStructure;
 rawData = sendDataToMidasTable(handles.perkinElmerReader.experimentDataStructure, handles.dimensionality);
@@ -442,9 +444,8 @@ function MIDAS_table_CreateFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 % set(hObject, 'Data', {}, 'visible', 'off');
-handles.midasTableController = MidasTableController(hObject);
-handles.midasTableController.startWithOneMeasurementColumn();
-handles.midasTableController.addTreatmentColumn(' ', '', '');
+
+
 guidata(hObject, handles);
 
 

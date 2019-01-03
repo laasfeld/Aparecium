@@ -1,7 +1,11 @@
 function handles = changeDimensionality(handles, dimensionality)
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
-dimensionality = floor(str2double(dimensionality));
+if isa(dimensionality, 'double')
+    dimensionality = floor(dimensionality);
+elseif isa(dimensionality, 'char')
+    dimensionality = floor(str2double(dimensionality));
+end
 
 if isnan(dimensionality) || dimensionality < 1
     set(handles.ChooseDimensionalityText,'String','Only positive integers allowed','ForegroundColor','red');
@@ -23,8 +27,10 @@ handles.treatments_TableData = get(handles.treatments_Table, 'data');
 numberOfRows = size(handles.treatments_TableData, 1);
 if(numberOfRows <= dimensionality - 1)
     for columns = numberOfRows : dimensionality -1
-        handles.treatments_TableData = [handles.treatments_TableData; emptyRow] ; 
-        handles.midasTableController.addTreatmentColumn(' ', '', '');
+        handles.treatments_TableData = [handles.treatments_TableData; emptyRow];
+        if(handles.midasTableController.treatmentColumns < columns)
+            handles.midasTableController.addTreatmentColumn(' ', '', '');
+        end
     end
 elseif (numberOfRows > dimensionality)
     for column = numberOfRows : -1 : dimensionality + 1

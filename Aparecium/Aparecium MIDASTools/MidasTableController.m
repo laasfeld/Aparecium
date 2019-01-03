@@ -122,6 +122,8 @@ classdef MidasTableController < handle
 
                 case 'min' 
                     timeMoments = timeMoments*60;
+                case 'm'
+                    timeMoments = timeMoments*60;
                 case 'h'
                     timeMoments = timeMoments*3600;
             end
@@ -136,6 +138,8 @@ classdef MidasTableController < handle
                 case 's'
 
                 case 'min' 
+                    timeMoments = timeMoments/60;
+                case 'm'
                     timeMoments = timeMoments/60;
                 case 'h'
                     timeMoments = timeMoments/3600;
@@ -298,7 +302,7 @@ classdef MidasTableController < handle
         function addData(this)
             if isequal(this.activeUpdate, 'on')
                 set(this.midasTableHandle, 'columnName', this.columnHeaders);
-                set(this.midasTableHandle, 'Data', this.tableData); 
+                this.midasTableHandle.setData(this.tableData); 
             end
         end
         
@@ -313,7 +317,7 @@ classdef MidasTableController < handle
         function addEventsData(this)
             if isequal(this.activeUpdate, 'on')
                 set(this.midasTableHandle, 'columnName', this.columnHeaders);
-                set(this.midasTableHandle, 'Data', this.eventData); 
+                this.midasTableHandle.setData(this.eventData); 
             end
         end
         
@@ -610,12 +614,12 @@ classdef MidasTableController < handle
                 if isequal(strfind(this.columnHeaders{column}, 'DA:ALL'),1) || isequal(strfind(this.columnHeaders{column}, 'DA:All'), 1)% "DA:All" is for loading older MIDAS files
                     for cycle = 1 : numberOfCycles
                        try
-                            this.eventData((cycle-1)*noOfWells+1:cycle*noOfWells, column) = this.eventData((cycle-1)*noOfWells+1, column); 
+                            this.eventData((cycle-1)*noOfWells+1:cycle*noOfWells, column) = {nanmin(cell2mat(this.eventData((cycle-1)*noOfWells+1:cycle*noOfWells, column)))}; 
                        catch
                            
                        end
                        try
-                            this.tableData((cycle-1)*noOfWells+1:cycle*noOfWells, column) = this.tableData((cycle-1)*noOfWells+1, column);
+                            this.tableData((cycle-1)*noOfWells+1:cycle*noOfWells, column) = {nanmin(cell2mat(this.tableData((cycle-1)*noOfWells+1:cycle*noOfWells, column)))};
                        catch
                            
                        end
