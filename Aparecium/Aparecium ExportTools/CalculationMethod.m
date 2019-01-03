@@ -39,9 +39,11 @@ classdef CalculationMethod < handle
         
         function [result, groups] = calculate(this, experiment, groupingStructure, sharedBlankStructure, timewiseBlankMatrix)
             if isequal(this.previousValues, {experiment, groupingStructure, sharedBlankStructure, timewiseBlankMatrix})
+                
                 result = this.measurementStructure;
                 groups = this.groups;
             else
+                disp('calculating');
                 this.previousValues = {experiment, groupingStructure, sharedBlankStructure, timewiseBlankMatrix};
                 this.channelNames = experiment.getChannelNames();
                 this.groupWells(experiment, groupingStructure, sharedBlankStructure, timewiseBlankMatrix);

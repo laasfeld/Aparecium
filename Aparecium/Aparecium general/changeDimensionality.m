@@ -1,7 +1,11 @@
 function handles = changeDimensionality(handles, dimensionality)
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
-dimensionality = floor(str2double(dimensionality));
+if isa(dimensionality, 'double')
+    dimensionality = floor(dimensionality);
+elseif isa(dimensionality, 'char')
+    dimensionality = floor(str2double(dimensionality));
+end
 
 if isnan(dimensionality) || dimensionality < 1
     set(handles.ChooseDimensionalityText,'String','Only positive integers allowed','ForegroundColor','red');

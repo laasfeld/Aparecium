@@ -614,12 +614,12 @@ classdef MidasTableController < handle
                 if isequal(strfind(this.columnHeaders{column}, 'DA:ALL'),1) || isequal(strfind(this.columnHeaders{column}, 'DA:All'), 1)% "DA:All" is for loading older MIDAS files
                     for cycle = 1 : numberOfCycles
                        try
-                            this.eventData((cycle-1)*noOfWells+1:cycle*noOfWells, column) = this.eventData((cycle-1)*noOfWells+1, column); 
+                            this.eventData((cycle-1)*noOfWells+1:cycle*noOfWells, column) = {nanmin(cell2mat(this.eventData((cycle-1)*noOfWells+1:cycle*noOfWells, column)))}; 
                        catch
                            
                        end
                        try
-                            this.tableData((cycle-1)*noOfWells+1:cycle*noOfWells, column) = this.tableData((cycle-1)*noOfWells+1, column);
+                            this.tableData((cycle-1)*noOfWells+1:cycle*noOfWells, column) = {nanmin(cell2mat(this.tableData((cycle-1)*noOfWells+1:cycle*noOfWells, column)))};
                        catch
                            
                        end

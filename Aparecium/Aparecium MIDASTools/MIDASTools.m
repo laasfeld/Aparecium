@@ -65,6 +65,7 @@ try
     handles.midasTableController.showTable();
     handles.mainMIDASTable.setVisible('on');
     set(handles.MIDASInformationText, 'String', ['MIDAS file ', handles.midasTableController.fileName, ' loaded']);
+    handles.fileName = handles.midasTableController.fileName;
 catch
     try
         if isequal(numel(varargin), 2) && strcmp(varargin{2}, 'fromMidasTable')
@@ -191,6 +192,8 @@ handles.midasTableController.showTable();
 handles.midasTableController.setEventDataEqualToData();
 handles.mainMIDASTable.setVisible('on');
 set(handles.MIDASInformationText, 'String', ['MIDAS file ', handles.midasTableController.fileName, ' loaded']);
+handles.fileName = handles.midasTableController.fileName;
+initializeExperimentConfigurationPanel(handles);
 guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
@@ -211,6 +214,7 @@ loadPrimaryMIDASFile_Callback(hObject, eventdata, handles);
 successBox('MIDAS file successfully loaded', 'Success');
 handles.mainMIDASTable.setVisible('on');
 set(handles.MIDASInformationText, 'String', ['MIDAS file ', handles.midasTableController.fileName, ' loaded']);
+handles.fileName = handles.midasTableController.fileName;
 initializeExperimentConfigurationPanel(handles);
 
 function initializeExperimentConfigurationPanel(handles)
@@ -218,7 +222,7 @@ handles =  MidasToApareciumExperimentInput(handles.midasTableController, handles
 handles.apareciumExperimentInput.setMode('addTreatments');
 handles.midasTableController.setDataEqualToEventData(); % MIDAS is loaded with all data as events data but some operations are carried out on table data.
 set(handles.ChooseDimensionality, 'Value', handles.apareciumExperimentInput.getNumberOfTreatments());
-handles.dimensionality = handles.apareciumExperimentInput.getNumberOfTreatments();
+handles = changeDimensionality(handles, handles.apareciumExperimentInput.getNumberOfTreatments());
 treatmentsTableData = handles.apareciumExperimentInput.getTreatmentsTableData();
 set(handles.treatments_Table, 'Data', treatmentsTableData);
 channels = handles.apareciumExperimentInput.getChannelNames();
