@@ -38,13 +38,13 @@ classdef CalculationMethod < handle
         end
         
         function [result, groups] = calculate(this, experiment, groupingStructure, sharedBlankStructure, timewiseBlankMatrix)
-            if isequal(this.previousValues, {experiment, groupingStructure, sharedBlankStructure, timewiseBlankMatrix})
+            if isequal(this.previousValues, {experiment, groupingStructure, sharedBlankStructure, timewiseBlankMatrix, this.formulae, this.subgroupStartValue})
                 
                 result = this.measurementStructure;
                 groups = this.groups;
             else
                 disp('calculating');
-                this.previousValues = {experiment, groupingStructure, sharedBlankStructure, timewiseBlankMatrix};
+                this.previousValues = {experiment, groupingStructure, sharedBlankStructure, timewiseBlankMatrix, this.formulae, this.subgroupStartValue};
                 this.channelNames = experiment.getChannelNames();
                 this.groupWells(experiment, groupingStructure, sharedBlankStructure, timewiseBlankMatrix);
                 this.generateMeasurementsStructure(experiment);
@@ -64,7 +64,40 @@ classdef CalculationMethod < handle
                                          for blankWell = 1 : numel(this.measurementStructure{group}{1})
                                             blankValues(blankWell, :) = this.measurementStructure{group}{1}{blankWell}{channel};
                                          end
+                                         
+                                         %% important
+                                            % in cases when blank is not
+                                            % measured at the exact same
+                                            % time moment it is not
+                                            % possible to do absolutely
+                                            % correct blank correction. but
+                                            % there are several
+                                            % possibilities for
+                                            % approximations
+                                            % here we approximate that the
+                                            % closest measured value is the
+                                            % estimate for the blank value
+                                         %%
+                                         
                                          if exist('blankValues', 'var')
+                                            someBlankValueExists = ~isempty(find(isnan(blankValues)==0, 1));
+                                            someNanValueExists = ~isempty(find(isnan(blankValues)==1, 1));                                            
+                                            if someNanValueExists && someBlankValueExists  
+                                               newBlankValues = blankValues;
+                                               for row = 1 : size(blankValues, 1)
+                                                  nonNanIndices = find(~isnan(blankValues(row, :)) == 1);
+                                                  for col = 1 : size(blankValues, 2)                                                 
+                                                     if isnan(blankValues(row, col))
+                                                         differenceIndex = abs(col - nonNanIndices);
+                                                         [unneeded, bestIndex] = min(differenceIndex);
+                                                         newBlankValues(row, col) = blankValues(row, nonNanIndices(bestIndex));
+                                                     end
+                                                  end
+                                               end
+                                               blankValues = newBlankValues;
+                                            end
+                                            
+                                            
                                             formula = [functionName, '(valuesToBeBlanked, blankValues)'];
                                             %resultStructure{group}{subgroup}{well}{channel} = eval(formula);
                                             insertionStructure = [eval(formula),insertionStructure];
@@ -256,7 +289,7 @@ classdef CalculationMethod < handle
             
             % group 0 is for unused wells so remove that one
             groupsInUse(groupsInUse == 0) = [];
-            
+            this.groups = [];
             % add the ordinary wells
             for group = groupsInUse'
                wellsInGroup = find(groupingStructure2(:,1) == group);

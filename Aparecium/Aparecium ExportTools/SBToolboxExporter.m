@@ -55,6 +55,7 @@ classdef SBToolboxExporter <  ExportPanelController
             userDefNames = MIDAS2SBNameManager.getMIDASChannelNames(treatments);
             stateOrParam = MIDAS2SBNameManager.getDefaultStateOrParam(treatments);
             include = MIDAS2SBNameManager.getDefaultInclude(treatments);
+            this.includeParameter = include';
             data = [treatments', userDefNames', num2cell(strcmp(stateOrParam, 'state')'), num2cell(strcmp(stateOrParam, 'param')'), include'];
             set(this.experimentParamNameTable, 'data', data);
         end                          
@@ -256,6 +257,12 @@ classdef SBToolboxExporter <  ExportPanelController
             end
             startingPath = settings.SBToolbox;
             FilePath = uigetdir(startingPath, 'Select destination folder (should be named Experiments)');
+            this.exportWithName(FilePath);
+        end
+        
+        function exportWithName(this, folderName)
+
+            FilePath = folderName;
             groupNames = this.experiment.getGroups();
             this.loadingBar.vizualize();
             eventTimes = this.experiment.getEventTimes();
@@ -273,38 +280,11 @@ classdef SBToolboxExporter <  ExportPanelController
                     initialConditions = this.outputTableStruct{group}{subgroup}.initialConditions;
                     representingWellIndex = this.experiment.getIndexOfUsedWell(this.groups{group}{subgroup}{1}); 
                     concentrationChangeEvent = this.experiment.getConcentrationChangeEvents();
-                    expFileWriter(this.outputTableStruct{group}{subgroup}.path, initialConditions, representingWellIndex, concentrationChangeEvent, eventTimes, this.experimentParamsNames, this.experimentStateOrParam, outputFilenameEXP)
+                    expFileWriter(this.outputTableStruct{group}{subgroup}.path, initialConditions, representingWellIndex, concentrationChangeEvent, eventTimes, this.experimentParamsNames, this.experimentStateOrParam, outputFilenameEXP, this.includeParameter)
                     xlswrite(outputFilenameMIDAS, this.outputTableStruct{group}{subgroup}.SBTable);
                 end
             end
             this.loadingBar.devizualize();
-        end
-        
-        function exportWithName(this, folderName)
-
-            FilePath = folderName;
-            groupNames = this.experiment.getGroups();
-            this.loadingBar.vizualize();
-            eventTimes = this.experiment.getEventTimes();
-            for well = 1 : numel(eventTimes)
-               eventTimes{well} = eventTimes{well}*this.timeController.getUnitConversionConstant(); 
-            end
-            for group = 1 : numel(this.groups)
-                for subgroup = this.subgroupStartValue : numel(this.groups{group})
-                    this.loadingBar.setLoadingBarPercent( 100* (((group-1)/numel(this.groups))+(subgroup-1)/(numel(this.groups{group})*numel(this.groups))));
-                    outputValue = this.outputTableStruct{group}{subgroup}.outputValue;
-                    mkdir(FilePath,[outputValue, '_Group_', groupNames{group}, '_', this.subgroupNames{group}{subgroup}]);
-                    tempFilePath = [FilePath,'\',outputValue,'_Group_',groupNames{group}, '_', this.subgroupNames{group}{subgroup}];
-                    outputFilenameMIDAS = [tempFilePath, '\', this.outputTableStruct{group}{subgroup}.path, '.xls'];
-                    outputFilenameEXP = [tempFilePath, '\', this.outputTableStruct{group}{subgroup}.path, '.exp'];
-                    initialConditions = this.outputTableStruct{group}{subgroup}.initialConditions;
-                    representingWellIndex = this.experiment.getIndexOfUsedWell(this.groups{group}{subgroup}{1}); 
-                    concentrationChangeEvent = this.experiment.getConcentrationChangeEvents();
-                    expFileWriter(this.outputTableStruct{group}{subgroup}.path, initialConditions, representingWellIndex, concentrationChangeEvent, eventTimes, this.experimentParamsNames, outputFilenameEXP)
-                    xlswrite(outputFilenameMIDAS, this.outputTableStruct{group}{subgroup}.SBTable);
-                end
-            end
-            this.loadingBar.devizualize(); 
         end
         
         function updateExperimentParamNameTable(this)

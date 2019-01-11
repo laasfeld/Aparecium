@@ -104,6 +104,11 @@ classdef MidasTableController < handle
             % use with caution
             this.tableData = this.eventData;
         end
+        
+        function deriveDataFromEventData(this)
+            nanIndices = isnan(nanmean(cell2mat(this.eventData(:, end - this.measurementColumns + 1 : end)), 2));
+            this.tableData = this.eventData(~nanIndices, :);
+        end
            
         function recalculateTimeShift(this, timeShift)
            this.timeShift = timeShift;

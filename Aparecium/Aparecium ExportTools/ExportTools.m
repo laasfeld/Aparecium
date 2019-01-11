@@ -174,6 +174,7 @@ switch handles.mode
 end
 
 handles = initializeShowBlank(handles);
+handles.calculationMethod = CalculationMethod();
 
 guidata(hObject, handles);
 
@@ -375,10 +376,9 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 handles.plateSimulatorInterface.addExperiment(handles.apareciumExperimentInput);
 handles.simPlateHandle = handles.plateSimulatorInterface.generatePlateSimulator(handles);
 plate = handles.plateSimulatorInterface.PlateSimulator.getMicroPlate();
-concentrations = handles.apareciumExperimentInput.predefinedConcentrations;
-concentrations = concentrations(:,:,1,:);
-concentrations = reshape(concentrations, size(concentrations, 1), size(concentrations, 2) , size(concentrations, 4));
-concentrations = permute(concentrations, [2 1 3]);
+concentrations = handles.apareciumExperimentInput.getConcentrationsAtEvents();
+%concentrations = reshape(concentrations, size(concentrations, 1), size(concentrations, 2) , size(concentrations, 4));
+concentrations = permute(concentrations, [3 2 1 4]); %time, columns, rows, treatment
 plate.treatWellsWithPredefinedTreatments(concentrations);
 setUIModeToPlateSim(hObject, handles);
 figure1_ResizeFcn(handles.figure1, [], handles);
@@ -728,22 +728,22 @@ function applyFormula_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-calculationMethod = CalculationMethod();
+%handles.calculationMethod = CalculationMethod();
 if get(handles.showBlank, 'Value')
     subgroupStartValue = 1;
 else
     subgroupStartValue = 2;
 end
 
-calculationMethod.setSubgroupStartValue(subgroupStartValue);
-calculationMethod.addFormulae(handles.activeFormula);
-handles.excelTableController.setCalculationMethod(calculationMethod);
+handles.calculationMethod.setSubgroupStartValue(subgroupStartValue);
+handles.calculationMethod.addFormulae(handles.activeFormula);
+handles.excelTableController.setCalculationMethod(handles.calculationMethod);
 handles.excelTableController.calculateNewTable(handles.excelTableConfiguration);
 
 set(handles.tableConfigurationChooser, 'enable', 'on');
 
 %calculationMethod.addFormulae(handles.activeFormula);
-handles.SBExporter.setCalculationMethod(calculationMethod);
+handles.SBExporter.setCalculationMethod(handles.calculationMethod);
 
 possibleVariables = get(handles.SBIncludedMeasurements, 'String');
 chosenVariables = get(handles.SBIncludedMeasurements, 'Value');
@@ -759,14 +759,14 @@ set(handles.chooseSBSubgroup, 'Value', 1);
 set(handles.graphFormatChooser, 'enable', 'on');
 set(handles.chooseGraphGroup, 'enable', 'on');
 
-handles.graphicalPreviewController.setCalculationMethod(calculationMethod);
+handles.graphicalPreviewController.setCalculationMethod(handles.calculationMethod);
 handles.graphicalPreviewController.calculateNewGraph();
 
 % apply formula to copasiPanelController
-handles.copasiPreviewController.setCalculationMethod(calculationMethod);
+handles.copasiPreviewController.setCalculationMethod(handles.calculationMethod);
 handles.copasiPreviewController.calculateNewTable(handles.SBCalcMode, handles.activeFormula{end}.acronyme); %% TODO - change to handles.CopasiCalcMode
 
-handles.prismPanelController.setCalculationMethod(calculationMethod);
+handles.prismPanelController.setCalculationMethod(handles.calculationMethod);
 handles.prismPanelController.calculateNewTable(handles.excelTableConfiguration);
 
 guidata(hObject, handles);
@@ -774,15 +774,15 @@ guidata(hObject, handles);
 function applyFormulaToExcelPreview(hObject, eventdata, handles)
 
 
-calculationMethod = CalculationMethod();
+%calculationMethod = CalculationMethod();
 if get(handles.showBlank, 'Value')
     subgroupStartValue = 1;
 else
     subgroupStartValue = 2;
 end
-calculationMethod.setSubgroupStartValue(subgroupStartValue);
-calculationMethod.addFormulae(handles.activeFormula);
-handles.excelTableController.setCalculationMethod(calculationMethod);
+handles.calculationMethod.setSubgroupStartValue(subgroupStartValue);
+handles.calculationMethod.addFormulae(handles.activeFormula);
+handles.excelTableController.setCalculationMethod(handles.calculationMethod);
 handles.excelTableController.calculateNewTable(handles.excelTableConfiguration);
 set(handles.tableConfigurationChooser, 'enable', 'on');
 set(handles.chooseSBGroup, 'String', handles.apareciumExperimentInput.getGroups());
@@ -791,17 +791,42 @@ guidata(hObject, handles);
 function applyFormulaToGraph(hObject, eventdata, handles)
 set(handles.graphFormatChooser, 'enable', 'on');
 set(handles.chooseGraphGroup, 'enable', 'on');
-calculationMethod = CalculationMethod();
+%calculationMethod = CalculationMethod();
 if get(handles.showBlank, 'Value')
     subgroupStartValue = 1;
 else
     subgroupStartValue = 2;
 end
 
-calculationMethod.setSubgroupStartValue(subgroupStartValue);
-calculationMethod.addFormulae(handles.activeFormula);
-handles.graphicalPreviewController.setCalculationMethod(calculationMethod);
+handles.calculationMethod.setSubgroupStartValue(subgroupStartValue);
+handles.calculationMethod.addFormulae(handles.activeFormula);
+handles.graphicalPreviewController.setCalculationMethod(handles.calculationMethod);
 handles.graphicalPreviewController.calculateNewGraph();
+guidata(hObject, handles);
+
+function applyFormulaToSBToolboxPreview(hObject, eventdata, handles)
+%calculationMethod = CalculationMethod();
+if get(handles.showBlank, 'Value')
+    subgroupStartValue = 1;
+else
+    subgroupStartValue = 2;
+end
+
+handles.calculationMethod.setSubgroupStartValue(subgroupStartValue);
+handles.calculationMethod.addFormulae(handles.activeFormula);
+
+handles.SBExporter.setCalculationMethod(handles.calculationMethod);
+
+possibleVariables = get(handles.SBIncludedMeasurements, 'String');
+chosenVariables = get(handles.SBIncludedMeasurements, 'Value');
+outputVariables = possibleVariables(chosenVariables);
+
+handles.SBExporter.calculateNewTable(handles.SBCalcMode, outputVariables);
+set(handles.chooseSBGroup, 'String', handles.apareciumExperimentInput.getGroups());
+handles.SBExporter.showTableData(1, 2);
+subgroupNames = handles.SBExporter.getSubgroupNamesOfGroup(1);
+set(handles.chooseSBSubgroup, 'String', subgroupNames);
+set(handles.chooseSBSubgroup, 'Value', 1);
 guidata(hObject, handles)
 
 % --- Executes on button press in deleteSelectedLines.
@@ -937,7 +962,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
 % --- Executes when entered data in editable cell(s) in parameterNameTable.
 function parameterNameTable_CellEditCallback(hObject, eventdata, handles)
 % hObject    handle to parameterNameTable (see GCBO)
@@ -951,7 +975,6 @@ function parameterNameTable_CellEditCallback(hObject, eventdata, handles)
 handles.SBExporter.getNewExperimentParamsNames();
 handles.SBExporter.getNewExperimentStateOrParam();
 handles.SBExporter.getNewExperimentIncludes();
-applyFormula_Callback(hObject, eventdata, handles);
 guidata(hObject, handles);
 
 
@@ -1038,6 +1061,7 @@ function exportSBTable_Callback(hObject, eventdata, handles)
 % hObject    handle to exportSBTable (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+applyFormulaToSBToolboxPreview(hObject, eventdata, handles);
 handles.SBExporter.exportWithDialogue();
 
 % --- Executes on button press in exportAsSBProject.
@@ -1075,6 +1099,7 @@ function outputTimeUnitDropdown_Callback(hObject, eventdata, handles)
 contents = get(hObject,'String');
 unit = contents{get(hObject,'Value')};
 handles.exportTimeMomentController.setTimeUnit(unit);
+applyFormula_Callback(hObject, eventdata, handles);
 guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.

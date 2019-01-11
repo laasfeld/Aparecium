@@ -345,5 +345,20 @@ classdef ApareciumExperimentInput < handle
                 data{treatment, 5} = false;
             end
         end
+        
+        function concentrationsAtEvents = getConcentrationsAtEvents(this)
+            timesAsArray = [];
+            for i = 1 : numel(this.eventTimes)
+               timesAsArray = [timesAsArray, this.eventTimes{i}]; 
+            end
+            eventTimes = unique(timesAsArray);
+            firstWellTimeMoments = this.timeMoments(1, :); % assume that event times are same for all wells in general
+            eventIndices = zeros(numel(eventTimes), 1);
+            for eventIndex = 1 : numel(eventTimes)
+                suitableIndices = find(firstWellTimeMoments == eventTimes(eventIndex));
+                eventIndices(eventIndex) = suitableIndices(1);% in cases when event has same time as measurement it is assumed that the event comes first and therefore the concentrations can be taken from the first suitable option;
+            end
+            concentrationsAtEvents = this.predefinedConcentrations(:,:,eventIndices,:);
+        end
     end
 end

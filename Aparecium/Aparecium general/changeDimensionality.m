@@ -26,7 +26,7 @@ handles.treatments_TableData = get(handles.treatments_Table, 'data');
 
 numberOfRows = size(handles.treatments_TableData, 1);
 if(numberOfRows <= dimensionality - 1)
-    for columns = numberOfRows : dimensionality -1
+    for columns = numberOfRows : dimensionality
         handles.treatments_TableData = [handles.treatments_TableData; emptyRow];
         if(handles.midasTableController.treatmentColumns < columns)
             handles.midasTableController.addTreatmentColumn(' ', '', '');

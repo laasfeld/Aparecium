@@ -215,8 +215,11 @@ function varargout = SettingsUI_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-varargout{1} = handles.settings;
-guidata(hObject, handles);
+if isfield(handles, 'settings')
+    varargout{1} = handles.settings;
+    guidata(hObject, handles);
+end
+
 
 
 
@@ -383,18 +386,21 @@ if isequal(get(handles.startupOption, 'Value'), 1)
 end
 
 try
-    if isequal(handles.saveExistAndReturn, 0) % save as usual, do not return the structure
+    if isequal(handles.saveExitAndReturn, 0) % save as usual, do not return the structure
         save([handles.folderPath, '\settings'],'settings');
+        guidata(hObject, handles);
+        uiresume(handles.figure1);
+        delete(handles.figure1);
     elseif isequal(handles.saveExistAndReturn, 1)
         save([handles.folderPath, '\settings'],'settings');
         guidata(hObject, handles);
         if isequal(get(handles.figure1, 'waitstatus'),'waiting')
-            uiresume(handles.figure1)
+            uiresume(handles.figure1);
         else
             delete(handles.figure1);
         end
     end
-catch
+catch MException
     save([handles.folderPath, '\settings'], 'settings');
 end
 
