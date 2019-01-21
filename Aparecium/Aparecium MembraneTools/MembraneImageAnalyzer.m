@@ -14,9 +14,9 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
     
     methods (Static)
     
-        function resultStructure = analyzeMembranesStatic(picName, secondaryPicName, filePath, imageProcessingParameters, timeParameters, figureHandles, functionHandle, calculationMethod, qualityMask, parametersToCalculate)
+        function resultStructure = analyzeMembranesStatic(picName, secondaryPicName, filePath, imageProcessingParameters, timeParameters, functionHandle, calculationMethod, qualityMask, parametersToCalculate)
             disp('MembraneImageAnalyzer');
-            resultStructure = MembraneImageAnalyzer.analyseOneImageStatic(picName, filePath, imageProcessingParameters, timeParameters, figureHandles, functionHandle, parametersToCalculate);
+            resultStructure = MembraneImageAnalyzer.analyseOneImageStatic(picName, filePath, imageProcessingParameters, timeParameters, functionHandle, parametersToCalculate);
 
             image = imread([filePath, secondaryPicName]);
             contents = dir(filePath);
@@ -94,7 +94,7 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             end
         end
         
-        function resultStructure = analyseOneImageStatic(picName, filePath, imageProcessingParameters, timeParameters, figureHandles, functionHandle, parametersToCalculate)
+        function resultStructure = analyseOneImageStatic(picName, filePath, imageProcessingParameters, timeParameters, functionHandle, parametersToCalculate)
                 tic
 
                 try
@@ -151,15 +151,7 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                     case 'on'
 
                     case 'off'
-                        try
-                            timePassed = toc(timeParameters.analysisStartTime);
-                            if ~isempty(figureHandles)
-                                imshow(I_orgTrue, 'Parent', figureHandles(1));
-                                imshow(bw2, 'Parent', figureHandles(2));
-                            end
-                        catch
-                            'no handles present';
-                        end
+                      timePassed = toc(timeParameters.analysisStartTime);
                 end
 
            %clear references to java objects

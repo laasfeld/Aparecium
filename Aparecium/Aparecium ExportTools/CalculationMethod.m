@@ -59,7 +59,7 @@ classdef CalculationMethod < handle
                                   for well = 1 : numel(this.groups{group}{subgroup})
                                       insertionStructure = cell(0,0);
                                       for channel = numel(this.channelNames):-1:1
-
+                                         clear blankValues;
                                          valuesToBeBlanked = this.measurementStructure{group}{subgroup}{well}{channel};
                                          for blankWell = 1 : numel(this.measurementStructure{group}{1})
                                             blankValues(blankWell, :) = this.measurementStructure{group}{1}{blankWell}{channel};

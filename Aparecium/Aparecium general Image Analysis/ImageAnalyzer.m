@@ -149,9 +149,7 @@ classdef ImageAnalyzer < handle
                 if ~isempty(this.feedbackHandle)
                     set(this.feedbackHandle, 'String', 'Analysis completed');
                 end
-                if ~isempty(this.figureHandles)
-                    cla(this.figureHandles(2));
-                end
+
             catch
             end
             %%
@@ -349,9 +347,6 @@ classdef ImageAnalyzer < handle
             try
                 if ~isempty(this.feedbackHandle)
                     set(this.feedbackHandle, 'String', 'Analysis completed');
-                end
-                if ~isempty(this.figureHandles)
-                    cla(this.figureHandles(2));
                 end
             catch
             end
@@ -558,19 +553,27 @@ classdef ImageAnalyzer < handle
                             this.imagesLeftToAnalyse = this.imagesLeftToAnalyse/poolSize;
                         end
                         
-                        for well = 1 : numel(wellID)                              
-                            if strcmp(this.ICSEOrMembrane, 'ICSE')
+                                                      
+                        if strcmp(this.ICSEOrMembrane, 'ICSE')
+                            for well = 1 : numel(wellID)
                                if well == 1
                                    measurementParams = this.configureWellMeasurementParameters(well, nameArray, [], wellID, directoryPath, folder);
                                else
                                    measurementParams = [measurementParams, this.configureWellMeasurementParameters(well, nameArray, [], wellID, directoryPath, folder)];
                                end
-                               %wellMeasurementInfo{well} = this.analyzeOneWell(well, nameArray, [], wellID, directoryPath, folder);                           
-                            elseif strcmp(this.ICSEOrMembrane, 'Membrane')
-                               nameArray = this.imageImporter.getNameArrayOfFolder(folder);
-                               secondaryNameArray = this.imageImporter.getSecondaryNameArrayOfFolder(folder);
-                               wellMeasurementInfo{well} = this.analyzeOneWell(well, nameArray, secondaryNameArray, wellID, directoryPath, folder);
+                               %wellMeasurementInfo{well} = this.analyzeOneWell(well, nameArray, [], wellID, directoryPath, folder);
                             end
+                        elseif strcmp(this.ICSEOrMembrane, 'Membrane')
+                            nameArray = this.imageImporter.getNameArrayOfFolder(folder);
+                            secondaryNameArray = this.imageImporter.getSecondaryNameArrayOfFolder(folder);
+                            for well = 1 : numel(wellID)   
+                                if well == 1
+                                   measurementParams = this.configureWellMeasurementParameters(well, nameArray, secondaryNameArray, wellID, directoryPath, folder); 
+                                else
+                                   measurementParams = [measurementParams, this.configureWellMeasurementParameters(well, nameArray, secondaryNameArray, wellID, directoryPath, folder)];
+                                end                                   
+                                   %wellMeasurementInfo{well} = this.analyzeOneWell(well, nameArray, secondaryNameArray, wellID, directoryPath, folder);
+                            end                      
                         end
                         
                         if strcmp(this.ICSEOrMembrane, 'ICSE')
@@ -581,7 +584,7 @@ classdef ImageAnalyzer < handle
                             parfor imageIndex = 1 : numel(measurementParams)% parfor should be here                            
                                 measurementParams(imageIndex).results = functionName(...
                                   measurementParams(imageIndex).wellName, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).imageProcessingParams,...
-                                  measurementParams(imageIndex).timeParameters, measurementParams(imageIndex).figureHandles, measurementParams(imageIndex).thresholdFunctionHandle,...
+                                  measurementParams(imageIndex).timeParameters, measurementParams(imageIndex).thresholdFunctionHandle,...
                                   measurementParams(imageIndex).parametersToCalculate);
                             end
 
@@ -590,7 +593,23 @@ classdef ImageAnalyzer < handle
                                wellMeasurementInfo{measurementParams(imageIndex).wellIndex}{measurementParams(imageIndex).picOfWell}.imageName = measurementParams(imageIndex).imageName;
                             end
                                                          
+                        elseif strcmp(this.ICSEOrMembrane, 'Membrane')
+                            for imageIndex = 1 : numel(measurementParams)
+                                measurementParams(imageIndex).results = ''; % create a field so parfor does not crash
+                            end
+                            functionName = str2func([class(this), '.analyzeMembranesStatic']); 
+                            parfor imageIndex = 1 : numel(measurementParams)% parfor should be here                            
+                                measurementParams(imageIndex).results = functionName(...
+                                measurementParams(imageIndex).wellName, measurementParams(imageIndex).secondaryPicOfWell, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).imageProcessingParams,...
+                                measurementParams(imageIndex).timeParameters, measurementParams(imageIndex).thresholdFunctionHandle, measurementParams(imageIndex).calculationMethod, measurementParams(imageIndex).qualityMask, ...
+                                measurementParams(imageIndex).parametersToCalculate);
+                            end
+                            for imageIndex = 1 : numel(measurementParams)
+                               wellMeasurementInfo{measurementParams(imageIndex).wellIndex}{measurementParams(imageIndex).picOfWell} = measurementParams(imageIndex).results;
+                               wellMeasurementInfo{measurementParams(imageIndex).wellIndex}{measurementParams(imageIndex).picOfWell}.imageName = measurementParams(imageIndex).imageName;
+                            end
                         end
+                        
                         
                         if(exist('matlabpool'))
                             this.imagesLeftToAnalyse = this.imagesLeftToAnalyse*matlabpool('size') - numel(wellID)*4;
@@ -620,17 +639,15 @@ classdef ImageAnalyzer < handle
             thresholdFunctionHandle = this.thresholdFunctionHandle;
             imagesOfWell = [];
             
-            
-            
             for pic = 1 : numel(nameArray)
                  if strfind(nameArray{pic}, wellID{well})
                      imagesOfWell(end + 1) = pic;
                  end
             end
+            
             imageProcessingParams = this.imageProcessingParameters;
             timeParameters.totalTimeElapsed = this.totalTimeElapsed;
-            timeParameters.analysisStartTime = this.analysisStartTime;
-            figHandles = []%this.figureHandles;
+            timeParameters.analysisStartTime = this.analysisStartTime;           
             nameArrayOfWell = nameArray(imagesOfWell);
             ICSEOrMembrane = this.ICSEOrMembrane;
             qualityMasks = [];
@@ -654,14 +671,25 @@ classdef ImageAnalyzer < handle
                      resultStructure(picOfWell).directoryPath = directoryPath;
                      resultStructure(picOfWell).imageProcessingParams = imageProcessingParams;
                      resultStructure(picOfWell).timeParameters = timeParameters;
-                     resultStructure(picOfWell).figureHandles = figHandles;
                      resultStructure(picOfWell).thresholdFunctionHandle = thresholdFunctionHandle;
                      resultStructure(picOfWell).imageName = nameArrayOfWell{picOfWell};
                      resultStructure(picOfWell).parametersToCalculate = this.parametersToCalculate;
                  elseif strcmp(ICSEOrMembrane, 'Membrane')
-                     
-                     resultStructure = analyzeMembranesStatic(nameArrayOfWell{picOfWell}, secondaryNameArrayOfWell{picOfWell}, directoryPath, imageProcessingParams, timeParameters, figHandles, thresholdFunctionHandle, 'Binary', qualityMasks{well});
-                     wellMeasurementInfo{picOfWell}.averageMembraneIntensity = resultStructure.averageMembraneIntensity;
+                     resultStructure(picOfWell).picOfWell = picOfWell;
+                     resultStructure(picOfWell).secondaryPicOfWell = secondaryNameArrayOfWell{picOfWell};
+                     resultStructure(picOfWell).wellIndex = well;
+                     resultStructure(picOfWell).wellName = nameArrayOfWell{picOfWell};
+                     resultStructure(picOfWell).directoryPath = directoryPath;
+                     resultStructure(picOfWell).imageProcessingParams = imageProcessingParams;
+                     resultStructure(picOfWell).timeParameters = timeParameters;
+                     resultStructure(picOfWell).thresholdFunctionHandle = thresholdFunctionHandle;
+                     resultStructure(picOfWell).imageName = nameArrayOfWell{picOfWell};
+                     resultStructure(picOfWell).parametersToCalculate = this.parametersToCalculate;
+                     resultStructure(picOfWell).calculationMethod = 'Binary';
+                     resultStructure(picOfWell).qualityMask = qualityMasks{well}; % this logic may fail if there is more than one image of a well
+
+                     %resultStructure = analyzeMembranesStatic(nameArrayOfWell{picOfWell}, secondaryNameArrayOfWell{picOfWell}, directoryPath, imageProcessingParams, timeParameters, thresholdFunctionHandle, 'Binary', qualityMasks{well});
+                     %wellMeasurementInfo{picOfWell}.averageMembraneIntensity = resultStructure.averageMembraneIntensity;
                  end
                  
              end
@@ -683,7 +711,6 @@ classdef ImageAnalyzer < handle
             imageProcessingParams = this.imageProcessingParameters;
             timeParameters.totalTimeElapsed = this.totalTimeElapsed;
             timeParameters.analysisStartTime = this.analysisStartTime;
-            figHandles = this.figureHandles;
             nameArrayOfWell = nameArray(imagesOfWell);
             ICSEOrMembrane = this.ICSEOrMembrane;
             qualityMasks = [];
@@ -702,11 +729,11 @@ classdef ImageAnalyzer < handle
             % resultStructure = ImageAnalyzer.analyseOneImageStatic(nameArrayOfWell{1}, directoryPath, imageProcessingParams, timeParameters, figHandles, thresholdFunctionHandle);
             for picOfWell = 1 : numel(imagesOfWell)
                  if strcmp(ICSEOrMembrane, 'ICSE')
-                     resultStructure = ImageAnalyzer.analyseOneImageStatic(nameArrayOfWell{picOfWell}, directoryPath, imageProcessingParams, timeParameters, figHandles, thresholdFunctionHandle)
+                     resultStructure = ImageAnalyzer.analyseOneImageStatic(nameArrayOfWell{picOfWell}, directoryPath, imageProcessingParams, timeParameters, thresholdFunctionHandle)
                  elseif strcmp(ICSEOrMembrane, 'Membrane')
                      %try
                         functionName = str2func([class(this), '.analyzeMembranesStatic']); 
-                        resultStructure = functionName(nameArrayOfWell{picOfWell}, secondaryNameArrayOfWell{picOfWell}, directoryPath, imageProcessingParams, timeParameters, figHandles, thresholdFunctionHandle, 'Binary', qualityMasks{well}, this.parametersToCalculate);
+                        resultStructure = functionName(nameArrayOfWell{picOfWell}, secondaryNameArrayOfWell{picOfWell}, directoryPath, imageProcessingParams, timeParameters, thresholdFunctionHandle, 'Binary', qualityMasks{well}, this.parametersToCalculate);
                         wellMeasurementInfo{picOfWell}.averageMembraneIntensity = resultStructure.averageMembraneIntensity;
                         wellMeasurementInfo{picOfWell} = resultStructure;
                         wellMeasurementInfo{picOfWell}.imageName = nameArrayOfWell{picOfWell}; 
@@ -799,62 +826,62 @@ classdef ImageAnalyzer < handle
     end
     methods(Static)
         
-        function resultStructure = analyzeMembranesStatic(picName, secondaryPicName, filePath, imageProcessingParameters, timeParameters, figureHandles, functionHandle, calculationMethod, qualityMask)
-            resultStructure = ImageAnalyzer.analyseOneImageStatic(picName, filePath, imageProcessingParameters, timeParameters, figureHandles, functionHandle);
-            %I_Fluo = Cytation5TIFFImage([regexprep(filePath, 'Bright Field', 'RFP'), regexprep(regexprep(picName, 'Bright Field', 'RFP'), '03_2', '03_1')]);
-            %image = I_Fluo.getImage();
-            %%image = imread([filePath(1:end-1), 'RFP',filePath(end),
-            %%regexprep(picName, 'x_', 'x_RFP_')]);
-
-            image = imread([filePath, secondaryPicName]);
-            contents = dir(filePath);
-            contents(1:2) = [];
-            cellContents = struct2cell(contents);
-            possibleNames = cellContents(1, :);
-            % prepare Zstack image names
-            ZIndex = strfind(secondaryPicName, '_1Z');
-            names = cell(1, numel(possibleNames));
-            index = 0;
-            while 1
-                pathlessName = [secondaryPicName(1:ZIndex+2), num2str(index), '_RFP_', secondaryPicName(end-6:end)];
-                if isequal(sum(strcmp(possibleNames, pathlessName)), 0)
-                   break; 
-                end
-                
-                names{index + 1} = [filePath, secondaryPicName(1:ZIndex+2), num2str(index), '_RFP_', secondaryPicName(end-6:end)];
-                index = index + 1;
-            end
-            
-            names = names(~cellfun(@isempty, names));
-            focusedImage = focusFromZStack(names);
-            %boundaries = bwboundaries(resultStructure.image);
-            %imageWithBoundaries = zeros(904, 1224);
-            %for boundarieIndex = 1 : numel(boundaries)
-            %    for pixelIndex = 1 : size(boundaries{boundarieIndex}, 1)
-            %        imageWithBoundaries(boundaries{boundarieIndex}(pixelIndex, 1), boundaries{boundarieIndex}(pixelIndex, 2)) = 1;
-            %    end
-            %end
-            %se = strel('disk',1);
-            %finalImage = imdilate(logical(imageWithBoundaries), se);
-            if strcmp(calculationMethod, 'Binary')
-                
-                binaryImageCalculator = BinaryImageCalculator();
-                parametersToCalculate = {'confluency', 'image'};
-                maskedImage = and(1-qualityMask, resultStructure.image);
-                binaryImageCalculator.calculateImageParameters(maskedImage, parametersToCalculate, functionHandle);
-                maskedResultStructure = binaryImageCalculator.resultStructure;
-                indices = maskedResultStructure.image == 1;
-                resultStructure.image = maskedResultStructure.image;
-                resultStructure.confluency = maskedResultStructure.confluency;
-                resultStructure.averageMembraneIntensity = mean(focusedImage(indices)); % image was instead of focusedImage
-                
-            elseif strcmp(calculationMethod, 'Probability')
-                 resultStructure.averageMembraneIntensity = sum(sum(double(image).*resultStructure.probabilityImage))/(sum(sum(resultStructure.probabilityImage)));
-            end
-            %resultStructure.averageMembraneIntensity = mean(mean(image));
-        end
+%         function resultStructure = analyzeMembranesStatic(picName, secondaryPicName, filePath, imageProcessingParameters, timeParameters, functionHandle, calculationMethod, qualityMask)
+%             resultStructure = ImageAnalyzer.analyseOneImageStatic(picName, filePath, imageProcessingParameters, timeParameters, functionHandle);
+%             %I_Fluo = Cytation5TIFFImage([regexprep(filePath, 'Bright Field', 'RFP'), regexprep(regexprep(picName, 'Bright Field', 'RFP'), '03_2', '03_1')]);
+%             %image = I_Fluo.getImage();
+%             %%image = imread([filePath(1:end-1), 'RFP',filePath(end),
+%             %%regexprep(picName, 'x_', 'x_RFP_')]);
+% 
+%             image = imread([filePath, secondaryPicName]);
+%             contents = dir(filePath);
+%             contents(1:2) = [];
+%             cellContents = struct2cell(contents);
+%             possibleNames = cellContents(1, :);
+%             % prepare Zstack image names
+%             ZIndex = strfind(secondaryPicName, '_1Z');
+%             names = cell(1, numel(possibleNames));
+%             index = 0;
+%             while 1
+%                 pathlessName = [secondaryPicName(1:ZIndex+2), num2str(index), '_RFP_', secondaryPicName(end-6:end)];
+%                 if isequal(sum(strcmp(possibleNames, pathlessName)), 0)
+%                    break; 
+%                 end
+%                 
+%                 names{index + 1} = [filePath, secondaryPicName(1:ZIndex+2), num2str(index), '_RFP_', secondaryPicName(end-6:end)];
+%                 index = index + 1;
+%             end
+%             
+%             names = names(~cellfun(@isempty, names));
+%             focusedImage = focusFromZStack(names);
+%             %boundaries = bwboundaries(resultStructure.image);
+%             %imageWithBoundaries = zeros(904, 1224);
+%             %for boundarieIndex = 1 : numel(boundaries)
+%             %    for pixelIndex = 1 : size(boundaries{boundarieIndex}, 1)
+%             %        imageWithBoundaries(boundaries{boundarieIndex}(pixelIndex, 1), boundaries{boundarieIndex}(pixelIndex, 2)) = 1;
+%             %    end
+%             %end
+%             %se = strel('disk',1);
+%             %finalImage = imdilate(logical(imageWithBoundaries), se);
+%             if strcmp(calculationMethod, 'Binary')
+%                 
+%                 binaryImageCalculator = BinaryImageCalculator();
+%                 parametersToCalculate = {'confluency', 'image'};
+%                 maskedImage = and(1-qualityMask, resultStructure.image);
+%                 binaryImageCalculator.calculateImageParameters(maskedImage, parametersToCalculate, functionHandle);
+%                 maskedResultStructure = binaryImageCalculator.resultStructure;
+%                 indices = maskedResultStructure.image == 1;
+%                 resultStructure.image = maskedResultStructure.image;
+%                 resultStructure.confluency = maskedResultStructure.confluency;
+%                 resultStructure.averageMembraneIntensity = mean(focusedImage(indices)); % image was instead of focusedImage
+%                 
+%             elseif strcmp(calculationMethod, 'Probability')
+%                  resultStructure.averageMembraneIntensity = sum(sum(double(image).*resultStructure.probabilityImage))/(sum(sum(resultStructure.probabilityImage)));
+%             end
+%             %resultStructure.averageMembraneIntensity = mean(mean(image));
+%         end
         
-        function resultStructure = analyseOneImageStatic(picName, filePath, imageProcessingParameters, timeParameters, figureHandles, functionHandle, parametersToCalculate)
+        function resultStructure = analyseOneImageStatic(picName, filePath, imageProcessingParameters, timeParameters, functionHandle, parametersToCalculate)
  %           try
                 tic
                 %timeMeasurer = Par(1);

@@ -427,7 +427,6 @@ switch handles.analysisMode % check if the user wants to analyze a completed mea
         end
         handles.midasTableController.deleteChannelHeader(1);
         handles.imageAnalyzer.setHandles(handles); % give handles to imageAnalyzer so it could use it
-        handles.imageAnalyzer.setFigureHandles([handles.leftAxes, handles.rightAxes]); % give figure handles to the imageAnalyzer
         handles.imageAnalyzer.setImageImporter(handles.imageImporter); % give the image importer to the image analyzer
         handles.imageAnalyzer.setImageProcessingParameters(handles.imageProcessingParameters); % give the image processing parameters to the image analyzer
         handles.imageAnalyzer.setAnalysisFeedbackHandle(handles.timePassed); % give the feedback handle to the image analyzer
