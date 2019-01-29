@@ -9,22 +9,14 @@ if isfield(inputStruct, 'automatically')
         filePath = inputStruct.filePath;
         filterIndex = 2;
     else
-        if isdeployed
-            load([pwd, '\', 'settings.mat']);
-        else
-            load settings
-        end 
-        startingPath = settings.MIDAS;
+        fileChooser = FileChooser();
+        startingPath = fileChooser.chooseMIDASFileSave();
         fileName=['MD-',fileName];
         [fileName,filePath,filterIndex] = uiputfile({'.xls';'.csv'},'Choose the filename',[startingPath,'\',fileName]);
     end
 else
-    if isdeployed
-        load([pwd, '\', 'settings.mat']);
-    else
-        load settings
-    end  
-    startingPath = settings.MIDAS;
+    fileChooser = FileChooser();
+    startingPath = fileChooser.chooseMIDASFileSave();
     fileName=['MD-',fileName];
     [fileName,filePath,filterIndex] = uiputfile({'*.xls';'*.csv'},'Choose the filename',[startingPath,'\',fileName]);
 end
@@ -58,6 +50,9 @@ elseif isequal(filterIndex, 0) % user selected cancel
    result = 0;
 elseif isequal(filerIndex, 3)
     
+if isequal(result, 1) && exist('fileChooser', 'var')
+    fileChooser.registerMIDASFilePath(filePath);
+end
 
 end
 

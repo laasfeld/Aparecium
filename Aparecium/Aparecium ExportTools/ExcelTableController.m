@@ -544,6 +544,108 @@ classdef ExcelTableController < ExportPanelController
             %drawnow;
         end
         
+        function convertDataToKineticSubgroupTable(this, data, groups)
+            
+            tableType = get(this.dropdownHandle, 'Value');
+            
+            firstsubgroupToShow = 2; % 2 if you want to hide the blank group, 1 of you want to show the blank group 
+            groupNames = this.experiment.getGroups();
+            
+            numberOfWells = numel(this.experiment.getWells());
+            Header(4, numberOfWells + 1) = {''};% make proper size header
+            Header(4,1) = {'time'};% set the time column
+            Header(1,2) = groupNames(1);
+            
+            numberOfCycles = this.timeController.getNumberOfCycles();
+            experimentData(numberOfCycles ,numberOfWells + 1) = {''};
+            column = 2;
+           
+            for group = 1 : size(data, 2)
+                for subgroup = this.subgroupStartValue : numel(data{group})
+                    for subgroupElement = 1 : numel(data{group}{subgroup})
+                        if subgroup == this.subgroupStartValue && subgroupElement == 1
+                            Header(1, column) = groupNames(group);
+                        end
+                        if subgroupElement == 1
+                            Header(2, column) = this.subgroupNames{group}(subgroup);
+                        end
+                        Header(3, column) = ['', groups{group}{subgroup}(subgroupElement)];
+                        tempString = '';
+                        tempTreatmentName = '';
+                        tempTreatmentValue = '';
+                        [treatmentNames, treatmentValues] = this.experiment.getTreatmentsOfWell(groups{group}{subgroup}(subgroupElement), 1);
+                        switch tableType
+                            case 1
+                                for treatment = 1 : numel(treatmentValues)
+                                    tempTreatmentName = treatmentNames{treatment};
+                                    tempTreatmentValue = treatmentValues{treatment};
+                                    tempString = [tempString, ' ', tempTreatmentName{1}, ':', tempTreatmentValue,'|'];
+                                end
+                            case 2 % smart treatment as header
+                                
+                            otherwise % treatment as header
+                                treatment = tableType - 2;
+                                tempTreatmentName = treatmentNames{treatment};
+                                tempTreatmentValue = treatmentValues{treatment};
+                                tempString = [tempTreatmentName{1}, ':', tempTreatmentValue];                                                               
+                        end
+                        Header(4,column) = {tempString}; 
+                        column = column + 1;% move writable column to right by one cell
+                    end
+                end
+            end
+            
+            column = 2;% reset writable column to 2
+            cyclesInUse = this.timeController.getCyclesInUse();
+            timeMoments = this.timeController.getCycleTimes();
+            fastKinetics = this.timeController.getFastKinetics();
+            if isequal(fastKinetics, 0) 
+                for group = 1 : size(data, 2)
+                    for subgroup = this.subgroupStartValue : numel(data{group})
+                        for subgroupElement = 1 : numel(data{group}{subgroup})
+                            for timeIndex = 1 : numberOfCycles             
+                                experimentData(timeIndex,1) = {num2str(timeMoments(cyclesInUse(timeIndex)))};
+                                experimentData(timeIndex,column) = {data{group}{subgroup}{subgroupElement}{1}(cyclesInUse(timeIndex))};           
+                            end
+                            column = column + 1;% move writable column to right by one cell
+                        end
+                    end
+                end
+            else
+                place=2;% reset writable column to 2
+                for group = 1 : size(data, 2)
+                    for subgroup = this.subgroupStartValue : numel(data{group})
+                        for subgroupElement = 1 : numel(data{group}{subgroup})
+                            for timeIndex = 1 : numberOfCycles 
+                                %localTimeIndex = groups{group}{subgroup}(subgroupElement);
+                                localTimeIndex = this.experiment.getIndexOfUsedWell(groups{group}{subgroup}(subgroupElement));
+                                row = size(timeMoments(:,timeIndex), 1)*(timeIndex-1) + localTimeIndex;
+                                experimentData(row, 1) = {num2str(timeMoments(localTimeIndex, cyclesInUse(timeIndex)))};
+                                experimentData(row, place) = {data{group}{subgroup}{subgroupElement}{1}(cyclesInUse(timeIndex))};    
+                            end
+                            place = place + 1;% move writable column to right by one cell
+                        end
+                    end
+                end         
+            end
+            if this.removeEmptyRows
+                rowToBeRemoved = [];
+                for rowToCheck = size(experimentData, 1) : -1 : 1 
+                    if isempty(experimentData{rowToCheck,1})
+                        rowToBeRemoved(end+1) = rowToCheck;
+                    end
+                end
+                experimentData(rowToBeRemoved, :) = [];
+            else
+                
+            end
+            
+            tableData = [Header; experimentData];
+            this.setTableData(tableData);
+            this.setVisualTableData(tableData);
+            %drawnow;
+        end
+        
         function setTableData(this, tableData)
            this.activeTable =  tableData; 
         end
@@ -552,14 +654,11 @@ classdef ExcelTableController < ExportPanelController
            this.tableHandle.setData(visualTableData);  
         end      
         
-        function exportWithDialogue(this)
+        
+        function exportWithDialogue(this) % consider moving some functionality of exportWithDialogue to exportWithName to reduce code duplication
             tableData = this.activeTable;
-            if isdeployed
-                load([pwd, '\', 'settings.mat']);
-            else
-                load settings
-            end
-            startingPath = settings.Excel;
+            fileChooser = FileChooser();
+            startingPath = fileChooser.chooseExcelExportFileSave();
             [FileName,FilePath,FilterIndex] = uiputfile({'*.xls';'*.csv'}, '', startingPath);
             
             if isequal(FilterIndex,1)
@@ -571,6 +670,7 @@ classdef ExcelTableController < ExportPanelController
                    % save it as an .xlsx file then
                    outputFilename = [outputFilename 'x'];
                    xlswrite(outputFilename, tableData);
+                   fileChooser.registerExcelFolderSavePath(FilePath);
                    warndlg('Error occurred while writing .xls file. An .xlsx file has been created instead');
                 end
                 answer = questdlg('Would you like to open the created Excel file now?', 'Open?', 'Yes', 'No', 'Yes');
@@ -628,16 +728,13 @@ classdef ExcelTableController < ExportPanelController
             end
                 
             if isequal(createFile, 1)
-                if isdeployed
-                    load([pwd, '\', 'settings.mat']);
-                else
-                    load settings
-                end
-                startingPath = settings.Excel;
+                fileChooser = FileChooser();
+                startingPath = fileChooser.chooseExcelExportFileSave();
                 [FileName, FilePath] = uiputfile({'.pzfx'}, '', startingPath);
                 fullFileName = [FilePath, '\', FileName];
                 
                 this.exportToPZFXWithName(fullFileName);
+                fileChooser.registerExcelFolderSavePath(FilePath);
                 answer = questdlg('Would you like to open the created Prism file now?', 'Open?', 'Yes', 'No', 'Yes');
                 if strcmp(answer, 'Yes')
                     winopen(fullFileName);

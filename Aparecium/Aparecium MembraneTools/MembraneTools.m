@@ -136,7 +136,9 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles.imageImporter = ImageImporter(); % Create a new object that can import the images correctly
 handles.imageImporter.analyzeQuality = 1;
-handles.imageImporter.userChooseImageFolders(); % Ask the user to choose the folder where the folders are that contain images
+fileChooser = FileChooser();
+startingPath = fileChooser.chooseMembraneToolsFolder(); % get the preferred starting folder
+handles.imageImporter.userChooseImageFolders(startingPath); % Ask the user to choose the folder where the folders are that contain images
 handles.experimentDataStructure = handles.imageImporter.experimentDataStructure; % Get information about which wells were used
 handles = generateApareciumExperimentInput(handles, handles.experimentDataStructure); % Generate the ApareciumExperimentInput object based the information from images 
 handles.imageProcessingParameters.setFullImageMode();
@@ -864,7 +866,9 @@ function pushbutton16_Callback(hObject, eventdata, handles)
 
 handles.imageImporter = ImageImporter(); % Create a new ImageImporter obejct
 handles.imageImporter.analyzeQuality = 1;
-handles.imageImporter.userChooseImageFolders(); % note that user must still choose the regular images, timing is still read from there but binary image is taken from elsewhere
+fileChooser = FileChooser();
+startingPath = fileChooser.chooseMembraneToolsFolder(); % get the preferred starting folder
+handles.imageImporter.userChooseImageFolders(startingPath); % note that user must still choose the regular images, timing is still read from there but binary image is taken from elsewhere
 handles.experimentDataStructure = handles.imageImporter.experimentDataStructure; 
 handles.imageProcessingParameters.setFromBinaryMode(); % set the image analysis parameters to accordance with processing binary files
 set(handles.autoSaveBinaryImage, 'value', 0); % Don´t save binary files, they must already be there

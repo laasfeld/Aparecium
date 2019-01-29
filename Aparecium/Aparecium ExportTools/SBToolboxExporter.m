@@ -250,14 +250,11 @@ classdef SBToolboxExporter <  ExportPanelController
         end
         
         function exportWithDialogue(this)
-            if isdeployed
-                load([pwd, '\', 'settings.mat']);
-            else
-                load settings
-            end
-            startingPath = settings.SBToolbox;
-            FilePath = uigetdir(startingPath, 'Select destination folder (should be named Experiments)');
-            this.exportWithName(FilePath);
+            fileChooser = FileChooser();
+            startingPath = fileChooser.chooseSBToolboxFolderSave();
+            folderPath = uigetdir(startingPath, 'Select destination folder (should be named Experiments)');
+            this.exportWithName(folderPath);
+            fileChooser.registerSBToolboxFolderSavePath(folderPath)
         end
         
         function exportWithName(this, folderName)

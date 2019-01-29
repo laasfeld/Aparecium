@@ -22,7 +22,7 @@ function varargout = SettingsUI(varargin)
 
 % Edit the above text to modify the response to help SettingsUI
 
-% Last Modified by GUIDE v2.5 12-Oct-2018 10:28:31
+% Last Modified by GUIDE v2.5 28-Jan-2019 12:53:52
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -77,6 +77,7 @@ set(handles.GCF, 'cdata', handles.folderImg);
 set(handles.FCF, 'cdata', handles.folderImg);
 set(handles.perkinElmer, 'cdata', handles.folderImg);
 set(handles.magellan, 'cdata', handles.folderImg);
+set(handles.MembraneTools, 'cdata', handles.folderImg);
 settings = [];
 load([handles.folderPath, 'settings']); 
 handles.settings = settings;
@@ -85,6 +86,7 @@ try
 catch MException
     if isequal(MException.identifier, 'MATLAB:nonExistentField')
         disp('PHERAStar path not found')
+        handles.settings.PHERAStarASCII = '';
     else
         rethrow(MException)
     end
@@ -95,6 +97,7 @@ try
 catch MException
     if isequal(MException.identifier, 'MATLAB:nonExistentField')
         disp('Excel path not found')
+        handles.settings.Excel = '';
     else
         rethrow(MException)
     end
@@ -105,6 +108,7 @@ try
 catch MException
     if isequal(MException.identifier, 'MATLAB:nonExistentField')
         disp('MIDAS path not found')
+        handles.settings.MIDAS = '';
     else
         rethrow(MException)
     end
@@ -115,6 +119,7 @@ try
 catch MException
     if isequal(MException.identifier, 'MATLAB:nonExistentField')
         disp('Gen5 ASCII path not found')
+        handles.settings.NeoASCII = '';
     else
         rethrow(MException)
     end
@@ -125,6 +130,7 @@ try
 catch MException
     if isequal(MException.identifier, 'MATLAB:nonExistentField')
         disp('PHERAStar database path not found')
+        handles.settings.PHERAStarDatabase = '';
     else
         rethrow(MException)
     end
@@ -135,6 +141,7 @@ try
 catch MException
     if isequal(MException.identifier, 'MATLAB:nonExistentField')
         disp('SBToolbox2 path not found')
+        handles.settings.SBToolbox = '';
     else
         rethrow(MException)
     end
@@ -145,6 +152,7 @@ try
 catch MException
     if isequal(MException.identifier, 'MATLAB:nonExistentField')
         disp('Configuration file path not found')
+        handles.settings.Configurations = '';
     else
         rethrow(MException)
     end
@@ -154,15 +162,51 @@ try
 catch MException
     if isequal(MException.identifier, 'MATLAB:nonExistentField')
         disp('Grouping configuration file path not found')
+        handles.settings.GCFPath = '';
     else
         rethrow(MException)
     end
 end
+
 try
     set(handles.FCFPath,'String',settings.FCFPath);
 catch MException
     if isequal(MException.identifier, 'MATLAB:nonExistentField')
         disp('Formula configuration path not found')
+        handles.settings.FCFPath = '';
+    else
+        rethrow(MException)
+    end
+end
+
+try
+    set(handles.MembraneToolsPath,'String',settings.MembraneToolsPath);
+catch MException
+    if isequal(MException.identifier, 'MATLAB:nonExistentField')
+        disp('Membrane Tools configuration path not found')
+        handles.settings.MembraneToolsPath = '';
+    else
+        rethrow(MException)
+    end
+end
+
+try
+    set(handles.magellanPath,'String',settings.magellanPath);
+catch MException
+    if isequal(MException.identifier, 'MATLAB:nonExistentField')
+        disp('Membrane Tools configuration path not found')
+        handles.settings.magellanPath = '';
+    else
+        rethrow(MException)
+    end
+end
+
+try
+    set(handles.PerkinElmerPath,'String',settings.PerkinElmerPath);
+catch MException
+    if isequal(MException.identifier, 'MATLAB:nonExistentField')
+        disp('Membrane Tools configuration path not found')
+        handles.settings.PerkinElmerPath = '';
     else
         rethrow(MException)
     end
@@ -173,6 +217,139 @@ try
 catch MException
     if isequal(MException.identifier, 'MATLAB:nonExistentField')
         disp('Blank setting not found, using False')
+        handles.settings.showBlank = false;
+    else
+        rethrow(MException)
+    end
+end
+
+try
+    set(handles.PHERAStarASCII_useLast, 'Value', settings.PHERAStarASCII_useLast);
+catch MException
+    if isequal(MException.identifier, 'MATLAB:nonExistentField')
+        disp('PHERAStarASCII_useLast setting not found, using False')
+        handles.settings.PHERAStarASCII_useLast = false;
+    else
+        rethrow(MException)
+    end
+end
+
+try
+    set(handles.NeoASCII_useLast, 'Value', settings.NeoASCII_useLast);
+catch MException
+    if isequal(MException.identifier, 'MATLAB:nonExistentField')
+        disp('NeoASCII_useLast setting not found, using False')
+        handles.settings.NeoASCII_useLast = false;
+    else
+        rethrow(MException)
+    end
+end
+
+try
+    set(handles.PHERAStarDatabase_useLast, 'Value', settings.PHERAStarDatabase_useLast);
+catch MException
+    if isequal(MException.identifier, 'MATLAB:nonExistentField')
+        disp('PHERAStarDatabase_useLast setting not found, using False')
+        handles.settings.PHERAStarDatabase_useLast = false;
+    else
+        rethrow(MException)
+    end
+end
+
+try
+    set(handles.MIDAS_useLast, 'Value', settings.MIDAS_useLast);
+catch MException
+    if isequal(MException.identifier, 'MATLAB:nonExistentField')
+        disp('MIDAS_useLast setting not found, using False')
+        handles.settings.MIDAS_useLast = false;
+    else
+        rethrow(MException)
+    end
+end
+
+try
+    set(handles.Excel_useLast, 'Value', settings.Excel_useLast);
+catch MException
+    if isequal(MException.identifier, 'MATLAB:nonExistentField')
+        disp('Excel_useLast setting not found, using False')
+        handles.settings.Excel_useLast = false;
+    else
+        rethrow(MException)
+    end
+end
+
+try
+    set(handles.SBToolbox_useLast, 'Value', settings.SBToolbox_useLast);
+catch MException
+    if isequal(MException.identifier, 'MATLAB:nonExistentField')
+        disp('SBToolbox_useLast setting not found, using False')
+        handles.settings.SBToolbox_useLast = false;
+    else
+        rethrow(MException)
+    end
+end
+
+try
+    set(handles.Configurations_useLast, 'Value', settings.Configurations_useLast);
+catch MException
+    if isequal(MException.identifier, 'MATLAB:nonExistentField')
+        disp('Configurations_useLast setting not found, using False')
+        handles.settings.Configurations_useLast = false;
+    else
+        rethrow(MException)
+    end
+end
+
+try
+    set(handles.GCF_useLast, 'Value', settings.GCF_useLast);
+catch MException
+    if isequal(MException.identifier, 'MATLAB:nonExistentField')
+        disp('GCF_useLast setting not found, using False')
+        handles.settings.GCF_useLast = false;
+    else
+        rethrow(MException)
+    end
+end
+
+try
+    set(handles.FCF_useLast, 'Value', settings.FCF_useLast);
+catch MException
+    if isequal(MException.identifier, 'MATLAB:nonExistentField')
+        disp('FCF_useLast setting not found, using False')
+        handles.settings.FCF_useLast = false;
+    else
+        rethrow(MException)
+    end
+end
+
+try
+    set(handles.perkinElmer_useLast, 'Value', settings.perkinElmer_useLast);
+catch MException
+    if isequal(MException.identifier, 'MATLAB:nonExistentField')
+        disp('perkinElmer_useLast setting not found, using False')
+        handles.settings.perkinElmer_useLast = false;
+    else
+        rethrow(MException)
+    end
+end
+
+try
+    set(handles.magellan_useLast, 'Value', settings.magellan_useLast);
+catch MException
+    if isequal(MException.identifier, 'MATLAB:nonExistentField')
+        disp('magellan_useLast setting not found, using False')
+        handles.settings.magellan_useLast = false;
+    else
+        rethrow(MException)
+    end
+end
+
+try
+    set(handles.MembraneTools_useLast, 'Value', settings.MembraneTools_useLast);
+catch MException
+    if isequal(MException.identifier, 'MATLAB:nonExistentField')
+        disp('MembraneTools_useLast setting not found, using False')
+        handles.settings.MembraneTools_useLast = false;
     else
         rethrow(MException)
     end
@@ -366,12 +543,27 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+function handles = updateLastFolderSettings(handles)
+handles.settings.PHERAStarASCII_useLast = get(handles.PHERAStarASCII_useLast, 'Value');
+handles.settings.NeoASCII_useLast = get(handles.NeoASCII_useLast, 'Value');
+handles.settings.PHERAStarDatabase_useLast = get(handles.PHERAStarDatabase_useLast, 'Value');
+handles.settings.MIDAS_useLast = get(handles.MIDAS_useLast, 'Value');
+handles.settings.Excel_useLast = get(handles.Excel_useLast, 'Value');
+handles.settings.SBToolbox_useLast = get(handles.SBToolbox_useLast, 'Value');
+handles.settings.Configurations_useLast = get(handles.Configurations_useLast, 'Value');
+handles.settings.GCF_useLast = get(handles.GCF_useLast, 'Value');
+handles.settings.FCF_useLast = get(handles.FCF_useLast, 'Value');
+handles.settings.perkinElmer_useLast = get(handles.perkinElmer_useLast, 'Value');
+handles.settings.magellan_useLast = get(handles.magellan_useLast, 'Value');
+handles.settings.MembraneTools_useLast = get(handles.MembraneTools_useLast, 'Value');
+
 
 % --- Executes on button press in save.
 function save_Callback(hObject, eventdata, handles)
 % hObject    handle to save (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+handles = updateLastFolderSettings(handles);
 settings = handles.settings;
 handles.folderPath;
 
@@ -411,16 +603,22 @@ function PHERAStarASCII_Callback(hObject, eventdata, handles)
 % hObject    handle to PHERAStarASCII (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.settings.PHERAStarASCII = uigetdir('','Select standard folder for PHERAStar ASCII files');
-set(handles.PHERAStarASCII_Path,'String',handles.settings.PHERAStarASCII);
+result = uigetdir(handles.settings.PHERAStarASCII, 'Select standard folder for PHERAStar ASCII files');
+if ~isequal(result, 0)
+    handles.settings.PHERAStarASCII = result;
+    set(handles.PHERAStarASCII_Path,'String',handles.settings.PHERAStarASCII);
+end
 guidata(hObject,handles);
 % --- Executes on button press in NeoASCII.
 function NeoASCII_Callback(hObject, eventdata, handles)
 % hObject    handle to NeoASCII (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.settings.NeoASCII = uigetdir('','Select standard folder for Synergy Neo ASCII files');
-set(handles.NeoASCII_Path,'String',handles.settings.NeoASCII);
+result = uigetdir(handles.settings.NeoASCII, 'Select standard folder for Synergy Neo ASCII files');
+if ~isequal(result, 0)
+    handles.settings.NeoASCII = result;
+    set(handles.NeoASCII_Path,'String',handles.settings.NeoASCII);
+end
 guidata(hObject,handles);
 
 % --- Executes on button press in PHERAStarDatabase.
@@ -428,8 +626,11 @@ function PHERAStarDatabase_Callback(hObject, eventdata, handles)
 % hObject    handle to PHERAStarDatabase (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.settings.PHERAStarDatabase = uigetdir('','Select standard folder for PHERAStar database files');
-set(handles.PHERAStarDatabase_Path,'String',handles.settings.PHERAStarDatabase);
+result = uigetdir(handles.settings.PHERAStarDatabase, 'Select standard folder for PHERAStar database files');
+if ~isequal(result, 0)
+    handles.settings.PHERAStarDatabase = result;
+    set(handles.PHERAStarDatabase_Path,'String',handles.settings.PHERAStarDatabase);
+end
 guidata(hObject,handles);
 
 % --- Executes on button press in MIDAS.
@@ -437,8 +638,11 @@ function MIDAS_Callback(hObject, eventdata, handles)
 % hObject    handle to MIDAS (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.settings.MIDAS = uigetdir('','Select standard folder for MIDAS files');
-set(handles.MIDAS_Path,'String',handles.settings.MIDAS);
+result = uigetdir(handles.settings.MIDAS, 'Select standard folder for MIDAS files');
+if ~isequal(result, 0)
+    handles.settings.MIDAS = result;
+    set(handles.MIDAS_Path,'String',handles.settings.MIDAS);
+end
 guidata(hObject,handles);
 
 % --- Executes on button press in Excel.
@@ -446,8 +650,11 @@ function Excel_Callback(hObject, eventdata, handles)
 % hObject    handle to Excel (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.settings.Excel = uigetdir('','Select standard folder for Excel/Prism files');
-set(handles.Excel_Path,'String',handles.settings.Excel);
+result = uigetdir(handles.settings.Excel, 'Select standard folder for Excel/Prism files');
+if ~isequal(result, 0)
+    handles.settings.Excel = result;
+    set(handles.Excel_Path,'String',handles.settings.Excel);
+end
 guidata(hObject,handles);
 
 % --- Executes on button press in SBToolbox.
@@ -455,8 +662,11 @@ function SBToolbox_Callback(hObject, eventdata, handles)
 % hObject    handle to SBToolbox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.settings.SBToolbox = uigetdir('','Select standard folder for SBToolbox files');
-set(handles.SBToolbox_Path,'String',handles.settings.SBToolbox);
+result = uigetdir(handles.settings.SBToolbox, 'Select standard folder for SBToolbox files');
+if ~isequal(result, 0)
+    handles.settings.SBToolbox = result;
+    set(handles.SBToolbox_Path,'String',handles.settings.SBToolbox);
+end
 guidata(hObject,handles);
 
 
@@ -488,8 +698,11 @@ function Configurations_Callback(hObject, eventdata, handles)
 % hObject    handle to Configurations (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.settings.Configurations = uigetdir('','Select standard folder for configuration files');
-set(handles.Configurations_Path,'String',handles.settings.Configurations);
+result = uigetdir(handles.settings.Configurations, 'Select standard folder for configuration files');
+if ~isequal(result, 0)
+    handles.settings.Configurations = result;
+    set(handles.Configurations_Path,'String',handles.settings.Configurations);
+end
 guidata(hObject,handles);
 
 % --- Executes when user attempts to close figure1.
@@ -536,8 +749,11 @@ function GCF_Callback(hObject, eventdata, handles)
 % hObject    handle to GCF (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.settings.GCFPath = uigetdir('','Select standard folder for group configuration files (GCF)');
-set(handles.GCFPath,'String',handles.settings.GCFPath);
+result = uigetdir(handles.settings.GCFPath, 'Select standard folder for group configuration files (GCF)');
+if ~isequal(result, 0)
+    handles.settings.GCFPath = result;
+    set(handles.GCFPath,'String',handles.settings.GCFPath);
+end
 guidata(hObject,handles);
 
 
@@ -569,8 +785,11 @@ function FCF_Callback(hObject, eventdata, handles)
 % hObject    handle to FCF (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.settings.FCFPath = uigetdir('','Select standard folder for formula configuration files(FCF)');
-set(handles.FCFPath,'String',handles.settings.FCFPath);
+result = uigetdir(handles.settings.FCFPath, 'Select standard folder for formula configuration files(FCF)');
+if ~isequal(result, 0)
+    handles.settings.FCFPath = result;
+    set(handles.FCFPath,'String',handles.settings.FCFPath);
+end
 guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
@@ -683,3 +902,161 @@ function SBStateNameOptions_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 SBStateNameOptions()
+
+
+
+function MembraneToolsPath_Callback(hObject, eventdata, handles)
+% hObject    handle to MembraneToolsPath (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of MembraneToolsPath as text
+%        str2double(get(hObject,'String')) returns contents of MembraneToolsPath as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function MembraneToolsPath_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to MembraneToolsPath (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in MembraneTools.
+function MembraneTools_Callback(hObject, eventdata, handles)
+% hObject    handle to MembraneTools (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+result = uigetdir(handles.settings.MembraneToolsPath, 'Select standard image import folder for MembraneTools');
+if ~isequal(result, 0)
+    handles.settings.MembraneToolsPath = result;
+    set(handles.MembraneToolsPath,'String',handles.settings.MembraneToolsPath);
+end
+guidata(hObject,handles);
+
+% --- Executes on button press in allCheckbox.
+function allCheckbox_Callback(hObject, eventdata, handles)
+% hObject    handle to allCheckbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of allCheckbox
+value = get(hObject,'Value');
+tickBoxes = [handles.PHERAStarASCII_useLast, handles.NeoASCII_useLast, handles.PHERAStarDatabase_useLast, handles.MIDAS_useLast, handles.Excel_useLast,... 
+    handles.SBToolbox_useLast, handles.Configurations_useLast, handles.GCF_useLast, handles.FCF_useLast, handles.perkinElmer_useLast, handles.magellan_useLast, handles.MembraneTools_useLast];
+for i = 1 : numel(tickBoxes)
+   set(tickBoxes(i), 'Value', value);
+end
+guidata(hObject, handles);
+
+% --- Executes on button press in PHERAStarASCII_useLast.
+function PHERAStarASCII_useLast_Callback(hObject, eventdata, handles)
+% hObject    handle to PHERAStarASCII_useLast (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of PHERAStarASCII_useLast
+
+
+% --- Executes on button press in NeoASCII_useLast.
+function NeoASCII_useLast_Callback(hObject, eventdata, handles)
+% hObject    handle to NeoASCII_useLast (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of NeoASCII_useLast
+
+
+% --- Executes on button press in PHERAStarDatabase_useLast.
+function PHERAStarDatabase_useLast_Callback(hObject, eventdata, handles)
+% hObject    handle to PHERAStarDatabase_useLast (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of PHERAStarDatabase_useLast
+
+
+% --- Executes on button press in MIDAS_useLast.
+function MIDAS_useLast_Callback(hObject, eventdata, handles)
+% hObject    handle to MIDAS_useLast (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of MIDAS_useLast
+
+
+% --- Executes on button press in Excel_useLast.
+function Excel_useLast_Callback(hObject, eventdata, handles)
+% hObject    handle to Excel_useLast (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of Excel_useLast
+
+
+% --- Executes on button press in SBToolbox_useLast.
+function SBToolbox_useLast_Callback(hObject, eventdata, handles)
+% hObject    handle to SBToolbox_useLast (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of SBToolbox_useLast
+
+
+% --- Executes on button press in Configurations_useLast.
+function Configurations_useLast_Callback(hObject, eventdata, handles)
+% hObject    handle to Configurations_useLast (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of Configurations_useLast
+
+
+% --- Executes on button press in GCF_useLast.
+function GCF_useLast_Callback(hObject, eventdata, handles)
+% hObject    handle to GCF_useLast (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of GCF_useLast
+
+
+% --- Executes on button press in FCF_useLast.
+function FCF_useLast_Callback(hObject, eventdata, handles)
+% hObject    handle to FCF_useLast (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of FCF_useLast
+
+
+% --- Executes on button press in perkinElmer_useLast.
+function perkinElmer_useLast_Callback(hObject, eventdata, handles)
+% hObject    handle to perkinElmer_useLast (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of perkinElmer_useLast
+
+
+% --- Executes on button press in magellan_useLast.
+function magellan_useLast_Callback(hObject, eventdata, handles)
+% hObject    handle to magellan_useLast (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of magellan_useLast
+
+
+% --- Executes on button press in MembraneTools_useLast.
+function MembraneTools_useLast_Callback(hObject, eventdata, handles)
+% hObject    handle to MembraneTools_useLast (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of MembraneTools_useLast

@@ -22,9 +22,13 @@ classdef ImageImporter < handle
             
         end
         
-        function userChooseImageFolders(this)
+        function userChooseImageFolders(this, varargin)
 
-            mainDir = uigetdir('','Choose the folder which contains folders with all the image files for all the timepoints');
+            if isequal(nargin, 2)
+                mainDir = varargin{1};
+            elseif isequal(nargin, 1)
+                mainDir = uigetdir(startingPath, 'Choose the folder which contains folders with all the image files for all the timepoints');
+            end
 
             this.mainDirectory = mainDir;
             %% get all folders from the path

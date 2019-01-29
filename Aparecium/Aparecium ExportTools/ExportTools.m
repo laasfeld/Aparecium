@@ -25,7 +25,7 @@ function varargout = ExportTools(varargin)
 
 % Edit the above text to modify the response to help ExportTools
 
-% Last Modified by GUIDE v2.5 14-Dec-2018 16:07:50
+% Last Modified by GUIDE v2.5 28-Jan-2019 14:28:37
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
@@ -666,7 +666,7 @@ controllers{5} = handles.prismPanelController;
 addParametersToControllers(controllers, handles.apareciumExperimentInput, groupStructure, subgroupNames, sharedBlankStructure, timewiseBlankStructure, handles.excelTableConfiguration)
 
 set(handles.groupsOKIndicator, 'String', 'OK', 'BackgroundColor', [0 1 0]);
-set(handles.savePlateKonfig, 'Enable', 'on');
+set(handles.savePlateConfig, 'Enable', 'on');
 handles.activeFormula
 if ~isequal(handles.activeFormula, [])
     set(handles.applyFormula, 'Enable', 'on');
@@ -1154,13 +1154,13 @@ function SBTable_CellEditCallback(hObject, eventdata, handles)
 group = get(handles.chooseSBGroup, 'Value');
 subgroups = handles.SBExporter.getSubgroupsOfGroup(group);
 subgroup = get(handles.chooseSBSubgroup, 'Value');
-handles = handles.SBExporter.cellEditCallbackFunction(hObject, eventdata, handles, group, subgroups{subgroup})
+handles = handles.SBExporter.cellEditCallbackFunction(hObject, eventdata, handles, group, subgroups{subgroup});
 guidata(hObject, handles)
 
 
-% --- Executes on button press in savePlateKonfig.
-function savePlateKonfig_Callback(hObject, eventdata, handles)
-% hObject    handle to savePlateKonfig (see GCBO)
+% --- Executes on button press in savePlateConfig.
+function savePlateConfig_Callback(hObject, eventdata, handles)
+% hObject    handle to savePlateConfig (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 groupStructure = handles.plateSimulatorInterface.getGroupStructure();
@@ -1170,18 +1170,14 @@ timewiseBlankStructure = handles.plateSimulatorInterface.getTimewiseBlankStructu
 timewiseBlankAlignment = handles.plateSimulatorInterface.getTimewiseBlankAlignment();
 subgroupNames = handles.plateSimulatorInterface.getSubgroupNames();
 subgroupNames = reshapeSubgroupNames(groupStructure, subgroupNames, sharedBlankStructure);
-if isdeployed
-    load([pwd, '\', 'settings.mat']);
-else
-    load settings
-end
-try
-    [fileName, filePath] = uiputfile('*.mat', 'Save group config file, prefix GCF- is recommended', settings.GCFPath);
-catch
-    [fileName, filePath] = uiputfile('*.mat', 'Save group config file, prefix GCF- is recommended');
-end
+fileChooser = FileChooser;
+startingPath = fileChooser.chooseGCFFileSave();
+[filePath, fileName] = uiputfile('*.mat', 'Grouping configurationFile, should start with FCF-', [startingPath, '/GCF-.mat']);
 fullPath = [filePath, fileName];
-save(fullPath, 'groupStructure', 'groupNames', 'sharedBlankStructure', 'timewiseBlankStructure', 'timewiseBlankAlignment', 'subgroupNames');
+if ~isequal(fullPath, 0)
+    save(fullPath, 'groupStructure', 'groupNames', 'sharedBlankStructure', 'timewiseBlankStructure', 'timewiseBlankAlignment', 'subgroupNames');
+    fileChooser.registerGCFFilePath(filePath);
+end
 
 % --- Executes on button press in loadGroups.
 function loadGroups_Callback(hObject, eventdata, handles)
@@ -1243,7 +1239,7 @@ if exist('groupStructure', 'var') && exist('groupNames', 'var');
         set(handles.groupNameTable, 'data', groupNames);
         set(handles.groupsOKIndicator, 'String', 'OK', 'BackgroundColor', [0 1 0]);
         set(handles.chooseGraphGroup, 'String', handles.apareciumExperimentInput.getGroups());
-        set(handles.savePlateKonfig, 'Enable', 'on');
+        set(handles.savePlateConfig, 'Enable', 'on');
         set(handles.numberOfGroupsField, 'String', num2str(numel(groupNames)));
        
     else
@@ -1261,18 +1257,15 @@ function saveFormula_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 activeFormula = handles.activeFormula;
 channelNames = handles.apareciumExperimentInput.getChannelNames();
-if isdeployed
-    load([pwd, '\', 'settings.mat']);
-else
-    load settings
-end 
-try
-    [fileName, filePath] = uiputfile('*.mat', 'Save group config file, prefix FCF- is recommended', settings.FCFPath);
-catch
-    [fileName, filePath] = uiputfile('*.mat', 'Save group config file, prefix FCF- is recommended');
-end
+fileChooser = FileChooser;
+startingPath = fileChooser.chooseFCFFileSave();
+[filePath, fileName] = uiputfile('*.mat', 'Save formula configurationFile, should start with FCF-', [startingPath, '/FCF-.mat']);
 fullPath = [filePath, fileName];
-save(fullPath, 'activeFormula', 'channelNames');
+if ~isequal(fullPath, 0)
+    save(fullPath, 'activeFormula', 'channelNames');
+    fileChooser.registerFCFFilePath(this, path);
+end
+
 
 
 % --- Executes on button press in toOriginalChannels.
@@ -1588,7 +1581,7 @@ if exist('groupStructure', 'var') && exist('groupNames', 'var');
     set(handles.groupNameTable, 'data', groupNames);
     set(handles.groupsOKIndicator, 'String', 'OK', 'BackgroundColor', [0 1 0]);
     set(handles.chooseGraphGroup, 'String', handles.apareciumExperimentInput.getGroups());
-    set(handles.savePlateKonfig, 'Enable', 'on');
+    set(handles.savePlateConfig, 'Enable', 'on');
     set(handles.applyFormula, 'Enable', 'on');
 else
    warndlg('It seems that this .mat file is not in the correct format. Groups not loaded.') 
