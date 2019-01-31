@@ -484,7 +484,7 @@ classdef FileChooser < handle
         
         %% Excel export/Prism Export methods
     
-        function chooseExcelExportFileSave(this)
+        function startingPath = chooseExcelExportFileSave(this)
             if isfield(this.settings, 'Excel')
                 startingPath = this.settings.Excel;
             else
