@@ -10,7 +10,7 @@ classdef MidasTableController < handle
         rawExperimentData;
         fileName;
         columnHeaders = {'ID:plate', 'ID:well', 'DA:ALL', 'DV:Channel1', 'DV:Channel2'};
-        tableData = {'', '', '', '' ,''};
+        tableData = cell(0, 5);%{'', '', '', '' ,''};
         eventData = [];
         midasTableHandle;
         informativeColumns = 2;
@@ -370,7 +370,11 @@ classdef MidasTableController < handle
         
         function eventBlocks = generateEventBlocks(this, eventTimes)
             wells = this.treatmentStructure.resultWells;
-            plateName = this.tableData{1, 1};
+            if isequal(size(this.tableData, 1), 0)
+                plateName = 'My_Plate'; 
+            else
+                plateName = this.tableData{1, 1};
+            end
             eventBlocks = cell(size(eventTimes, 1), 1);
             for event = 1 : size(eventTimes, 1)
                eventBlocks{event} = cell(1, this.informativeColumns + this.treatmentColumns + this.timeColumns + this.measurementColumns);
@@ -410,15 +414,25 @@ classdef MidasTableController < handle
         end
         
         function cycleBeginningTimes = calculateCycleBeginningTimes(this)
-            noOfWells = numel(this.treatmentStructure.resultWells);
-            time = this.tableData(:, this.informativeColumns + this.treatmentColumns + 1);
-            cycleBeginningTimes = zeros(size(this.tableData, 1)/noOfWells, 1);
-            for cycle = 1 : size(this.tableData, 1)/noOfWells;
-                cycleTime = zeros(noOfWells, 1);
-                for row = 1 : noOfWells
-                    cycleTime(row) = time{(cycle - 1)*noOfWells + row};
+            try
+                noOfWells = numel(this.treatmentStructure.resultWells);
+                time = this.tableData(:, this.informativeColumns + this.treatmentColumns + 1);
+                if size(this.tableData, 1) < noOfWells
+                    cycleBeginningTimes = [];
+                    return;
                 end
-                cycleBeginningTimes(cycle)=min(cycleTime);
+                cycleBeginningTimes = zeros(size(this.tableData, 1)/noOfWells, 1);
+                for cycle = 1 : size(this.tableData, 1)/noOfWells;
+                    cycleTime = zeros(noOfWells, 1);
+                    for row = 1 : noOfWells
+                        cycleTime(row) = time{(cycle - 1)*noOfWells + row};
+                    end
+                    cycleBeginningTimes(cycle)=min(cycleTime);
+                end
+            catch Mexception
+                if strcmp(Mexception.identifier, 'MATLAB:NonIntegerInput') % PlateSimulator seems to be used before the MIDAS file is generated. This can happen with MembraneTools and/or ICSE Tools where PlateSimulator can be used before the data in analyzed. Check what happens, when actual events are used in these tools
+                    cycleBeginningTimes = 0;
+                end
             end
         end
         
@@ -441,7 +455,7 @@ classdef MidasTableController < handle
             treatments = treatmentStructure.results;
             
             connectionMatrix = zeros(numel(treatmentStructure.resultWells),1);
-            if isequal(size(this.tableData, 1), 1) 
+            if isequal(size(this.tableData, 1), 0) 
                 for i = 1 : numel(treatmentStructure.resultWells)
                     connectionMatrix(i) = i;
                 end
