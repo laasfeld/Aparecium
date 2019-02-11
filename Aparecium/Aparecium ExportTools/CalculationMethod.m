@@ -118,6 +118,7 @@ classdef CalculationMethod < handle
                            for group = 1 : numel(this.groups)
                                for subgroup = this.subgroupStartValue : numel(this.groups{group})
                                   for well = 1 : numel(this.groups{group}{subgroup})
+                                      
                                       for channel = numel(this.channelNames):-1:1
                                          blankValues = [];
                                          if ~isempty(this.measurementStructure{group}{1})
@@ -153,6 +154,7 @@ classdef CalculationMethod < handle
                                for subgroup = this.subgroupStartValue : numel(this.groups{group})
                                   if ~isempty(this.measurementStructure{group}{subgroup})
                                       for well = 1 : numel(this.groups{group}{subgroup})
+                                          insertionStructure = cell(0,0);
                                           for channel = numel(this.channelNames):-1:1
                                              blankValues = [];
 
@@ -161,13 +163,15 @@ classdef CalculationMethod < handle
                                              if exist('blankValues', 'var')
                                                 formula = [functionName, '(valuesToBeBlanked, blankValues)'];
                                                 %resultStructure{group}{subgroup}{well}{channel} = eval(formula);
-                                                this.measurementStructure{group}{subgroup}{well} = [eval(formula), this.measurementStructure{group}{subgroup}{well}]; 
+                                                insertionStructure = [eval(formula), insertionStructure];
+                                                %this.measurementStructure{group}{subgroup}{well} = [eval(formula), this.measurementStructure{group}{subgroup}{well}]; 
                                              else                                         
                                                  errordlg('One of the wells had no blank value. Cannot perform timewise blank normalization!')
                                                  error('One of the wells had no blank value. Cannot perform timewise blank normalization!')
                                              end                                   
-                                          end
+                                          end                                         
                                       end
+                                      this.measurementStructure{group}{subgroup}{well} = [insertionStructure, this.measurementStructure{group}{subgroup}{well}];
                                   else
                                       ['No measurements in subgoup ', subgroup];
                                   end
