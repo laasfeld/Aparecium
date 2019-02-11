@@ -69,7 +69,7 @@ handles.plateSimulatorInterface = PlateSimulatorInterface();
 handles.simPlateHandle = [];
 handles.fileName = [];
 handles = ExperimentConfigurationPanelFunc(handles);
-handles = MIDASOptionsPanelFunc(handles);
+%handles = MIDASOptionsPanelFunc(handles);
 guidata(hObject, handles)
 initializeChannelsTable(handles);
 
@@ -135,7 +135,7 @@ if allow
 
     handles.fileName = regexprep(fileName, '.txt', '');
     handles.MIDAS_table.setVisible('on');
-    set(handles.MIDASInformationText,'String', ['Gen5 ASCII file ', fileName, ' loaded']);
+    set(handles.MIDASInformationText,'String', ['Protdegrade txt ', fileName, ' loaded']);
     handles.experimentDataStructure = ProtegradeLoader(fullFilePath);
     handles = generateApareciumExperimentInput(handles, handles.experimentDataStructure);
     numberOfChannels = handles.apareciumExperimentInput.getNumberOfChannels;
@@ -146,7 +146,7 @@ if allow
 
     setChannels(handles);
     handles.midasTableController.setData(rawData);
-    successBox('Gen5 ASCII file successfully loaded', 'Success');
+    successBox('Protdegrade .txt file successfully loaded', 'Success');
 else
 end
 guidata(hObject, handles);

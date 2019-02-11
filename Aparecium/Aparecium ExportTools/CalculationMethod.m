@@ -259,7 +259,11 @@ classdef CalculationMethod < handle
                                   for well = 1 : numel(this.groups{group}{subgroup})
                                      inlineInput = cell(length(usedChannels),1);
                                      for channel = 1 : length(usedChannels)
-                                        inlineInput{channel} = this.measurementStructure{group}{subgroup}{well}{usedChannels(channel)};
+                                         try
+                                            inlineInput{channel} = this.measurementStructure{group}{subgroup}{well}{usedChannels(channel)};
+                                         catch MException
+                                             'siin'
+                                         end
                                      end
                                      try
                                         this.measurementStructure{group}{subgroup}{well} = [f(inlineInput{:}), this.measurementStructure{group}{subgroup}{well}]; 
@@ -313,6 +317,7 @@ classdef CalculationMethod < handle
         end
         
         function [usedChannels, usedChannelNames] = findUsedChannels(this, formulaIndex)
+            calculationCharacters = {'+', '-', '/', '*', '(', ')'};
             usedChannels=[];
             for channel = 1 : numel(this.channelNames)
                 if ~isequal(this.channelNames{channel}, [])
@@ -332,7 +337,15 @@ classdef CalculationMethod < handle
                     formula = regexprep(this.formulae{formulaIndex}.formula, ' ', '_');
                 
                     if strfind(formula, channelNames)>0
-                        usedChannels(end+1) = channel;
+                        %allow = 0;
+                        %findIndex = strfind(formula, channelNames);
+                        %endIndex = findIndex + numel(channelNames);
+                        %if (isequal(findIncex, 1) || ~isempty(cell2mat(strfind(calculationCharacters, formula(findIndex - 2))))) && (endIndex > numel(formula 
+                            
+                        %end
+                        if 1
+                            usedChannels(end+1) = channel;
+                        end
                     end
                 end
             end

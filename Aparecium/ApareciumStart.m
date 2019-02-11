@@ -22,7 +22,7 @@ function varargout = ApareciumStart(varargin)
 
 % Edit the above text to modify the response to help ApareciumStart
 
-% Last Modified by GUIDE v2.5 05-Jan-2018 00:55:41
+% Last Modified by GUIDE v2.5 11-Feb-2019 16:12:37
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -240,4 +240,21 @@ function pushbutton16_CreateFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 handles.imageReorganizationTools = hObject;
+guidata(hObject, handles);
+
+
+% --- Executes on button press in protdegradeTools.
+function protdegradeTools_Callback(hObject, eventdata, handles)
+% hObject    handle to protdegradeTools (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+set(handles.figure1, 'visible' ,'off');
+ProtdegradeTools();
+
+% --- Executes during object creation, after setting all properties.
+function protdegradeTools_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to protdegradeTools (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+handles.protdegradeTools = hObject;
 guidata(hObject, handles);
