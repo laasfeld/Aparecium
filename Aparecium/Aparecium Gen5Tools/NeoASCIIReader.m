@@ -142,6 +142,7 @@ classdef NeoASCIIReader < handle
                         currentRead.runtime = 0;
                         currentRead.interval = 0;  
                     end
+                    line = this.getNextLine();
                     acceptedReadTypes = {'Fluorescence Spectrum', 'Image Endpoint', 'Fluorescence Endpoint', 'Image Montage'};
                     for readTypeCounter = 1 : numel(acceptedReadTypes)
                        if strfind(line, acceptedReadTypes{readTypeCounter})
@@ -712,7 +713,7 @@ classdef NeoASCIIReader < handle
                           error('Could not process file. Reads in append do not match up'); 
                        end
                    end
-                   if ~isequal(extraCycles, 0)
+                   if ~(isequal(extraCycles, 0) || strcmp(sortedListOfReads{activeReadIndex}.getReadType(), 'Image Montage'))
                       error('Could not process file. Reads in append do not match up') 
                    end                  
                    activeReadIndex = activeReadIndex + counter - 1;

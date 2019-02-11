@@ -62,6 +62,10 @@ classdef Gen5Read < handle
             this.readType = regexprep(line, 'Read', '');
         end
         
+        function readType = getReadType(this)
+            readType = this.readType;
+        end
+        
         function setChannel1(this, line)
             this.channels{1} = regexprep(line,'  ','');
         end
