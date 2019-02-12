@@ -780,7 +780,9 @@ classdef ExcelTableController < ExportPanelController
             fastKinetics = this.timeController.getFastKinetics();
             if isequal(fastKinetics, 0)
                 for group = 1 : size(data, 2)
-                    Table = [];
+                    %YCol(numel(data{group}) - this.subgroupStartValue + 1) = struct('Title', cell(1, size(groups{group}{subgroup}, 1)), 'Subcolumn', struct('d', cell(1, numberOfCycles)));
+                    %Table = struct('Title', cell(1, numel(data{group}) - this.subgroupStartValue + 1), 'XColumn', cell(1, numel(data{group}) - this.subgroupStartValue + 1), 'YColumn', cell(1, numel(data{group}) - this.subgroupStartValue + 1));
+                    clear YCol;
                     Table(1).Title = groupNames{group};
                     Table(1).XColumn.Title = ['time(', this.timeController.timeUnit, ')'];
                     tempTimeMoments = timeMoments(cyclesInUse);
@@ -795,16 +797,17 @@ classdef ExcelTableController < ExportPanelController
                         this.PZFXColumnCountWarningFlag = 1;
                     end
                         
-                    
-                    for subgroup = this.subgroupStartValue : numel(data{group})                           
-                        for timeIndex = 1 : numberOfCycles
+                    largestDimTreatmentIndex = findLargestDimention(concentrationsOfGroup, treatmentUniquenessTable{group}{2});
+                    for subgroup = this.subgroupStartValue : numel(data{group})
+                        %Table(subgroup - (this.subgroupStartValue - 1)).YColumn = struct('Title', cell(1, size(groups{group}{subgroup}, 1)), 'Subcolumn', struct('d', cell(1, numberOfCycles)));
+                        for timeIndex = 1 : numberOfCycles                          
                             for subgroupElement = 1 : size(groups{group}{subgroup}, 1)
                                 if isequal(subgroupElement, 1)
                                     switch tableType
                                         case 1
                                             Table(subgroup - (this.subgroupStartValue - 1)).YColumn(subgroupElement).Title = this.subgroupNames{group}{subgroup};
                                         case 2
-                                            treatmentIndex = findLargestDimention(concentrationsOfGroup, treatmentUniquenessTable{group}{2});
+                                            treatmentIndex = largestDimTreatmentIndex;
                                             well = groups{group}{subgroup}{1};
                                             [treatments, concs] = this.experiment.getTreatmentsOfWell(well,1);
                                             Table(subgroup - (this.subgroupStartValue - 1)).YColumn(subgroupElement).Title = [treatments{treatmentIndex}{1}, ' ', concs{treatmentIndex}];

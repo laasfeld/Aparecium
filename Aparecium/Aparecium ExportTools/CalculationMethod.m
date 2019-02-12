@@ -317,7 +317,7 @@ classdef CalculationMethod < handle
         end
         
         function [usedChannels, usedChannelNames] = findUsedChannels(this, formulaIndex)
-            calculationCharacters = {'+', '-', '/', '*', '(', ')'};
+            calculationCharacters = {'+', '-', '/', '*', '(', ')', '.'};
             usedChannels=[];
             for channel = 1 : numel(this.channelNames)
                 if ~isequal(this.channelNames{channel}, [])
@@ -337,13 +337,18 @@ classdef CalculationMethod < handle
                     formula = regexprep(this.formulae{formulaIndex}.formula, ' ', '_');
                 
                     if strfind(formula, channelNames)>0
-                        %allow = 0;
-                        %findIndex = strfind(formula, channelNames);
-                        %endIndex = findIndex + numel(channelNames);
-                        %if (isequal(findIncex, 1) || ~isempty(cell2mat(strfind(calculationCharacters, formula(findIndex - 2))))) && (endIndex > numel(formula 
-                            
-                        %end
-                        if 1
+                        allow = 1;
+                        findIndex = strfind(formula, channelNames);
+                        endIndex = findIndex + numel(channelNames);
+                        for presenceIndex = 1 : numel(findIndex)
+                            if (isequal(findIndex(presenceIndex), 1) || ~isempty(cell2mat(strfind(calculationCharacters, formula(findIndex(presenceIndex) - 1))))) && (endIndex(presenceIndex) > numel(formula) || ~isempty(cell2mat(strfind(calculationCharacters, formula(endIndex(presenceIndex) + 1)))))
+
+                            else
+                                allow = 0;
+                               break; 
+                            end
+                        end
+                        if allow
                             usedChannels(end+1) = channel;
                         end
                     end
