@@ -4,7 +4,7 @@ function line = variableToXMLString(variable)
 % check if the temp file we want to generate is 
 options.store_class = 0;
 options.store_size = 0;
-line = tinyxml2_wrap('format', variable, options);
+line2 = tinyxml2_wrap('format', variable, options);
 % d = dir('ApareciumTempXMLFile.txt');
 % if isequal(numel(d), 0)
 %     tinyxml2_wrap('save', 'ApareciumTempXMLFile.txt', variable, options)
@@ -22,5 +22,11 @@ line = tinyxml2_wrap('format', variable, options);
 %     fclose(fileHandle);
 %     delete('ApareciumTempXMLFile.txt');
 % end
-% end
+line2 = regexprep(line2,' idx="\d*"'  , '');
+line2(1:86) = [];
+%line2 = regexprep(line2, regexptranslate('escape',['<?xml version="1.0" encoding="UTF-8"?>','<!--Created using tinyxml2_wrap version 1.0-->']), '');
+line = line2;
+end
+
+
 
