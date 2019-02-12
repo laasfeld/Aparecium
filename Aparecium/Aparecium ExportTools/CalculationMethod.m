@@ -169,9 +169,9 @@ classdef CalculationMethod < handle
                                                  errordlg('One of the wells had no blank value. Cannot perform timewise blank normalization!')
                                                  error('One of the wells had no blank value. Cannot perform timewise blank normalization!')
                                              end                                   
-                                          end                                         
-                                      end
-                                      this.measurementStructure{group}{subgroup}{well} = [insertionStructure, this.measurementStructure{group}{subgroup}{well}];
+                                          end
+                                          this.measurementStructure{group}{subgroup}{well} = [insertionStructure, this.measurementStructure{group}{subgroup}{well}];
+                                      end                                    
                                   else
                                       ['No measurements in subgoup ', subgroup];
                                   end
