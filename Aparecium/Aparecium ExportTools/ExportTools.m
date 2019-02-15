@@ -554,6 +554,7 @@ if exist('activeFormula', 'var') && exist('channelNames', 'var')
                 set(handles.toOriginalChannels, 'Enable', 'on');                
             end
             handles.apareciumExperimentInput.setChannelNames(newFormulaChannels);
+            handles.apareciumExperimentInput.setHasChanged(0); % changing channel names here does not compromize the grouping
             handles.activeFormula = activeFormula;
             updateFormulaList(handles);
         end
@@ -586,6 +587,7 @@ function pushbutton10_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton10 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+handles.excelTableController.calculateNewPZFX(handles.excelTableConfiguration);
 handles.excelTableController.exportToPZFX();
 
 
@@ -738,6 +740,7 @@ end
 handles.calculationMethod.setSubgroupStartValue(subgroupStartValue);
 handles.calculationMethod.addFormulae(handles.activeFormula);
 handles.excelTableController.setCalculationMethod(handles.calculationMethod);
+
 handles.excelTableController.calculateNewTable(handles.excelTableConfiguration);
 
 set(handles.tableConfigurationChooser, 'enable', 'on');
@@ -766,8 +769,8 @@ handles.graphicalPreviewController.calculateNewGraph();
 handles.copasiPreviewController.setCalculationMethod(handles.calculationMethod);
 handles.copasiPreviewController.calculateNewTable(handles.SBCalcMode, handles.activeFormula{end}.acronyme); %% TODO - change to handles.CopasiCalcMode
 
-handles.prismPanelController.setCalculationMethod(handles.calculationMethod);
-handles.prismPanelController.calculateNewTable(handles.excelTableConfiguration);
+%handles.prismPanelController.setCalculationMethod(handles.calculationMethod);
+%handles.prismPanelController.calculateNewTable(handles.excelTableConfiguration);
 
 guidata(hObject, handles);
 

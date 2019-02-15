@@ -8,6 +8,19 @@ if isequal(numel(varargin), 0)
     return
 elseif isequal(numel(varargin), 1)
     index = varargin{1};
-    result = alphabet(index);
+    if numel(alphabet) >= index
+        result = alphabet(index);
+    else
+        doubleAlphabet = cell(numel(alphabet)^2 + numel(alphabet), 1);
+        doubleAlphabet(1:numel(alphabet)) = cellstr(alphabet');
+        counter = numel(alphabet);
+        for firstLetter = 1 : numel(alphabet)
+            for secondLetter = 1 : numel(alphabet)
+                counter = counter + 1;
+                doubleAlphabet(counter) = {[alphabet(firstLetter), alphabet(secondLetter)]}; 
+            end
+        end
+        result = doubleAlphabet{index};
+    end
 end
 

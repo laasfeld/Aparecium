@@ -343,7 +343,7 @@ classdef SBToolboxExporter <  ExportPanelController
                                 numberOfRows = numberOfRows + 1;
                             end
                         end
-                        experimentData = cell(numberOfRows, 5);
+                        experimentData = cell(numberOfRows, 2 + 3*numel(outputValue));
                         for channelIndex = 1 : numel(outputValue)
                             row = 0;
                             
@@ -355,24 +355,34 @@ classdef SBToolboxExporter <  ExportPanelController
                                 experimentData{row, (channelIndex - 1)*3+5} = 0; 
                             end
                             
-                            for timeIndex = 1 : numberOfCycles; % for now, assume that all wells were measured for equal number of cycles                          
-                                 for subgroupElement = 1 : numel(this.groups{group}{subgroup})
-                                    row = row + 1;
-                                    if isequal(channelIndex, 1)
-                                        experimentData{row, 2} = data{group}{subgroup}{subgroupElement}.timePoints(cyclesInUse(timeIndex));
-                                    end
-                                    experimentData{row, (channelIndex - 1)*3+3} = data{group}{subgroup}{subgroupElement}.average{requestedChannelIndices(channelIndex)}(cyclesInUse(timeIndex));
-                                    experimentData{row, (channelIndex - 1)*3+4} = data{group}{subgroup}{subgroupElement}.maximum{requestedChannelIndices(channelIndex)}(cyclesInUse(timeIndex));
-                                    experimentData{row, (channelIndex - 1)*3+5} = data{group}{subgroup}{subgroupElement}.minimum{requestedChannelIndices(channelIndex)}(cyclesInUse(timeIndex)); 
-                                 end
+%                             for timeIndex = 1 : numberOfCycles; % for now, assume that all wells were measured for equal number of cycles                          
+%                                 for subgroupElement = 1 : numel(this.groups{group}{subgroup})
+%                                     row = row + 1;
+%                                     if isequal(channelIndex, 1)
+%                                         experimentData{row, 2} = data{group}{subgroup}{subgroupElement}.timePoints(cyclesInUse(timeIndex));
+%                                     end
+%                                     experimentData{row, (channelIndex - 1)*3+3} = data{group}{subgroup}{subgroupElement}.average{requestedChannelIndices(channelIndex)}(cyclesInUse(timeIndex));
+%                                     experimentData{row, (channelIndex - 1)*3+4} = data{group}{subgroup}{subgroupElement}.maximum{requestedChannelIndices(channelIndex)}(cyclesInUse(timeIndex));
+%                                     experimentData{row, (channelIndex - 1)*3+5} = data{group}{subgroup}{subgroupElement}.minimum{requestedChannelIndices(channelIndex)}(cyclesInUse(timeIndex)); 
+%                                  end
+%                             end
+                         
+                            for subgroupElement = 1 : numel(this.groups{group}{subgroup})
+                                
+                                if isequal(channelIndex, 1)
+                                    experimentData(subgroupElement : numel(this.groups{group}{subgroup}): end, 2) = num2cell(data{group}{subgroup}{subgroupElement}.timePoints(cyclesInUse(:)));
+                                end
+                                experimentData(subgroupElement : numel(this.groups{group}{subgroup}): end, (channelIndex - 1)*3+3:(channelIndex - 1)*3+5) = num2cell([data{group}{subgroup}{subgroupElement}.average{requestedChannelIndices(channelIndex)}(cyclesInUse(:)),...
+                                data{group}{subgroup}{subgroupElement}.average{requestedChannelIndices(channelIndex)}(cyclesInUse(:)),...
+                                data{group}{subgroup}{subgroupElement}.minimum{requestedChannelIndices(channelIndex)}(cyclesInUse(:))]); 
                             end
                         end
                     elseif isequal(exportMode, 'Average')
                         try
                             time = data{group}{subgroup}.timePoints;
                             timepoints = numel(time);
-                            experimentData = cell(numberOfCycles, 5);
-                            experimentData(1,1) = {'Values'};
+                            experimentData = cell(numberOfCycles, 2 + 3*numel(outputValue));
+                            
                             for channelIndex = 1 : numel(outputValue)
                                 row = 0;
                                 if isequal(this.ultracorrect, 1)
@@ -382,16 +392,12 @@ classdef SBToolboxExporter <  ExportPanelController
                                     experimentData{row, (channelIndex - 1)*3+4} = 0;
                                     experimentData{row, (channelIndex - 1)*3+5} = 0; 
                                 end
-                                
-                                for timeIndex = 1 : numberOfCycles
-                                    if isequal(channelIndex, 1)
-                                        experimentData(timeIndex+this.ultracorrect,2) = {time(cyclesInUse(timeIndex))};
-                                    end
-                                    
-                                    experimentData(timeIndex+this.ultracorrect,(channelIndex - 1)*3+3) = {data{group}{subgroup}.average{requestedChannelIndices(channelIndex)}(cyclesInUse(timeIndex))};
-                                    experimentData(timeIndex+this.ultracorrect,(channelIndex - 1)*3+4) = {data{group}{subgroup}.maximum{requestedChannelIndices(channelIndex)}(cyclesInUse(timeIndex))};
-                                    experimentData(timeIndex+this.ultracorrect,(channelIndex - 1)*3+5) = {data{group}{subgroup}.minimum{requestedChannelIndices(channelIndex)}(cyclesInUse(timeIndex))};   
+                                if isequal(channelIndex, 1)
+                                    experimentData(1+this.ultracorrect : numberOfCycles + this.ultracorrect, 2) = num2cell(time(cyclesInUse(:)));
                                 end
+                                experimentData(1+this.ultracorrect : numberOfCycles + this.ultracorrect,(channelIndex - 1)*3+3:(channelIndex - 1)*3+5) = num2cell([data{group}{subgroup}.average{requestedChannelIndices(channelIndex)}(cyclesInUse(:)),...
+                                data{group}{subgroup}.average{requestedChannelIndices(channelIndex)}(cyclesInUse(:)),...
+                                data{group}{subgroup}.minimum{requestedChannelIndices(channelIndex)}(cyclesInUse(:))]);                                                                                                 
                             end
                         catch MException
                            disp(['Could not create table for group ', num2str(group),  ' ', this.subgroupNames{group}{subgroup}]);   

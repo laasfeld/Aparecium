@@ -90,6 +90,26 @@ classdef ExcelTableController < ExportPanelController
            
         end
         
+        function calculateNewPZFX(this, configuration)
+           [data, groups] = this.calculationMethod.calculate(this.experiment, this.groupStructure, this.sharedBlankStructure, this.timewiseBlankStructure);
+           if isequal(configuration, 1)
+                this.generateKineticPZFX(data, groups);
+           elseif isequal(configuration, 2)
+                if isequal(this.timeController.getFastKinetics(), 0)
+                    tableType = get(this.tableOrganizationHandle, 'Value');
+                    switch tableType
+                        case 1
+                            this.generatePZFX(data, groups);
+                        case 2                         
+                            this.generateSubgroupPZFX(data, groups)
+                    end
+                else
+                    warndlg('Concentration dependance table is not implemented for fast kinetics experiment');
+                end
+
+           end 
+        end
+        
         function convertDataToConcentrationTable(this, data, groups)
             % count the number of subgroups present
             tableType = get(this.dropdownHandle, 'Value');
@@ -497,14 +517,17 @@ classdef ExcelTableController < ExportPanelController
             cyclesInUse = this.timeController.getCyclesInUse();
             timeMoments = this.timeController.getCycleTimes();
             fastKinetics = this.timeController.getFastKinetics();
+            
+            timeMomentsAsString = cell(numel(cyclesInUse), 1);
+            for timeIndex = 1 : numberOfCycles             
+                experimentData(timeIndex, 1) = {num2str(timeMoments(cyclesInUse(timeIndex)))};                                           
+            end
+            % this loop can be optimized
             if isequal(fastKinetics, 0) 
                 for group = 1 : size(data, 2)
                     for subgroup = this.subgroupStartValue : numel(data{group})
-                        for subgroupElement = 1 : numel(data{group}{subgroup})
-                            for timeIndex = 1 : numberOfCycles             
-                                experimentData(timeIndex,1) = {num2str(timeMoments(cyclesInUse(timeIndex)))};
-                                experimentData(timeIndex,column) = {data{group}{subgroup}{subgroupElement}{1}(cyclesInUse(timeIndex))};           
-                            end
+                        for subgroupElement = 1 : numel(data{group}{subgroup})                                           
+                            experimentData(1 : numberOfCycles, column) = num2cell(data{group}{subgroup}{subgroupElement}{1}(cyclesInUse(:)));
                             column = column + 1;% move writable column to right by one cell
                         end
                     end
@@ -780,8 +803,9 @@ classdef ExcelTableController < ExportPanelController
             fastKinetics = this.timeController.getFastKinetics();
             if isequal(fastKinetics, 0)
                 for group = 1 : size(data, 2)
+
                     %YCol(numel(data{group}) - this.subgroupStartValue + 1) = struct('Title', cell(1, size(groups{group}{subgroup}, 1)), 'Subcolumn', struct('d', cell(1, numberOfCycles)));
-                    %Table = struct('Title', cell(1, numel(data{group}) - this.subgroupStartValue + 1), 'XColumn', cell(1, numel(data{group}) - this.subgroupStartValue + 1), 'YColumn', cell(1, numel(data{group}) - this.subgroupStartValue + 1));
+                    Table = struct('Title', cell(1, numel(data{group}) - this.subgroupStartValue + 1), 'XColumn', cell(1, numel(data{group}) - this.subgroupStartValue + 1), 'YColumn', cell(1, numel(data{group}) - this.subgroupStartValue + 1));
                     clear YCol;
                     Table(1).Title = groupNames{group};
                     Table(1).XColumn.Title = ['time(', this.timeController.timeUnit, ')'];
@@ -799,27 +823,29 @@ classdef ExcelTableController < ExportPanelController
                         
                     largestDimTreatmentIndex = findLargestDimention(concentrationsOfGroup, treatmentUniquenessTable{group}{2});
                     for subgroup = this.subgroupStartValue : numel(data{group})
-                        %Table(subgroup - (this.subgroupStartValue - 1)).YColumn = struct('Title', cell(1, size(groups{group}{subgroup}, 1)), 'Subcolumn', struct('d', cell(1, numberOfCycles)));
-                        for timeIndex = 1 : numberOfCycles                          
-                            for subgroupElement = 1 : size(groups{group}{subgroup}, 1)
-                                if isequal(subgroupElement, 1)
-                                    switch tableType
-                                        case 1
-                                            Table(subgroup - (this.subgroupStartValue - 1)).YColumn(subgroupElement).Title = this.subgroupNames{group}{subgroup};
-                                        case 2
-                                            treatmentIndex = largestDimTreatmentIndex;
-                                            well = groups{group}{subgroup}{1};
-                                            [treatments, concs] = this.experiment.getTreatmentsOfWell(well,1);
-                                            Table(subgroup - (this.subgroupStartValue - 1)).YColumn(subgroupElement).Title = [treatments{treatmentIndex}{1}, ' ', concs{treatmentIndex}];
-                                        otherwise
-                                            well = groups{group}{subgroup}{1};
-                                            treatmentIndex = tableType - 2;
-                                            [treatments, concs] = this.experiment.getTreatmentsOfWell(well,1);
-                                            Table(subgroup - (this.subgroupStartValue - 1)).YColumn(subgroupElement).Title = [treatments{treatmentIndex}{1}, ' ', concs{treatmentIndex}];
-                                    end
+                        Table(subgroup - (this.subgroupStartValue - 1)).YColumn = struct('Title', cell(1, size(groups{group}{subgroup}, 1)), 'Subcolumn', struct('d', cell(1, numberOfCycles)));
+                        for subgroupElement = 1 : size(groups{group}{subgroup}, 1)
+                            if isequal(subgroupElement, 1)
+                                switch tableType
+                                    case 1
+                                        Table(subgroup - (this.subgroupStartValue - 1)).YColumn(subgroupElement).Title = this.subgroupNames{group}{subgroup};
+                                    case 2
+                                        treatmentIndex = largestDimTreatmentIndex;
+                                        well = groups{group}{subgroup}{1};
+                                        [treatments, concs] = this.experiment.getTreatmentsOfWell(well,1);
+                                        Table(subgroup - (this.subgroupStartValue - 1)).YColumn(subgroupElement).Title = [treatments{treatmentIndex}{1}, ' ', concs{treatmentIndex}];
+                                    otherwise
+                                        well = groups{group}{subgroup}{1};
+                                        treatmentIndex = tableType - 2;
+                                        [treatments, concs] = this.experiment.getTreatmentsOfWell(well,1);
+                                        Table(subgroup - (this.subgroupStartValue - 1)).YColumn(subgroupElement).Title = [treatments{treatmentIndex}{1}, ' ', concs{treatmentIndex}];
                                 end
-                                Table(subgroup - (this.subgroupStartValue - 1)).YColumn(subgroupElement).Subcolumn(timeIndex).d = data{group}{subgroup}{subgroupElement}{1}(cyclesInUse(timeIndex));
                             end
+                            %for timeIndex = 1 : numberOfCycles                                                     
+                                
+                                %Table(subgroup - (this.subgroupStartValue - 1)).YColumn(subgroupElement).Subcolumn(timeIndex).d = data{group}{subgroup}{subgroupElement}{1}(cyclesInUse(timeIndex));
+                            %end
+                            Table(subgroup - (this.subgroupStartValue - 1)).YColumn(subgroupElement).Subcolumn = cell2struct(num2cell(data{group}{subgroup}{subgroupElement}{1}(cyclesInUse(:))), 'd', 2);
                         end
                     end
                     subXML(group).Table = Table;
