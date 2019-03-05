@@ -363,6 +363,10 @@ classdef BinaryImageCalculator < handle
                     unit = 'RIU';
                 case 'averageUnmaskedSecondaryImageIntensity'
                     unit = 'RIU';
+                case 'pixelCount'
+                    unit = '';
+                case 'intensitySTD'
+                    unit = 'RIU';
             end
         end
         
@@ -433,8 +437,34 @@ classdef BinaryImageCalculator < handle
                     average = BinaryImageCalculator.averageUnmaskedNonMembraneQuadrileIntensity(wellData);
                 case 'averageUnmaskedSecondaryImageIntensity'
                     average = BinaryImageCalculator.averageUnmaskedSecondaryImageIntensity(wellData);
+                case 'pixelCount'
+                    average = BinaryImageCalculator.averagePixelCount(wellData);
+                case 'intensitySTD'
+                    average = BinaryImageCalculator.averageIntensitySTD(wellData);
             end
         end        
+        
+        function average = averageIntensitySTD(resultStructures)
+            % pooled standard deviation will be found
+            means = zeros(numel(resultStructures), 1);
+            STDs = zeros(numel(resultStructures), 1);
+            weights = zeros(numel(resultStructures), 1);
+            for imageIndex = 1 : numel(resultStructures)
+                means(imageIndex) = resultStructures{imageIndex}.averageMembraneIntensity;
+                weights(imageIndex) = resultStructures{imageIndex}.membranePixelCount;
+                STDs(imageIndex) = resultStructures{imageIndex}.membraneIntensityStandardDeviation;
+            end
+            
+            average = pooledSTD(weights, means, STDs);
+        end
+        
+        function average = averagePixelCount(resultStructures)
+           pixelCount = 0;
+           for imageIndex = 1 : numel(resultStructures)
+              pixelCount = pixelCount + resultStructures{imageIndex}.membranePixelCount; 
+           end
+           average = pixelCount/numel(resultStructures);
+        end
         
         function average = averageArea(resultStructures)
             area = 0;

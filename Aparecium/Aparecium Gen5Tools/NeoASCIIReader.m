@@ -142,7 +142,7 @@ classdef NeoASCIIReader < handle
                         currentRead.runtime = 0;
                         currentRead.interval = 0;  
                     end
-                    line = this.getNextLine();
+                    %line = this.getNextLine();
                     acceptedReadTypes = {'Fluorescence Spectrum', 'Image Endpoint', 'Fluorescence Endpoint', 'Image Montage'};
                     for readTypeCounter = 1 : numel(acceptedReadTypes)
                        if strfind(line, acceptedReadTypes{readTypeCounter})
@@ -501,7 +501,8 @@ classdef NeoASCIIReader < handle
                 elseif sortedListOfReads{activeReadIndex}.getIsAppendsIndex > 1
                    measurements = leadingRead.getAndDeleteAppendMeasurements(sortedListOfReads{activeReadIndex}.getNumberOfCycles());
                    temperature = leadingRead.getAndDeleteAppendTemperatures(sortedListOfReads{activeReadIndex}.getNumberOfCycles());
-                   time   = leadingRead.getAndDeleteTimepoints(sortedListOfReads{activeReadIndex}.getNumberOfCycles());
+                   time = leadingRead.getAndDeleteTimepoints(sortedListOfReads{activeReadIndex}.getNumberOfCycles());
+                   time = time - leadingRead.measurementTimepoints(end) - leadingRead.interval; % this subtraction will make the read such that it would be equivalent to the case when no append was used. The time between reads is still recorded in the measurement time data of the first read.
                    sortedListOfReads{activeReadIndex}.setMeasurements(measurements);
                    sortedListOfReads{activeReadIndex}.setWellIDs(leadingRead.getWellIDs());
                    sortedListOfReads{activeReadIndex}.setTimepoints(time);
@@ -693,7 +694,7 @@ classdef NeoASCIIReader < handle
                     end
                 end
                 sortedListOfReads{activeReadIndex}.calculateCyclesByLineCount();
-                if(~isequal(sortedListOfReads{activeReadIndex}.cyclesByLineCount, sortedListOfReads{activeReadIndex}.numberOfCycles))
+                if(~isequal(sortedListOfReads{activeReadIndex}.cyclesByLineCount, sortedListOfReads{activeReadIndex}.numberOfCycles)) && numel(sortedListOfReads) > 1 && ~strcmp(sortedListOfReads{activeReadIndex}.getReadType(), 'Fluorescence Spectrum')
                    % this read starts an appended list of reads
                    sortedListOfReads{activeReadIndex}.setIsAppendsIndex(1);
                    extraCycles = sortedListOfReads{activeReadIndex}.cyclesByLineCount - sortedListOfReads{activeReadIndex}.numberOfCycles;
@@ -851,6 +852,7 @@ classdef NeoASCIIReader < handle
                sortedListOfReads = this.generateSortedListOfReads();
                experimentDataStructureArray = cell(0, 0);
                legalReadIndex = 0;
+               deleteReads = zeros(1, 0);
                for readIndex = 1 : numel(sortedListOfReads)
                    if(~strcmp(sortedListOfReads{readIndex}.readType, 'Fluorescence Spectrum'))
                        legalReadIndex = legalReadIndex + 1;
@@ -892,10 +894,12 @@ classdef NeoASCIIReader < handle
                            experimentDataStructureArray{legalReadIndex}.measurements{wellIndex} = measurementsAsDouble;
                            
                        end
+                   else
+                       deleteReads(end + 1) = readIndex;                       
                    end
                end 
-               
-               this.experimentDataStructure = ReadHandler(experimentDataStructureArray, this.generateSortedListOfReads(), this.kinetics, this.reads);
+               sortedListOfReads(deleteReads) = [];
+               this.experimentDataStructure = ReadHandler(experimentDataStructureArray, sortedListOfReads, this.kinetics, this.reads);
                if ~isequal(overflowStruct, [])
                     ShowOverflow(overflowStruct);
                end

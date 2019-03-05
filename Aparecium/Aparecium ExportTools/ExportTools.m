@@ -25,7 +25,7 @@ function varargout = ExportTools(varargin)
 
 % Edit the above text to modify the response to help ExportTools
 
-% Last Modified by GUIDE v2.5 28-Jan-2019 14:28:37
+% Last Modified by GUIDE v2.5 25-Feb-2019 19:47:59
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
@@ -56,6 +56,7 @@ function ExportTools_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to ExportTools (see VARARGIN)
 
 % Choose default command line output for ExportTools
+
 handles.output = hObject;
 handles.apareciumExperimentInput = ApareciumExperimentInput();
 handles.plateSimulatorInterface = PlateSimulatorInterface();
@@ -1074,14 +1075,15 @@ function exportAsSBProject_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 
-% --- Executes on button press in pushbutton20.
-function pushbutton20_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton20 (see GCBO)
+% --- Executes on button press in sendToIQMTools.
+function sendToIQMTools_Callback(hObject, eventdata, handles)
+% hObject    handle to sendToIQMTools (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+'test'
+handles.SBExporter.toSBProject();
 
-% --------------------------------------------------------------------
 
 
 % --------------------------------------------------------------------
@@ -1175,7 +1177,7 @@ subgroupNames = handles.plateSimulatorInterface.getSubgroupNames();
 subgroupNames = reshapeSubgroupNames(groupStructure, subgroupNames, sharedBlankStructure);
 fileChooser = FileChooser;
 startingPath = fileChooser.chooseGCFFileSave();
-[filePath, fileName] = uiputfile('*.mat', 'Grouping configurationFile, should start with FCF-', [startingPath, '/GCF-.mat']);
+[fileName, filePath] = uiputfile('*.mat', 'Grouping configurationFile, should start with FCF-', [startingPath, '/GCF-.mat']);
 fullPath = [filePath, fileName];
 if ~isequal(fullPath, 0)
     save(fullPath, 'groupStructure', 'groupNames', 'sharedBlankStructure', 'timewiseBlankStructure', 'timewiseBlankAlignment', 'subgroupNames');
@@ -2377,3 +2379,19 @@ function fastKineticsModel_Callback(hObject, eventdata, handles)
 handles.SBExporter.setUltracorrect(get(hObject, 'Value'));
 % Hint: get(hObject,'Value') returns toggle state of fastKineticsModel
 guidata(hObject, handles);
+
+
+% --- Executes during object creation, after setting all properties.
+function sendToIQMTools_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to sendToIQMTools (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes on button press in IncludeRedundantStates.
+function IncludeRedundantStates_Callback(hObject, eventdata, handles)
+% hObject    handle to IncludeRedundantStates (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of IncludeRedundantStates

@@ -277,7 +277,7 @@ classdef SBToolboxExporter <  ExportPanelController
                     initialConditions = this.outputTableStruct{group}{subgroup}.initialConditions;
                     representingWellIndex = this.experiment.getIndexOfUsedWell(this.groups{group}{subgroup}{1}); 
                     concentrationChangeEvent = this.experiment.getConcentrationChangeEvents();
-                    expFileWriter(this.outputTableStruct{group}{subgroup}.path, initialConditions, representingWellIndex, concentrationChangeEvent, eventTimes, this.experimentParamsNames, this.experimentStateOrParam, outputFilenameEXP, this.includeParameter)
+                    expFileWriter(this.outputTableStruct{group}{subgroup}.path, initialConditions, representingWellIndex, concentrationChangeEvent, eventTimes, this.experimentParamsNames, this.experimentStateOrParam, outputFilenameEXP, this.includeParameter, 'file')
                     xlswrite(outputFilenameMIDAS, this.outputTableStruct{group}{subgroup}.SBTable);
                 end
             end
@@ -343,6 +343,7 @@ classdef SBToolboxExporter <  ExportPanelController
                                 numberOfRows = numberOfRows + 1;
                             end
                         end
+                        numberOfRows = numberOfRows + this.ultracorrect;
                         experimentData = cell(numberOfRows, 2 + 3*numel(outputValue));
                         for channelIndex = 1 : numel(outputValue)
                             row = 0;
@@ -370,9 +371,9 @@ classdef SBToolboxExporter <  ExportPanelController
                             for subgroupElement = 1 : numel(this.groups{group}{subgroup})
                                 
                                 if isequal(channelIndex, 1)
-                                    experimentData(subgroupElement : numel(this.groups{group}{subgroup}): end, 2) = num2cell(data{group}{subgroup}{subgroupElement}.timePoints(cyclesInUse(:)));
+                                    experimentData(this.ultracorrect+subgroupElement : numel(this.groups{group}{subgroup}): end, 2) = num2cell(data{group}{subgroup}{subgroupElement}.timePoints(cyclesInUse(:)));
                                 end
-                                experimentData(subgroupElement : numel(this.groups{group}{subgroup}): end, (channelIndex - 1)*3+3:(channelIndex - 1)*3+5) = num2cell([data{group}{subgroup}{subgroupElement}.average{requestedChannelIndices(channelIndex)}(cyclesInUse(:)),...
+                                experimentData(this.ultracorrect+subgroupElement : numel(this.groups{group}{subgroup}): end, (channelIndex - 1)*3+3:(channelIndex - 1)*3+5) = num2cell([data{group}{subgroup}{subgroupElement}.average{requestedChannelIndices(channelIndex)}(cyclesInUse(:)),...
                                 data{group}{subgroup}{subgroupElement}.average{requestedChannelIndices(channelIndex)}(cyclesInUse(:)),...
                                 data{group}{subgroup}{subgroupElement}.minimum{requestedChannelIndices(channelIndex)}(cyclesInUse(:))]); 
                             end
@@ -445,6 +446,285 @@ classdef SBToolboxExporter <  ExportPanelController
         
         function sendToWorkspace(this)
             assignin('base', 'SBStructure', this.outputTableStruct);
+        end
+        
+        function toSBProject(this)
+            % create the project
+            % currently no model will be attached to the raw project
+            project = IQMprojectSB();
+            project = this.createIQMmodels(project);
+            % add experiments to the project
+            project = this.createIQMexperiments(project);
+            % add measurement data to the project
+            project = this.createIQMmeasurements(project);
+            
+            IQMparamestGUI(project);
+        end
+        
+        function project = createIQMmodels(this, project)
+            models = {};
+            modeltypes = [];
+            fileChooser = FileChooser();
+            modelLibraryPath = fileChooser.getModelLibraryPath();
+            files = findfiles('*.txt', modelLibraryPath);
+            files = [files; findfiles('*.txtbc', modelLibraryPath)];
+            files = [files; findfiles('*.xml', modelLibraryPath)];
+            for k=1:length(files),
+                filename = files{k};
+                % check correct extensions (.txt, .txtbc, .xml)
+                [a,b,EXT] = fileparts(filename);
+                if strcmp(EXT,'.txt') || strcmp(EXT,'.txtbc') || strcmp(EXT,'.xml'),
+                    try
+                        % import models
+                        models{end+1} = IQMmodel(filename);
+                        if strcmp(EXT,'.txt'),
+                            modeltypes(end+1) = 0;  % txt
+                        else
+                            modeltypes(end+1) = 1;  % txtbc or SBML
+                        end
+                    catch
+                        disp(sprintf('Warning: Error during model import: %s',lasterr));
+                    end
+
+                end
+            end
+            project.models = models;
+            project.modeltypes = modeltypes;
+        end
+        
+        function project = createIQMmeasurements(this, project)          
+
+            groupNames = this.experiment.getGroups();
+            counter = 1;
+            for group = 1 : numel(this.groups)
+                for subgroup = this.subgroupStartValue : numel(this.groups{group})                 
+                    [measurementStructure, errorMsg] = this.processData(this.outputTableStruct{group}{subgroup}.SBTable, 1, []);
+                    project.experiments(counter).measurements = {IQMmeasurement(measurementStructure)};
+                    counter = counter + 1;
+                end
+            end
+        end
+        
+        function project = createIQMexperiments(this, project)            
+            eventTimes = this.experiment.getEventTimes();
+            for well = 1 : numel(eventTimes)
+               eventTimes{well} = eventTimes{well}*this.timeController.getUnitConversionConstant(); 
+            end
+            counter = 1;
+            for group = 1 : numel(this.groups)
+                for subgroup = this.subgroupStartValue : numel(this.groups{group})
+                    outputFilenameEXP = [this.outputTableStruct{group}{subgroup}.path, '.exp'];
+                    initialConditions = this.outputTableStruct{group}{subgroup}.initialConditions;
+                    representingWellIndex = this.experiment.getIndexOfUsedWell(this.groups{group}{subgroup}{1});
+                    concentrationChangeEvent = this.experiment.getConcentrationChangeEvents();
+                    project.experiments(counter).experiment = IQMexperiment(expFileWriter(this.outputTableStruct{group}{subgroup}.path, initialConditions, representingWellIndex, concentrationChangeEvent, eventTimes, this.experimentParamsNames, this.experimentStateOrParam, outputFilenameEXP, this.includeParameter, 'struct'));                    
+                    project.experiments(counter).name = outputFilenameEXP;
+                    project.experiments(counter).notes = '';
+                    counter = counter + 1;
+                end
+            end
+        end
+        
+        function [measurementstructure,errorMsg] = processData(this, RAW,sheet,errorMsg)
+            % this function is adapted from IQMmeasurement function from
+            % IQMTools
+            % <<<COPYRIGHTSTATEMENT - IQM TOOLS LITE>>>
+            
+            % initialize empty measurement structure
+            measurementstructure = struct(IQMmeasurement());
+            % get size of RAW matrix
+            [nrows, ncols] = size(RAW);
+            % each identifier needs to appear but only once!
+            % furthermore, the identifieres need to appear in the correct order!
+            rowName = 0;
+            rowNotes = 0;
+            rowComponentnotes = 0;
+            rowComponents = 0;
+            rowValues = 0;
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            % get rows of identifiers and check the order
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            for row=1:nrows,
+                if ~isnan(RAW{row,1}),
+                    if strcmp(strtrim(lower(RAW{row,1})),'name'),
+                        rowName = row;
+                        if rowNotes+rowComponents+rowComponentnotes+rowValues ~= 0,
+                            errorMsg = sprintf('%sIdentifier ''Name'' in sheet %d does not come in correct order.\n',errorMsg,sheet);
+                        end
+                    end
+                    if strcmp(strtrim(lower(RAW{row,1})),'notes'),
+                        rowNotes = row;
+                        if rowComponents+rowComponentnotes+rowValues ~= 0,
+                            errorMsg = sprintf('%sIdentifier ''Notes'' in sheet %d does not come in correct order.\n',errorMsg,sheet);
+                        end
+                    end
+                    if strcmp(strtrim(lower(RAW{row,1})),'componentnotes'),
+                        rowComponentnotes = row;
+                        if rowComponents + rowValues ~= 0,
+                            errorMsg = sprintf('%sIdentifier ''Componentnotes'' in sheet %d does not come in correct order.\n',errorMsg,sheet);
+                        end
+                    end
+                    if strcmp(strtrim(lower(RAW{row,1})),'components'),
+                        rowComponents = row;
+                        if rowValues ~= 0,
+                            errorMsg = sprintf('%sIdentifier ''Components'' in sheet %d does not come in correct order.\n',errorMsg,sheet);
+                        end
+                    end
+                    if strcmp(strtrim(lower(RAW{row,1})),'values'),
+                        rowValues = row;
+                    end
+                    % check if all identifiers found then break the loop
+                    if rowName*rowNotes*rowComponents*rowComponentnotes*rowValues ~= 0,
+                        break;
+                    end
+                end
+            end
+            % check if all identifiers present
+            if rowName*rowNotes*rowComponents*rowComponentnotes*rowValues == 0,
+                errorMsg = sprintf('%sAt least one identifier is missing in in sheet %d.\n',errorMsg,sheet);
+            end
+
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            % Name
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            % Name only one line but several columns
+            name = '';
+            for col=2:ncols,
+                if ~isnan(RAW{rowName,col}),
+                    if ischar(RAW{rowName,col}),
+                        name = sprintf('%s %s',name,RAW{rowName,col});
+                    end
+                else
+                    break;
+                end
+            end
+            measurementstructure.name = strtrim(name);
+
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            % Notes
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            % Notes several lines and several columns
+            notes = '';
+            spaceYes = 1;
+            for row=rowNotes:rowComponentnotes-1,
+                for col=2:ncols,
+                    if ~isnan(RAW{row,col}),
+                        if ischar(RAW{row,col}),
+                            if spaceYes,
+                                notes = sprintf('%s %s',notes,strtrim(RAW{row,col}));
+                            else
+                                notes = sprintf('%s%s',notes,strtrim(RAW{row,col}));
+                                spaceYes = 1;
+                            end
+                        end
+                    end
+                end
+                notes = sprintf('%s\n',strtrim(notes)); 
+                spaceYes = 0;
+            end
+            measurementstructure.notes = notes;
+
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            % Components
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            components = {};
+            for col = 2:ncols,
+                if ~isnan(RAW{rowComponents,col}),
+                    components{end+1} = regexprep(RAW{rowComponents,col},' ','');
+                else
+                    break;
+                end
+            end
+            % find 'time' component
+            timeindex = strmatchIQM('time',components,'exact');
+            % initialize help structure for min max values (error bounds) + components
+            errorbounddata = struct('name',{},'type',{},'indexvalues',{});
+            componentdata = struct('name',{},'indexvalues',{});
+            % fill in component names/formulas in structure
+            for k=1:length(components),
+                if k ~= timeindex,
+                    % check if componentname defines an upper or lower bound
+                    if ~isempty(regexp(components{k},'[+]')),
+                        % component defines an upper bound
+                        errorbounddata(end+1).name = regexprep(components{k},'\W','');
+                        errorbounddata(end).type = 'max';
+                        errorbounddata(end).indexvalues = k;
+                    elseif ~isempty(regexp(components{k},'[-]')),
+                        % component defines a lower bound
+                        errorbounddata(end+1).name = regexprep(components{k},'\W','');
+                        errorbounddata(end).type = 'min';
+                        errorbounddata(end).indexvalues = k;
+                    else
+                        measurementstructure.data(end+1).name = components{k};
+                        componentdata(end+1).name = components{k};
+                        componentdata(end).indexvalues = k;
+                    end
+                end
+            end
+
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            % Componentnotes
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            index = 1;
+            for k = 1:length(componentdata)
+                col = componentdata(k).indexvalues+1;
+                if ~isnan(RAW{rowComponentnotes,col}),
+                    if ischar(RAW{rowComponentnotes,col}),
+                        componentnotes = RAW{rowComponentnotes,col};
+                        measurementstructure.data(k).notes = strtrim(componentnotes);
+                    end
+                else
+                    measurementstructure.data(k).notes = '';
+                end
+            end
+
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            % Values and errorbounds
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            % get values matrix
+            try
+                valuesmatrix = cell2mat(RAW(rowValues:nrows,2:length(components)+1));
+            catch
+                error('Please check the datatypes in the values section of the Excel file.');
+            end
+            time = valuesmatrix(:,timeindex);
+            % check for first occurrence of NaN in time vector ... then cut off.
+            indexNaN = find(isnan(time)==1);
+            if isempty(indexNaN),
+                numbertimesteps = length(time);
+            else
+                numbertimesteps = indexNaN(1)-1;
+            end
+            measurementstructure.time = time(1:numbertimesteps);
+            % assign the measurement data into the structure
+            % assign the measurement data into the structure
+            for k=1:length(componentdata),
+                measurementstructure.data(k).values = valuesmatrix(1:numbertimesteps,componentdata(k).indexvalues);
+            end
+            % assign the error bound data if present (and corresponding component
+            % present too ... otherwise warning).
+            for k=1:length(errorbounddata),
+                indexcomponent = strmatchIQM(errorbounddata(k).name,{componentdata.name},'exact');
+                if isempty(indexcomponent),
+                    warning('Component ''%s'' has given error bound but does not exist in the data file.',errorbounddata(k).name);
+                else
+                    if strcmp(errorbounddata(k).type,'max'),
+                        measurementstructure.data(indexcomponent).maxvalues = valuesmatrix(1:numbertimesteps,errorbounddata(k).indexvalues);
+                    else
+                        measurementstructure.data(indexcomponent).minvalues = valuesmatrix(1:numbertimesteps,errorbounddata(k).indexvalues);
+                    end
+                end
+            end
+
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            % Fill the nonavailable errorbounds with NaN
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            for k=1:length(measurementstructure.data),
+                if isempty(measurementstructure.data(k).minvalues) || isempty(measurementstructure.data(k).maxvalues),
+                    measurementstructure.data(k).maxvalues = NaN(size(measurementstructure.data(k).values));
+                    measurementstructure.data(k).minvalues = NaN(size(measurementstructure.data(k).values));
+                end
+            end
         end
     end
 end

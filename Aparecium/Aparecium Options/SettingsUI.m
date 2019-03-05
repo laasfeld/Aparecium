@@ -22,7 +22,7 @@ function varargout = SettingsUI(varargin)
 
 % Edit the above text to modify the response to help SettingsUI
 
-% Last Modified by GUIDE v2.5 28-Jan-2019 12:53:52
+% Last Modified by GUIDE v2.5 21-Feb-2019 13:52:37
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -78,6 +78,8 @@ set(handles.FCF, 'cdata', handles.folderImg);
 set(handles.perkinElmer, 'cdata', handles.folderImg);
 set(handles.magellan, 'cdata', handles.folderImg);
 set(handles.MembraneTools, 'cdata', handles.folderImg);
+set(handles.IQMTools, 'cdata', handles.folderImg);
+set(handles.modelLibrary, 'cdata', handles.folderImg);
 settings = [];
 load([handles.folderPath, 'settings']); 
 handles.settings = settings;
@@ -207,6 +209,28 @@ catch MException
     if isequal(MException.identifier, 'MATLAB:nonExistentField')
         disp('Membrane Tools configuration path not found')
         handles.settings.PerkinElmerPath = '';
+    else
+        rethrow(MException)
+    end
+end
+
+try
+    set(handles.IQMToolsPath,'String',settings.IQMToolsPath);
+catch MException
+    if isequal(MException.identifier, 'MATLAB:nonExistentField')
+        disp('Membrane Tools configuration path not found')
+        handles.settings.IQMToolsPath = '';
+    else
+        rethrow(MException)
+    end
+end
+
+try
+    set(handles.modelLibraryPath,'String',settings.modelLibraryPath);
+catch MException
+    if isequal(MException.identifier, 'MATLAB:nonExistentField')
+        disp('Membrane Tools configuration path not found')
+        handles.settings.modelLibraryPath = '';
     else
         rethrow(MException)
     end
@@ -350,6 +374,28 @@ catch MException
     if isequal(MException.identifier, 'MATLAB:nonExistentField')
         disp('MembraneTools_useLast setting not found, using False')
         handles.settings.MembraneTools_useLast = false;
+    else
+        rethrow(MException)
+    end
+end
+
+try
+    set(handles.IQMTools_useLast, 'Value', settings.IQMTools_useLast);
+catch MException
+    if isequal(MException.identifier, 'MATLAB:nonExistentField')
+        disp('MembraneTools_useLast setting not found, using False')
+        handles.settings.IQMTools_useLast = false;
+    else
+        rethrow(MException)
+    end
+end
+
+try
+    set(handles.modelLibrary_useLast, 'Value', settings.modelLibrary_useLast);
+catch MException
+    if isequal(MException.identifier, 'MATLAB:nonExistentField')
+        disp('MembraneTools_useLast setting not found, using False')
+        handles.settings.modelLibrary_useLast = false;
     else
         rethrow(MException)
     end
@@ -556,6 +602,8 @@ handles.settings.FCF_useLast = get(handles.FCF_useLast, 'Value');
 handles.settings.perkinElmer_useLast = get(handles.perkinElmer_useLast, 'Value');
 handles.settings.magellan_useLast = get(handles.magellan_useLast, 'Value');
 handles.settings.MembraneTools_useLast = get(handles.MembraneTools_useLast, 'Value');
+handles.settings.IQMTools_useLast = get(handles.IQMTools_useLast, 'Value');
+handles.settings.modelLibrary_useLast = get(handles.modelLibrary_useLast, 'Value');
 
 
 % --- Executes on button press in save.
@@ -912,7 +960,8 @@ function MembraneToolsPath_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of MembraneToolsPath as text
 %        str2double(get(hObject,'String')) returns contents of MembraneToolsPath as a double
-
+handles.settings.MembraneToolsPath = get(hObject,'String');
+guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
 function MembraneToolsPath_CreateFcn(hObject, eventdata, handles)
@@ -948,7 +997,7 @@ function allCheckbox_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of allCheckbox
 value = get(hObject,'Value');
 tickBoxes = [handles.PHERAStarASCII_useLast, handles.NeoASCII_useLast, handles.PHERAStarDatabase_useLast, handles.MIDAS_useLast, handles.Excel_useLast,... 
-    handles.SBToolbox_useLast, handles.Configurations_useLast, handles.GCF_useLast, handles.FCF_useLast, handles.perkinElmer_useLast, handles.magellan_useLast, handles.MembraneTools_useLast];
+    handles.SBToolbox_useLast, handles.Configurations_useLast, handles.GCF_useLast, handles.FCF_useLast, handles.perkinElmer_useLast, handles.magellan_useLast, handles.MembraneTools_useLast, handles.IQMTools_useLast, handles.modelLibrary_useLast];
 for i = 1 : numel(tickBoxes)
    set(tickBoxes(i), 'Value', value);
 end
@@ -1060,3 +1109,93 @@ function MembraneTools_useLast_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of MembraneTools_useLast
+
+
+
+function IQMToolsPath_Callback(hObject, eventdata, handles)
+% hObject    handle to IQMToolsPath (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of IQMToolsPath as text
+%        str2double(get(hObject,'String')) returns contents of IQMToolsPath as a double
+handles.settings.IQMToolsPath = get(hObject,'String');
+guidata(hObject,handles);
+
+% --- Executes during object creation, after setting all properties.
+function IQMToolsPath_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to IQMToolsPath (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in IQMTools.
+function IQMTools_Callback(hObject, eventdata, handles)
+% hObject    handle to IQMTools (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+result = uigetdir(handles.settings.IQMToolsPath, 'Select standard image import folder for MembraneTools');
+if ~isequal(result, 0)
+    handles.settings.IQMToolsPath = result;
+    set(handles.IQMToolsPath,'String',handles.settings.IQMToolsPath);
+end
+guidata(hObject,handles);
+
+% --- Executes on button press in IQMTools_useLast.
+function IQMTools_useLast_Callback(hObject, eventdata, handles)
+% hObject    handle to IQMTools_useLast (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of IQMTools_useLast
+
+
+
+function modelLibraryPath_Callback(hObject, eventdata, handles)
+% hObject    handle to modelLibraryPath (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of modelLibraryPath as text
+%        str2double(get(hObject,'String')) returns contents of modelLibraryPath as a double
+handles.settings.modelLibraryPath = get(hObject,'String');
+guidata(hObject,handles);
+
+% --- Executes during object creation, after setting all properties.
+function modelLibraryPath_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to modelLibraryPath (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in modelLibrary.
+function modelLibrary_Callback(hObject, eventdata, handles)
+% hObject    handle to modelLibrary (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+result = uigetdir(handles.settings.modelLibraryPath, 'Select standard image import folder for MembraneTools');
+if ~isequal(result, 0)
+    handles.settings.modelLibraryPath = result;
+    set(handles.modelLibraryPath,'String',handles.settings.modelLibraryPath);
+end
+guidata(hObject,handles);
+
+% --- Executes on button press in modelLibrary_useLast.
+function modelLibrary_useLast_Callback(hObject, eventdata, handles)
+% hObject    handle to modelLibrary_useLast (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of modelLibrary_useLast

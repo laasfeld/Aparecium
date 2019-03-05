@@ -54,6 +54,9 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                 nonMaskIndices = qualityMask == 0;
                 resultStructure.averageSecondaryImageIntensity = mean(mean(focusedImage(nonMaskIndices)));
                 
+                resultStructure.membranePixelCount = numel(find(indices==1));
+                resultStructure.membraneIntensityStandardDeviation = std(double(focusedImage(indices)));
+                
                 reverseMaskedImage = and(1-qualityMask, 1-resultStructure.image);
                 binaryImageCalculator = BinaryImageCalculator();
                 binaryImageCalculator.calculateImageParameters(reverseMaskedImage, parametersToCalculate, functionHandle);
@@ -88,6 +91,7 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                 catch
                     resultStructure.firstUnmaskedNonMembraneQuadrileIntensity = mean(sortedPixels(1:floor(numel(sortedPixels)/4)));
                 end
+
                 
             elseif strcmp(calculationMethod, 'Probability')
                  resultStructure.averageMembraneIntensity = sum(sum(double(image).*resultStructure.probabilityImage))/(sum(sum(resultStructure.probabilityImage)));

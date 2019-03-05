@@ -53,8 +53,8 @@ classdef FileChooser < handle
         %% Neo ASCII methods
         
         function [fullFilePath, fileName] = userChooseNeoASCIIFile(this)
-            if isfield(this.settings, 'NeoAsciiPath')
-                startingPath = this.settings.NeoAsciiPath;
+            if isfield(this.settings, 'NeoASCII')
+                startingPath = this.settings.NeoASCII;
             else
                 startingPath = '';
             end
@@ -506,6 +506,8 @@ classdef FileChooser < handle
            end
         end
         
+        %% MembraneTools methods
+        
         function folderPath = chooseMembraneToolsFolder(this)
             if isfield(this.settings, 'MembraneToolsPath')
                 startingPath = this.settings.MembraneToolsPath;
@@ -533,6 +535,18 @@ classdef FileChooser < handle
                    end
                end
            end
+        end
+        
+        %% model library methods
+        
+        function path = getModelLibraryPath(this)
+             if isfield(this.settings, 'modelLibraryPath')
+                startingPath = this.settings.modelLibraryPath;
+            else
+                startingPath = '';
+            end
+
+            path = startingPath;
         end
     end
     

@@ -1,4 +1,4 @@
-// ColoredFieldCellRenderer - Modified TableCellRenderer for colored cells
+
 
 // Programmed by Yair M. Altman: altmany(at)gmail.com
 
@@ -39,9 +39,9 @@ public class ColoredFieldCellRenderer extends DefaultTableCellRenderer implement
             // never mind...
         }
         */
-
 		if (_disabled)
 		{
+			System.out.println("disabling");
 			cell.setEnabled(false);
 			cell.setBackground(_bgcolor);
 		}

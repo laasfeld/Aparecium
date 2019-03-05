@@ -471,18 +471,33 @@ classdef MidasTableController < handle
                     end
                 end
             end
-            
-            for block = 1 :  size(this.tableData, 1)/noOfWells;
-                for row = 1 : noOfWells
-                    wellName = this.tableData( (block-1) + row, 2);
-                    tempData( (block-1)*noOfWells + row,  1 : noOfTreatments) = treatments{connectionMatrix(row)};
-                    %this.tableData( (block-1)*noOfWells + row, this.informativeColumns + 1 : this.informativeColumns + noOfTreatments) = num2cell(treatments(row, :));       
+            if (this.includeEvents)
+                for block = 1 :  size(this.eventData, 1)/noOfWells;
+                    for row = 1 : noOfWells
+                        wellName = this.eventData( (block-1) + row, 2);
+                        tempData( (block-1)*noOfWells + row,  1 : noOfTreatments) = treatments{connectionMatrix(row)};
+                        %this.tableData( (block-1)*noOfWells + row, this.informativeColumns + 1 : this.informativeColumns + noOfTreatments) = num2cell(treatments(row, :));       
+                    end
+                end
+            else
+                for block = 1 :  size(this.tableData, 1)/noOfWells;
+                    for row = 1 : noOfWells
+                        wellName = this.tableData( (block-1) + row, 2);
+                        tempData( (block-1)*noOfWells + row,  1 : noOfTreatments) = treatments{connectionMatrix(row)};
+                        %this.tableData( (block-1)*noOfWells + row, this.informativeColumns + 1 : this.informativeColumns + noOfTreatments) = num2cell(treatments(row, :));       
+                    end
                 end
             end
             if exist('tempData', 'var')
-                tempCellData = num2cell(tempData);
-                this.tableData(:, this.informativeColumns + 1 : this.informativeColumns + noOfTreatments) = tempCellData;
-                this.addData();
+                if (this.includeEvents)
+                    tempCellData = num2cell(tempData);
+                    this.eventData(:, this.informativeColumns + 1 : this.informativeColumns + noOfTreatments) = tempCellData;
+                    this.addData();
+                else
+                    tempCellData = num2cell(tempData);
+                    this.tableData(:, this.informativeColumns + 1 : this.informativeColumns + noOfTreatments) = tempCellData;
+                    this.addData();
+                end
             else
                 
             end
@@ -495,6 +510,8 @@ classdef MidasTableController < handle
         end
         
         function readMidasFile(this, fullFilePath)
+            this.tableData = cell(0, 5);%{'', '', '', '' ,''};
+            this.eventData = [];
             this.fileName = this.findFileName(fullFilePath);
             this.fullFilePath = fullFilePath;
             [data, textData] = loadFromMIDAS(fullFilePath);

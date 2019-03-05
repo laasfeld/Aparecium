@@ -28,8 +28,12 @@ end
 
 for i = 1:numberOfChannels
     for j = 1:numberOfWells 
-       measurementsSplitValue{i,j} = measurements{1,j}(i:numberOfChannels:end);
-       measurementsColumns(j:numberOfWells:end, i) = num2cell(measurementsSplitValue{i,j});
+       try
+           measurementsSplitValue{i,j} = measurements{1,j}(i:numberOfChannels:end);
+           measurementsColumns(j:numberOfWells:end, i) = num2cell(measurementsSplitValue{i,j});
+       catch MException
+           'siin'
+       end
     end
 end
 

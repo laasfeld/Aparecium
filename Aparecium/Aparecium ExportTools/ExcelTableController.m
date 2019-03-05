@@ -203,8 +203,8 @@ classdef ExcelTableController < ExportPanelController
                     end
                 end
             end
-            colorgen = @(color,text) ['<html><table border=0 width=200 bgcolor=',color,'  ><TR><TD>',text,'</TD></TR> </table></html>'];
-            colorgenBlank = @(color,text) ['<html><table border=0 width=200 bgcolor=',color,' color=',color,' ><TR><TD>',text,'</TD></TR> </table></html>'];
+            %colorgen = @(color,text) ['<html><table border=0 width=200 bgcolor=',color,'  ><TR><TD>',text,'</TD></TR> </table></html>'];
+            %colorgenBlank = @(color,text) ['<html><table border=0 width=200 bgcolor=',color,' color=',color,' ><TR><TD>',text,'</TD></TR> </table></html>'];
             cr = ColoredFieldCellRenderer(java.awt.Color.white);
             cr.setDisabled(true);
             maxNumberOfSubgroupElements = -1;
@@ -220,10 +220,10 @@ classdef ExcelTableController < ExportPanelController
                         for subgroupElement = 1 : maxNumberOfSubgroupElements
                             switch mod(timeIndex + group, 2)
                                 case 0
-                                    colorCode = 'E4EFF7';
+                                    %colorCode = 'E4EFF7';
                                     colorRGB = [228	239	247]/255;
                                 case 1
-                                    colorCode = 'E8D8E4';
+                                    %colorCode = 'E8D8E4';
                                     colorRGB = [232	216	228]/255;
                             end
                             if subgroupElement <= size(groups{group}{subgroup}, 1)
@@ -276,7 +276,7 @@ classdef ExcelTableController < ExportPanelController
             %set(this.tableHandle,'ColumnFormat',[]);
             for colIdx = 1 : size(tableData, 2)
                 %disp([num2str(colIdx),' /',num2str(size(tableData, 2))])                
-                jtable.getColumnModel.getColumn(colIdx-1).setCellRenderer(cr);
+                jtable.getColumnModel.getColumn(colIdx-1).setCellRenderer(cr);              
             end
             
             

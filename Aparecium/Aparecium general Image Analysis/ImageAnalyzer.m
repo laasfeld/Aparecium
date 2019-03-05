@@ -1070,6 +1070,8 @@ classdef ImageAnalyzer < handle
                 parametersToCalculate{end + 1} = 'averageUnmaskedNonMembraneIntensity';
                 parametersToCalculate{end + 1} = 'firstUnmaskedNonMembraneQuadrileIntensity';
                 parametersToCalculate{end + 1} = 'averageUnmaskedSecondaryImageIntensity';
+                parametersToCalculate{end + 1} = 'pixelCount';
+                parametersToCalculate{end + 1} = 'intensitySTD';
             end
             for well = 1 : length(handles.ID)
                 % generate temporary variable wellData for holding data for that particular well
@@ -1078,7 +1080,7 @@ classdef ImageAnalyzer < handle
 
                 for parameterIndex = 1 : numel(parametersToCalculate)
                     try
-                    wellData(end + 1, 1) = BinaryImageCalculator.averageParameter(handles.imageData{well}, parametersToCalculate{parameterIndex}, cameraAndLensParameters);
+                        wellData(end + 1, 1) = BinaryImageCalculator.averageParameter(handles.imageData{well}, parametersToCalculate{parameterIndex}, cameraAndLensParameters);
                     catch MException
                         disp(['No numerical representation possible for ', parametersToCalculate{parameterIndex}, ' using NaN instead']);
                         wellData(end + 1, 1) = NaN;

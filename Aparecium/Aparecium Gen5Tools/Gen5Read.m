@@ -158,7 +158,13 @@ classdef Gen5Read < handle
         end
         
         function calculateCyclesByLineCount(this)
-            this.cyclesByLineCount = ((this.lastLineOfMeasurements - this.firstLineOfMeasurements)-numel(this.channels)*3)/numel(this.channels);
+            % this is prone to error and not tested enough, be careful with
+            % this check
+            if(this.isKineticRead())
+                this.cyclesByLineCount = ((this.lastLineOfMeasurements - this.firstLineOfMeasurements)-numel(this.channels)*3)/numel(this.channels);
+            else
+                this.cyclesByLineCount = 1; 
+            end
         end
         
         function experimentDataStructure = toExperimentDataStructure(read)
