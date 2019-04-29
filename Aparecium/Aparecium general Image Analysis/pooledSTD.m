@@ -1,6 +1,7 @@
 function pooledSTD = pooledSTD(N, means, STDs)
 %UNTITLED2 Summary of this function goes here
-%   Detailed explanation goes here
+%   https://en.wikipedia.org/wiki/Pooled_variance    population based
+%   statistics sigmax equation
 
 % calculate sum of samples - number of samples
 sum_sam = sum(N);

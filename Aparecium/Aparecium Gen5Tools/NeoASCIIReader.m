@@ -36,7 +36,11 @@ classdef NeoASCIIReader < handle
             this.mapBytesToLines();
             this.initializeFileHandle();
             this.readVersion();
-            if(this.checkIfHeaderIsPresent()); 
+            if(this.checkIfHeaderIsPresent());
+                if this.checkIfOnlyOnePlateIsInFile()
+                   errordlg('More than one plate found in the input file. Only a single plate is allowed in the input');
+                   error('More than one plate found in the input file. Only a single plate is allowed in the input');
+                end
                 this.findLastLineOfHeader();
                 this.findLastLineOfFile();
                 this.readPlateType();
@@ -76,6 +80,22 @@ classdef NeoASCIIReader < handle
             line = this.getNextLine();
             headerIsPresent = strcmp(line, 'Procedure Details');
             this.goToBeginningOfTheFile();
+        end
+        
+        function morePlatesPresent = checkIfOnlyOnePlateIsInFile(this)
+            this.goToBeginningOfTheFile();
+            this.skipLines(4 + this.lineShiftFromVersion);
+            line = this.getNextLine();
+            firstPlateFound = strcmp(line, 'Procedure Details');
+            morePlatesPresent = false;
+            while notAtEndOfTheFile(this, line)
+               line = this.getNextLine();
+               if strcmp(line, 'Procedure Details');
+                   morePlatesPresent = true;
+                   break;
+               end
+            end
+            this.goToBeginningOfTheFile();            
         end
         
         function readPlateType(this)

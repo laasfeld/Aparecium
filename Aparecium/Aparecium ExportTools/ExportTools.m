@@ -25,7 +25,7 @@ function varargout = ExportTools(varargin)
 
 % Edit the above text to modify the response to help ExportTools
 
-% Last Modified by GUIDE v2.5 25-Feb-2019 19:47:59
+% Last Modified by GUIDE v2.5 26-Mar-2019 13:13:15
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
@@ -1080,8 +1080,7 @@ function sendToIQMTools_Callback(hObject, eventdata, handles)
 % hObject    handle to sendToIQMTools (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-'test'
+applyFormulaToSBToolboxPreview(hObject, eventdata, handles);
 handles.SBExporter.toSBProject();
 
 
@@ -2395,3 +2394,12 @@ function IncludeRedundantStates_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of IncludeRedundantStates
+handles.SBExporter.setIncludeRedundantParameters(get(hObject,'Value'));
+
+% --- Executes on button press in addToSBProject.
+function addToSBProject_Callback(hObject, eventdata, handles)
+% hObject    handle to addToSBProject (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+applyFormulaToSBToolboxPreview(hObject, eventdata, handles);
+handles.SBExporter.addToExistingProject();

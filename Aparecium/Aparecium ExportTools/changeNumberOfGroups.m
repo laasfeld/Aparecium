@@ -21,7 +21,7 @@ if(numberOfRows > numberOfGroups) && strcmp(get(handles.groupsOKIndicator, 'Stri
         
         case 'Yes'
             set(handles.groupsOKIndicator, 'String', 'Undef', 'BackgroundColor', [1 0 0]);
-            set(handles.savePlateKonfig, 'Enable', 'off');
+            set(handles.savePlateConfig, 'Enable', 'off');
             set(handles.applyFormula, 'Enable', 'off');
         case 'No'
             set(handles.numberOfGroupsField,'String',num2str(numberOfRows));

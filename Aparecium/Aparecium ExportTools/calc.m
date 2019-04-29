@@ -1,8 +1,7 @@
 function varargout = calc(varargin)
 % This function creates a function editor
-% GUI for editing functions. Allows user to choose whatever function to be
-% calculated depending on available channels. Maximum number of channels is
-% currently five. 
+% GUI for editing functions. Allows user to choose simple mathematical function to be
+% calculated depending on available channels. 
 % Instructions: enter the function you need and press "Confirm Function" button on the
 % calculator to confirm the function entered, then close the window to return the function.
 

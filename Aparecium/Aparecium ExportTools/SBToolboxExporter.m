@@ -8,6 +8,7 @@ classdef SBToolboxExporter <  ExportPanelController
         experimentStateOrParam = [];
         experimentParamNameTable = []; % can either be 'state' or 'param'
         includeParameter = [];
+        includeRedundantParameters = false;
         outputTableStruct = [];
         groups = [];
         loadingBar = [];
@@ -21,6 +22,14 @@ classdef SBToolboxExporter <  ExportPanelController
     methods
         function this = SBToolboxExporter()
             
+        end
+        
+        function setIncludeRedundantParameters(this, includeRedundantParameters)
+            this.includeRedundantParameters = includeRedundantParameters;
+        end
+        
+        function includeRedundantParameters = getIncludeRedundantParameters(this)
+            includeRedundantParameters = this.includeRedundantParameters;
         end
         
         function setUltracorrect(this, value)
@@ -277,7 +286,7 @@ classdef SBToolboxExporter <  ExportPanelController
                     initialConditions = this.outputTableStruct{group}{subgroup}.initialConditions;
                     representingWellIndex = this.experiment.getIndexOfUsedWell(this.groups{group}{subgroup}{1}); 
                     concentrationChangeEvent = this.experiment.getConcentrationChangeEvents();
-                    expFileWriter(this.outputTableStruct{group}{subgroup}.path, initialConditions, representingWellIndex, concentrationChangeEvent, eventTimes, this.experimentParamsNames, this.experimentStateOrParam, outputFilenameEXP, this.includeParameter, 'file')
+                    expFileWriter(this.outputTableStruct{group}{subgroup}.path, initialConditions, representingWellIndex, concentrationChangeEvent, eventTimes, this.experimentParamsNames, this.experimentStateOrParam, outputFilenameEXP, this.includeParameter, 'file', this.includeRedundantParameters)
                     xlswrite(outputFilenameMIDAS, this.outputTableStruct{group}{subgroup}.SBTable);
                 end
             end
@@ -374,7 +383,7 @@ classdef SBToolboxExporter <  ExportPanelController
                                     experimentData(this.ultracorrect+subgroupElement : numel(this.groups{group}{subgroup}): end, 2) = num2cell(data{group}{subgroup}{subgroupElement}.timePoints(cyclesInUse(:)));
                                 end
                                 experimentData(this.ultracorrect+subgroupElement : numel(this.groups{group}{subgroup}): end, (channelIndex - 1)*3+3:(channelIndex - 1)*3+5) = num2cell([data{group}{subgroup}{subgroupElement}.average{requestedChannelIndices(channelIndex)}(cyclesInUse(:)),...
-                                data{group}{subgroup}{subgroupElement}.average{requestedChannelIndices(channelIndex)}(cyclesInUse(:)),...
+                                data{group}{subgroup}{subgroupElement}.maximum{requestedChannelIndices(channelIndex)}(cyclesInUse(:)),...
                                 data{group}{subgroup}{subgroupElement}.minimum{requestedChannelIndices(channelIndex)}(cyclesInUse(:))]); 
                             end
                         end
@@ -397,7 +406,7 @@ classdef SBToolboxExporter <  ExportPanelController
                                     experimentData(1+this.ultracorrect : numberOfCycles + this.ultracorrect, 2) = num2cell(time(cyclesInUse(:)));
                                 end
                                 experimentData(1+this.ultracorrect : numberOfCycles + this.ultracorrect,(channelIndex - 1)*3+3:(channelIndex - 1)*3+5) = num2cell([data{group}{subgroup}.average{requestedChannelIndices(channelIndex)}(cyclesInUse(:)),...
-                                data{group}{subgroup}.average{requestedChannelIndices(channelIndex)}(cyclesInUse(:)),...
+                                data{group}{subgroup}.maximum{requestedChannelIndices(channelIndex)}(cyclesInUse(:)),...
                                 data{group}{subgroup}.minimum{requestedChannelIndices(channelIndex)}(cyclesInUse(:))]);                                                                                                 
                             end
                         catch MException
@@ -448,6 +457,22 @@ classdef SBToolboxExporter <  ExportPanelController
             assignin('base', 'SBStructure', this.outputTableStruct);
         end
         
+        function addToExistingProject(this)
+            [fileName, filePath] = uigetfile('*.iqmp', 'Choose project where to add current experiments');
+            project = IQMprojectSB([filePath, fileName]);
+            
+            % do not add new models, otherwise the models list will be
+            % overcrowded with many duplicate models in the project.
+            %project = this.createIQMmodels(project);
+            % add experiments to the project
+            [project, counterStart] = this.createIQMexperiments(project);
+            % add measurement data to the project
+            project = this.createIQMmeasurements(project, counterStart);
+            properName = regexprep(fileName, '.iqmp', '');
+            eval([properName, '=project']);
+            save([filePath, fileName], properName);
+        end
+        
         function toSBProject(this)
             % create the project
             % currently no model will be attached to the raw project
@@ -456,7 +481,7 @@ classdef SBToolboxExporter <  ExportPanelController
             % add experiments to the project
             project = this.createIQMexperiments(project);
             % add measurement data to the project
-            project = this.createIQMmeasurements(project);
+            project = this.createIQMmeasurements(project, 1);
             
             IQMparamestGUI(project);
         end
@@ -488,14 +513,27 @@ classdef SBToolboxExporter <  ExportPanelController
 
                 end
             end
-            project.models = models;
-            project.modeltypes = modeltypes;
+            
+            projectAsStruct = IQMstruct(project);
+            prevModels = projectAsStruct.models;
+            prevModelTypes = projectAsStruct.modeltypes;
+            if strcmp(prevModels, '')
+                project.models = models;
+            else
+                project.models = [prevModels, models]; 
+            end
+            
+            if strcmp(prevModelTypes, '')
+                project.modeltypes = modeltypes;
+            else
+                project.modeltypes = [prevModelTypes, modeltypes]; 
+            end
         end
         
-        function project = createIQMmeasurements(this, project)          
+        function project = createIQMmeasurements(this, project, counterStart)              
+            counter = counterStart
 
             groupNames = this.experiment.getGroups();
-            counter = 1;
             for group = 1 : numel(this.groups)
                 for subgroup = this.subgroupStartValue : numel(this.groups{group})                 
                     [measurementStructure, errorMsg] = this.processData(this.outputTableStruct{group}{subgroup}.SBTable, 1, []);
@@ -505,19 +543,23 @@ classdef SBToolboxExporter <  ExportPanelController
             end
         end
         
-        function project = createIQMexperiments(this, project)            
+        function [project, counterStart] = createIQMexperiments(this, project)            
             eventTimes = this.experiment.getEventTimes();
             for well = 1 : numel(eventTimes)
                eventTimes{well} = eventTimes{well}*this.timeController.getUnitConversionConstant(); 
             end
-            counter = 1;
+            
+            projectAsStruct = IQMstruct(project);          
+            counter = numel(projectAsStruct.experiments) + 1;
+            counterStart = counter;
+            
             for group = 1 : numel(this.groups)
                 for subgroup = this.subgroupStartValue : numel(this.groups{group})
                     outputFilenameEXP = [this.outputTableStruct{group}{subgroup}.path, '.exp'];
                     initialConditions = this.outputTableStruct{group}{subgroup}.initialConditions;
                     representingWellIndex = this.experiment.getIndexOfUsedWell(this.groups{group}{subgroup}{1});
                     concentrationChangeEvent = this.experiment.getConcentrationChangeEvents();
-                    project.experiments(counter).experiment = IQMexperiment(expFileWriter(this.outputTableStruct{group}{subgroup}.path, initialConditions, representingWellIndex, concentrationChangeEvent, eventTimes, this.experimentParamsNames, this.experimentStateOrParam, outputFilenameEXP, this.includeParameter, 'struct'));                    
+                    project.experiments(counter).experiment = IQMexperiment(expFileWriter(this.outputTableStruct{group}{subgroup}.path, initialConditions, representingWellIndex, concentrationChangeEvent, eventTimes, this.experimentParamsNames, this.experimentStateOrParam, outputFilenameEXP, this.includeParameter, 'struct', this.includeRedundantParameters));                    
                     project.experiments(counter).name = outputFilenameEXP;
                     project.experiments(counter).notes = '';
                     counter = counter + 1;

@@ -79,7 +79,7 @@ classdef PlateSimulatorInterface < handle
                     [probableEventCycles, probableEventTimes] = this.predictEvents();
                     if strfind(mode, 'groupWells')   
                         this.PlateSimulator = plateSimulator.PlateSimulator(treatments, concentrations, units, mode, wellNames, inUse, cycles, measurements, groups);
-                        timewiseBlankStructure = this.generateStandardTimewiseBlankStructure(inUse, cycles);
+                        timewiseBlankStructure = this.generateStandardTimewiseBlankStructure(inUse, cycles, measurements);
                         this.PlateSimulator.setTimewiseBlankStructure(timewiseBlankStructure);
                         this.experiment.setHasChanged(0);
                     elseif strfind(mode, 'addTreatments')
@@ -253,9 +253,15 @@ classdef PlateSimulatorInterface < handle
     
     methods(Static)
         
-        function timewiseBlankStructure = generateStandardTimewiseBlankStructure(inUse, cycles)
+        function timewiseBlankStructure = generateStandardTimewiseBlankStructure(inUse, cycles, measurements)
             timewiseBlankStructure = zeros([size(inUse), cycles]);
-            timewiseBlankStructure(:, :, 1) = 1;
+            for i = 1 : size(measurements, 3)
+                oneNonNaNPresent = ~min(min(min(isnan(measurements(:,:,i,:)))));
+                if isequal(oneNonNaNPresent, 1)
+                    timewiseBlankStructure(:, :, i) = 1;
+                    break;
+                end
+            end        
         end
         
         function finalJavaArray = convertCellToJava2dimStringArray(concentrations)

@@ -339,9 +339,9 @@ classdef CalculationMethod < handle
                     if strfind(formula, channelNames)>0
                         allow = 1;
                         findIndex = strfind(formula, channelNames);
-                        endIndex = findIndex + numel(channelNames);
+                        endIndex = findIndex + numel(channelNames)-1;
                         for presenceIndex = 1 : numel(findIndex)
-                            if (isequal(findIndex(presenceIndex), 1) || ~isempty(cell2mat(strfind(calculationCharacters, formula(findIndex(presenceIndex) - 1))))) && (endIndex(presenceIndex) > numel(formula) || ~isempty(cell2mat(strfind(calculationCharacters, formula(endIndex(presenceIndex) + 1)))))
+                            if (isequal(findIndex(presenceIndex), 1) || ~isempty(cell2mat(strfind(calculationCharacters, formula(findIndex(presenceIndex) - 1))))) && (endIndex(presenceIndex) >= numel(formula) || ~isempty(cell2mat(strfind(calculationCharacters, formula(endIndex(presenceIndex) + 1)))))
 
                             else
                                 allow = 0;
