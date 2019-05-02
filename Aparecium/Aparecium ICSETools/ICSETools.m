@@ -133,7 +133,7 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles.imageImporter = ImageImporter(); % Create a new object that can import the images correctly
-handles.imageImporter.userChooseImageFolders(''); % Ask the user to choose the folder where the folders are that contain images
+handles.imageImporter.userChooseImageFolders(); % Ask the user to choose the folder where the folders are that contain images
 handles.experimentDataStructure = handles.imageImporter.experimentDataStructure; % Get information about which wells were used
 handles = generateApareciumExperimentInput(handles, handles.experimentDataStructure); % Generate the ApareciumExperimentInput object based the information from images 
 guidata(hObject, handles);
@@ -922,7 +922,7 @@ function pushbutton16_Callback(hObject, eventdata, handles)
 % this function deals with importing binary images. Sti
 
 handles.imageImporter = ImageImporter(); % Create a new ImageImporter obejct
-handles.imageImporter.userChooseImageFolders(''); % note that user must still choose the regular images, timing is still read from there but binary image is taken from elsewhere
+handles.imageImporter.userChooseImageFolders(); % note that user must still choose the regular images, timing is still read from there but binary image is taken from elsewhere
 handles.experimentDataStructure = handles.imageImporter.experimentDataStructure; 
 handles.imageProcessingParameters.setFromBinaryMode(); % set the image analysis parameters to accordance with processing binary files
 set(handles.autoSaveBinaryImage, 'value', 0); % Don´t save binary files, they must already be there

@@ -623,7 +623,30 @@ classdef ImageAnalyzer < handle
                 case 'off'
                     for well = 1 : numel(wellID)
                         if strcmp(this.ICSEOrMembrane, 'ICSE') 
-                            wellMeasurementInfo{well} = this.analyzeOneWell(well, nameArray, [], wellID, directoryPath, folder);                           
+                            for well = 1 : numel(wellID)
+                               if well == 1
+                                   measurementParams = this.configureWellMeasurementParameters(well, nameArray, [], wellID, directoryPath, folder);
+                               else
+                                   measurementParams = [measurementParams, this.configureWellMeasurementParameters(well, nameArray, [], wellID, directoryPath, folder)];
+                               end
+                               %wellMeasurementInfo{well} = this.analyzeOneWell(well, nameArray, [], wellID, directoryPath, folder);
+                            end
+                            
+                            for imageIndex = 1 : numel(measurementParams)
+                                measurementParams(imageIndex).results = ''; % create a field so parfor does not crash
+                            end
+                            functionName = str2func([class(this), '.analyseOneImageStatic']); 
+                            for imageIndex = 1 : numel(measurementParams)% parfor should be here                            
+                                measurementParams(imageIndex).results = functionName(...
+                                  measurementParams(imageIndex).wellName, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).imageProcessingParams,...
+                                  measurementParams(imageIndex).timeParameters, measurementParams(imageIndex).thresholdFunctionHandle,...
+                                  measurementParams(imageIndex).parametersToCalculate);
+                            end
+
+                            for imageIndex = 1 : numel(measurementParams)
+                               wellMeasurementInfo{measurementParams(imageIndex).wellIndex}{measurementParams(imageIndex).picOfWell} = measurementParams(imageIndex).results;
+                               wellMeasurementInfo{measurementParams(imageIndex).wellIndex}{measurementParams(imageIndex).picOfWell}.imageName = measurementParams(imageIndex).imageName;
+                            end                         
                         elseif strcmp(this.ICSEOrMembrane, 'Membrane')
                             nameArray = this.imageImporter.getNameArrayOfFolder(folder);
                             secondaryNameArray = this.imageImporter.getSecondaryNameArrayOfFolder(folder);

@@ -13,7 +13,7 @@ classdef ICSEImageAnalyzer < ImageAnalyzer
     end
     
     methods (Static)      
-        function resultStructure = analyseOneImageStatic(picName, filePath, imageProcessingParameters, timeParameters, figureHandles, functionHandle, parametersToCalculate)
+        function resultStructure = analyseOneImageStatic(picName, filePath, imageProcessingParameters, timeParameters, functionHandle, parametersToCalculate)
             'ICSE'    
             tic
                 try
@@ -53,9 +53,9 @@ classdef ICSEImageAnalyzer < ImageAnalyzer
                 end
                 
                 binaryImageCalculator = BinaryImageCalculator();
-                %parametersToCalculate = {'area', 'areaSTD', 'diameter', 'diameterSTD', 'objectCount', 'maxDiameter', 'image', 'confluency'};
+                parametersToCalculate = {'area', 'areaSTD', 'diameter', 'diameterSTD', 'objectCount', 'maxDiameter', 'image', 'confluency'};
                 binaryImageCalculator.calculateImageParameters(bw2, parametersToCalculate, functionHandle);
-                resultStructure = binaryImageCalculator.resultStructure;
+                resultStructure = binaryImageCalculator.resultStructure
                 resultStructure.imageTime = imageTime;
                 try
                     resultStructure.imageWidthMicrons = imageWidthMicrons;

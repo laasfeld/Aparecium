@@ -136,7 +136,7 @@ classdef BinaryImageCalculator < handle
                  guaranteeEcc(this);
                  this.criteriaMatchingcc = this.cc;                
                  for i = size(this.cc.PixelIdxList,2):-1:1
-                     if(objectMatchesCriteria(this.cc.PixelIdxList{i}, this.ecc(i), this.thresholdFunctionHandle) || isequal(func2str(this.thresholdFunctionHandle), 'None'))
+                     if(objectMatchesCriteria(this.cc.PixelIdxList{i}, this.ecc(i), this.thresholdFunctionHandle) || isequal(this.thresholdFunctionHandle, @None))
 
                      else
                         this.criteriaMatchingcc.PixelIdxList(i) = []; 
@@ -160,7 +160,7 @@ classdef BinaryImageCalculator < handle
             
             this.criteriaMatchingBoundaries = this.boundaries;
             for i = size(this.cc.PixelIdxList,2):-1:1
-                if(objectMatchesCriteria(this.cc.PixelIdxList{i}, this.ecc(i), this.thresholdFunctionHandle) || isequal(func2str(this.thresholdFunctionHandle), 'None'))
+                if(objectMatchesCriteria(this.cc.PixelIdxList{i}, this.ecc(i), this.thresholdFunctionHandle) || isequal(this.thresholdFunctionHandle, @None))
 
                 else
                    this.criteriaMatchingBoundaries(i) = []; 
@@ -188,7 +188,7 @@ classdef BinaryImageCalculator < handle
             this.guaranteeCC();
             this.criteriaMatchingEcc = this.ecc;
             for i = size(this.cc.PixelIdxList,2):-1:1
-                if(objectMatchesCriteria(this.cc.PixelIdxList{i}, this.ecc(i), this.thresholdFunctionHandle) || isequal(func2str(this.thresholdFunctionHandle), 'None'))
+                if(objectMatchesCriteria(this.cc.PixelIdxList{i}, this.ecc(i), this.thresholdFunctionHandle) || isequal(this.thresholdFunctionHandle, @None))
 
                 else
                    this.criteriaMatchingEcc(i) = []; 
