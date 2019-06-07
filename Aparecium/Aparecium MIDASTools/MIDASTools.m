@@ -183,18 +183,18 @@ guidata(hObject, handles);
 
 % --- Executes on button press in setAsPrimaryMidas.
 function setAsPrimaryMidas_Callback(hObject, eventdata, handles)
-% hObject    handle to setAsPrimaryMidas (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-handles.midasTableController = mergeMIDASFiles(handles.stackTableController, handles.midasTableController);
-handles.midasTableController.setMidasTableHandle(handles.mainMIDASTable);
-handles.midasTableController.showTable();
-handles.midasTableController.setEventDataEqualToData();
-handles.mainMIDASTable.setVisible('on');
-set(handles.MIDASInformationText, 'String', ['MIDAS file ', handles.midasTableController.fileName, ' loaded']);
-handles.fileName = handles.midasTableController.fileName;
-initializeExperimentConfigurationPanel(handles);
-guidata(hObject, handles);
+    % hObject    handle to setAsPrimaryMidas (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+    handles.midasTableController = mergeMIDASFiles(handles.stackTableController, handles.midasTableController);
+    handles.midasTableController.setMidasTableHandle(handles.mainMIDASTable);
+    handles.midasTableController.showTable();
+    handles.midasTableController.setEventDataEqualToData();
+    handles.mainMIDASTable.setVisible('on');
+    set(handles.MIDASInformationText, 'String', ['MIDAS file ', handles.midasTableController.fileName, ' loaded']);
+    handles.fileName = handles.midasTableController.fileName;
+    initializeExperimentConfigurationPanel(handles);
+    guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function stackTable_CreateFcn(hObject, eventdata, handles)

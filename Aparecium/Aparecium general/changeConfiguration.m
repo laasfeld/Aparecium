@@ -9,5 +9,13 @@ function [ handles ] = changeConfiguration(filename, handles)
     end
     data = [namesTR, valuesTR', unitsTR', falseValues', falseValues'];
     set(handles.treatments_Table, 'Data', data);
+    if exist('treatmentStructure')
+        handles.treatmentStructure = treatmentStructure;
+        answer = questdlg('Configuration file contains treatment layout. Do you want to apply layout?', 'Question' ,'Yes', 'No', 'No');
+        handles.fromTreatmentStructure = answer;
+    else
+        handles.treatmentStructure = [];
+        handles.fromTreatmentStructure = 'No';
+    end
 end
 

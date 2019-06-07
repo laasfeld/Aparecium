@@ -129,6 +129,9 @@ classdef ApareciumCommonImporterFunctions
             if isequal(handles.apareciumExperimentInput.hasChanged, 0) && isequal(handles.plateSimulatorInterface.attemptMidasInitialize, 1)
                 treatmentStructure = handles.midasTableController.getTreatmentStructure();
                 handles.plateSimulatorInterface.regeneratePlateSimulatorFromTreatmentStructure(treatmentStructure);
+            elseif isfield(handles, 'treatmentStruct') && strcmp(handles.treatmentStructure, 'Yes');
+                treatmentStructure = handles.treatmentStructure;
+                handles.plateSimulatorInterface.regeneratePlateSimulatorFromTreatmentStructure(treatmentStructure) 
             end
             handles = ApareciumCommonImporterFunctions.setUIModeToPlateSim(handles);
             ApareciumCommonImporterFunctions.figure1_ResizeFcn(handles.figure1, eventdata, handles);

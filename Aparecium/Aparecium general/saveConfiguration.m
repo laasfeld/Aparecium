@@ -6,13 +6,14 @@ function result = saveConfiguration(handles)
     namesTR = data(:, 1); % it is used in uisave, ignore warning
     valuesTR = data(:, 2)'; % it is used in uisave, ignore warning
     unitsTR = data(:, 3)'; % it is used in uisave, ignore warning
+    treatmentStructure = handles.plateSimulatorInterface.getTreatmentStructure();
     fileChooser = FileChooser();
     startingPath = fileChooser.chooseConfigurationFileSave(); 
     [fileName, filePath] = uiputfile([startingPath,'\','CF-',handles.fileName,'.MAT']);
     if isequal(fileName, 0) || isequal(filePath, 0)
         result = 0;
     elseif ~isequal(fileName, 0) && ~isequal(filePath, 0)
-        save( [filePath, fileName], 'dimensionalityTR','namesTR','valuesTR','unitsTR');
+        save( [filePath, fileName], 'dimensionalityTR','namesTR','valuesTR','unitsTR', 'treatmentStructure');
         result = 1;
         fileChooser.registerConfigurationFileSavePath(filePath);
     end
