@@ -39,7 +39,7 @@ function varargout = MembraneTools(varargin)
 
 % Edit the above text to modify the response to help MembraneTools
 
-% Last Modified by GUIDE v2.5 26-Jul-2018 10:22:04
+% Last Modified by GUIDE v2.5 13-Aug-2019 13:22:08
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1118,3 +1118,95 @@ function fromImageTickBox_CreateFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
+
+
+% --- Executes on selection change in detectionModel.
+function detectionModel_Callback(hObject, eventdata, handles)
+% hObject    handle to detectionModel (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns detectionModel contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from detectionModel
+contents = cellstr(get(hObject,'String'));
+if strcmp(contents{get(hObject,'Value')}, 'Sobel')
+    set(handles.ilastikParametersPanel, 'Visible', 'off')
+    set(handles.analysisParameters, 'Visible', 'on')
+    handles.imageProcessingParameters.detectionModel = handles.imageProcessingParameters.SobelModel;
+elseif strcmp(contents{get(hObject,'Value')}, 'Ilastik')
+    set(handles.ilastikParametersPanel, 'Visible', 'on')
+    set(handles.analysisParameters, 'Visible', 'off')
+    handles.imageProcessingParameters.detectionModel = handles.imageProcessingParameters.IlastikModel;
+end
+guidata(hObject, handles)
+
+% --- Executes during object creation, after setting all properties.
+function detectionModel_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to detectionModel (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function ilastikModelPath_Callback(hObject, eventdata, handles)
+% hObject    handle to ilastikModelPath (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of ilastikModelPath as text
+%        str2double(get(hObject,'String')) returns contents of ilastikModelPath as a double
+handles.imageProcessingParameters.ilastikModelPath = get(hObject,'String');
+guidata(hObject, handles)
+
+% --- Executes during object creation, after setting all properties.
+function ilastikModelPath_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to ilastikModelPath (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in chooseIlastikFile.
+function chooseIlastikFile_Callback(hObject, eventdata, handles)
+% hObject    handle to chooseIlastikFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+fileChooser = FileChooser();
+fullPath = fileChooser.chooseIlastikModelFile();
+handles.imageProcessingParameters.ilastikModelPath = fullPath;
+set(handles.ilastikModelPath, 'String', fullPath);
+guidata(hObject, handles)
+
+
+function ilastikMembraneLabelIndex_Callback(hObject, eventdata, handles)
+% hObject    handle to ilastikMembraneLabelIndex (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of ilastikMembraneLabelIndex as text
+%        str2double(get(hObject,'String')) returns contents of ilastikMembraneLabelIndex as a double
+handles.imageProcessingParameters.membraneLabelIndex = str2double(get(hObject,'String'));
+guidata(hObject, handles)
+
+% --- Executes during object creation, after setting all properties.
+function ilastikMembraneLabelIndex_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to ilastikMembraneLabelIndex (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

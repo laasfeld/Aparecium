@@ -537,6 +537,66 @@ classdef FileChooser < handle
            end
         end
         
+        function fullFilePath = chooseIlastikModelFile(this)
+            if isfield(this.settings, 'defaultIlastikModelPath')
+                startingPath = this.settings.defaultIlastikModelPath;
+            else
+                startingPath = '';
+            end
+            
+            [fileName, filePath] = uigetfile('*.ilp', 'Choose Ilastik model', startingPath);
+            fullFilePath = [filePath, fileName];
+
+            if isequal(fullFilePath(1,1),0)
+               error('User selected Cancel')
+            end
+            this.registerIlastikModelPath(filePath);
+        end
+        
+        function registerIlastikModelPath(this, path)
+           if isfield(this.settings, 'defaultIlastikModel_useLast')
+               if isequal(this.settings.defaultIlastikModel_useLast, true)
+                   this.settings.defaultIlastikModelPath = path;
+                   settings = this.settings; % ignore warning, it is used in the save
+                   if isdeployed
+                        save([pwd, '\', 'settings.mat'], 'settings');
+                   else
+                        save([this.settingsPath, 'settings.mat'], 'settings');
+                   end
+               end
+           end
+        end
+        
+        %% Ilastik methods
+        
+        function path = getIlastikExecutablePath(this)
+            if isfield(this.settings, 'IlastikExecutablePath')
+                path = this.settings.IlastikExecutablePath;
+            else
+                result = questdlg('Ilastik executable path not found! To attempt automatic search of Ilastik, click "Attempt search". Clicking "Cancel will stop analysis"','Ilastik not configured','Attempt search','Cancel', 'Attempt search');
+                switch result
+                    case 'Attempt search'
+                        ilastikPath = findIlastikPath();
+                        if isempty(ilastikPath)
+                           result = questdlg('Automatic search failed! Click "Manually" to manually select the Ilastik executable. Clicking "Cancel will stop analysis"','Ilastik not configured','Manually','Cancel', 'Manually');
+                           switch result
+                               case 'Manually'
+                                   [fileName, filePath] = uigetfile('*.exe', 'Select Ilastik executable', 'ilastik.exe');
+                                   path = [filePath, fileName];
+                               case 'Cancel'
+                                 path = '';
+                           end
+                                  
+                        else
+                           path = ilastikPath;
+                        end
+                    case 'Cancel'
+                        path = '';
+                end
+                       
+            end
+        end
+        
         %% model library methods
         
         function path = getModelLibraryPath(this)

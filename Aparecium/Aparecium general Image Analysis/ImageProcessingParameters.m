@@ -34,7 +34,15 @@ classdef ImageProcessingParameters < handle
         Fast = 'Image center';
         FromBinary = 'From binary image';
         Slopes = 'Slopes';
+        
         FromBinaryAndMask = 'From binary and mask image';
+        
+        IlastikModel = 'IlastikModel';
+        SobelModel = 'SobelModel';
+        
+        detectionModel = 'SobelModel';
+        membraneLabelIndex = 1;
+        ilastikModelPath = [];
         
         automaticallySaveMidasFile = 'on';
         midasFileSaveFormat = 'complete';

@@ -22,7 +22,7 @@ function varargout = SettingsUI(varargin)
 
 % Edit the above text to modify the response to help SettingsUI
 
-% Last Modified by GUIDE v2.5 21-Feb-2019 13:52:37
+% Last Modified by GUIDE v2.5 16-Aug-2019 11:38:27
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -80,6 +80,8 @@ set(handles.magellan, 'cdata', handles.folderImg);
 set(handles.MembraneTools, 'cdata', handles.folderImg);
 set(handles.IQMTools, 'cdata', handles.folderImg);
 set(handles.modelLibrary, 'cdata', handles.folderImg);
+set(handles.defaultIlastikModel, 'cdata', handles.folderImg);
+set(handles.IlastikExecutable, 'cdata', handles.folderImg);
 settings = [];
 load([handles.folderPath, 'settings']); 
 handles.settings = settings;
@@ -196,7 +198,7 @@ try
     set(handles.magellanPath,'String',settings.magellanPath);
 catch MException
     if isequal(MException.identifier, 'MATLAB:nonExistentField')
-        disp('Membrane Tools configuration path not found')
+        disp('Magellan default path not found')
         handles.settings.magellanPath = '';
     else
         rethrow(MException)
@@ -207,7 +209,7 @@ try
     set(handles.PerkinElmerPath,'String',settings.PerkinElmerPath);
 catch MException
     if isequal(MException.identifier, 'MATLAB:nonExistentField')
-        disp('Membrane Tools configuration path not found')
+        disp('PerkinElmer file default path not found')
         handles.settings.PerkinElmerPath = '';
     else
         rethrow(MException)
@@ -218,7 +220,7 @@ try
     set(handles.IQMToolsPath,'String',settings.IQMToolsPath);
 catch MException
     if isequal(MException.identifier, 'MATLAB:nonExistentField')
-        disp('Membrane Tools configuration path not found')
+        disp('IQMTools path not found')
         handles.settings.IQMToolsPath = '';
     else
         rethrow(MException)
@@ -229,8 +231,19 @@ try
     set(handles.modelLibraryPath,'String',settings.modelLibraryPath);
 catch MException
     if isequal(MException.identifier, 'MATLAB:nonExistentField')
-        disp('Membrane Tools configuration path not found')
+        disp('Model library path not found')
         handles.settings.modelLibraryPath = '';
+    else
+        rethrow(MException)
+    end
+end
+
+try
+    set(handles.defaultIlastikModelPath,'String',settings.defaultIlastikModelPath);
+catch MException
+    if isequal(MException.identifier, 'MATLAB:nonExistentField')
+        disp('Ilastik model default path not found')
+        handles.settings.defaultIlastikModelPath = '';
     else
         rethrow(MException)
     end
@@ -396,6 +409,28 @@ catch MException
     if isequal(MException.identifier, 'MATLAB:nonExistentField')
         disp('MembraneTools_useLast setting not found, using False')
         handles.settings.modelLibrary_useLast = false;
+    else
+        rethrow(MException)
+    end
+end
+
+try
+    set(handles.defaultIlastikModel_useLast, 'Value', settings.defaultIlastikModel_useLast);
+catch MException
+    if isequal(MException.identifier, 'MATLAB:nonExistentField')
+        disp('defaultIlastikModel_useLast setting not found, using False')
+        handles.settings.defaultIlastikModel_useLast = false;
+    else
+        rethrow(MException)
+    end
+end
+
+try
+    set(handles.IlastikExecutablePath_useLast, 'Value', settings.IlastikExecutablePath_useLast);
+catch MException
+    if isequal(MException.identifier, 'MATLAB:nonExistentField')
+        disp('defaultIlastikModel_useLast setting not found, using False')
+        handles.settings.IlastikExecutablePath_useLast = false;
     else
         rethrow(MException)
     end
@@ -604,6 +639,7 @@ handles.settings.magellan_useLast = get(handles.magellan_useLast, 'Value');
 handles.settings.MembraneTools_useLast = get(handles.MembraneTools_useLast, 'Value');
 handles.settings.IQMTools_useLast = get(handles.IQMTools_useLast, 'Value');
 handles.settings.modelLibrary_useLast = get(handles.modelLibrary_useLast, 'Value');
+handles.settings.defaultIlastikModel_useLast = get(handles.defaultIlastikModel_useLast, 'Value');
 
 
 % --- Executes on button press in save.
@@ -997,7 +1033,7 @@ function allCheckbox_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of allCheckbox
 value = get(hObject,'Value');
 tickBoxes = [handles.PHERAStarASCII_useLast, handles.NeoASCII_useLast, handles.PHERAStarDatabase_useLast, handles.MIDAS_useLast, handles.Excel_useLast,... 
-    handles.SBToolbox_useLast, handles.Configurations_useLast, handles.GCF_useLast, handles.FCF_useLast, handles.perkinElmer_useLast, handles.magellan_useLast, handles.MembraneTools_useLast, handles.IQMTools_useLast, handles.modelLibrary_useLast];
+    handles.SBToolbox_useLast, handles.Configurations_useLast, handles.GCF_useLast, handles.FCF_useLast, handles.perkinElmer_useLast, handles.magellan_useLast, handles.MembraneTools_useLast, handles.IQMTools_useLast, handles.modelLibrary_useLast, handles.defaultIlastikModel_useLast];
 for i = 1 : numel(tickBoxes)
    set(tickBoxes(i), 'Value', value);
 end
@@ -1199,3 +1235,93 @@ function modelLibrary_useLast_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of modelLibrary_useLast
+
+
+
+function defaultIlastikModelPath_Callback(hObject, eventdata, handles)
+% hObject    handle to defaultIlastikModelPath (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of defaultIlastikModelPath as text
+%        str2double(get(hObject,'String')) returns contents of defaultIlastikModelPath as a double
+handles.settings.defaultIlastikModelPath = get(hObject,'String');
+guidata(hObject, handles);
+
+% --- Executes during object creation, after setting all properties.
+function defaultIlastikModelPath_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to defaultIlastikModelPath (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in defaultIlastikModel.
+function defaultIlastikModel_Callback(hObject, eventdata, handles)
+% hObject    handle to defaultIlastikModel (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[fileName, filePath] = uigetfile('*.ilp', 'Select default Ilastik model', handles.settings.defaultIlastikModelPath);
+if ~isequal(fileName, 0)
+    handles.settings.defaultIlastikModelPath = [filePath, fileName];
+    set(handles.defaultIlastikModelPath,'String',handles.settings.defaultIlastikModelPath);
+end
+guidata(hObject,handles);
+
+% --- Executes on button press in defaultIlastikModel_useLast.
+function defaultIlastikModel_useLast_Callback(hObject, eventdata, handles)
+% hObject    handle to defaultIlastikModel_useLast (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of defaultIlastikModel_useLast
+
+
+
+function IlastikExecutablePath_Callback(hObject, eventdata, handles)
+% hObject    handle to IlastikExecutablePath (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of IlastikExecutablePath as text
+%        str2double(get(hObject,'String')) returns contents of IlastikExecutablePath as a double
+handles.settings.IlastikExecutablePath = get(hObject,'String');
+guidata(hObject, handles);
+
+% --- Executes during object creation, after setting all properties.
+function IlastikExecutablePath_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to IlastikExecutablePath (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in IlastikExecutable.
+function IlastikExecutable_Callback(hObject, eventdata, handles)
+% hObject    handle to IlastikExecutable (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[fileName, filePath] = uigetfile('*.exe', 'Select Ilastik executable path', handles.settings.IlastikExecutablePath);
+if ~isequal(fileName, 0)
+    handles.settings.IlastikExecutablePath = [filePath, fileName];
+    set(handles.IlastikExecutablePath,'String',handles.settings.IlastikExecutablePath);
+end
+guidata(hObject,handles);
+
+% --- Executes on button press in IlastikExecutablePath_useLast.
+function IlastikExecutablePath_useLast_Callback(hObject, eventdata, handles)
+% hObject    handle to IlastikExecutablePath_useLast (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of IlastikExecutablePath_useLast

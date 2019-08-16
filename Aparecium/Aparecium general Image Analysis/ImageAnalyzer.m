@@ -597,12 +597,17 @@ classdef ImageAnalyzer < handle
                             for imageIndex = 1 : numel(measurementParams)
                                 measurementParams(imageIndex).results = ''; % create a field so parfor does not crash
                             end
-                            functionName = str2func([class(this), '.analyzeMembranesStatic']); 
-                            parfor imageIndex = 1 : numel(measurementParams)% parfor should be here                            
-                                measurementParams(imageIndex).results = functionName(...
-                                measurementParams(imageIndex).wellName, measurementParams(imageIndex).secondaryPicOfWell, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).imageProcessingParams,...
-                                measurementParams(imageIndex).timeParameters, measurementParams(imageIndex).thresholdFunctionHandle, measurementParams(imageIndex).calculationMethod, measurementParams(imageIndex).qualityMask, ...
-                                measurementParams(imageIndex).parametersToCalculate);
+                            functionName = str2func([class(this), '.analyzeMembranesStatic']);
+                            if this.imageProcessingParameters.detectionModel == this.imageProcessingParameters.IlastikModel
+                                IlastikAnalysis = str2func([class(this), '.performIlastikAnalysis']);
+                                measurementParams = IlastikAnalysis(measurementParams); 
+                            else
+                                parfor imageIndex = 1 : numel(measurementParams)% parfor should be here                            
+                                    measurementParams(imageIndex).results = functionName(...
+                                    measurementParams(imageIndex).wellName, measurementParams(imageIndex).secondaryPicOfWell, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).imageProcessingParams,...
+                                    measurementParams(imageIndex).timeParameters, measurementParams(imageIndex).thresholdFunctionHandle, measurementParams(imageIndex).calculationMethod, measurementParams(imageIndex).qualityMask, ...
+                                    measurementParams(imageIndex).parametersToCalculate, []);
+                                end
                             end
                             for imageIndex = 1 : numel(measurementParams)
                                wellMeasurementInfo{measurementParams(imageIndex).wellIndex}{measurementParams(imageIndex).picOfWell} = measurementParams(imageIndex).results;
@@ -650,7 +655,24 @@ classdef ImageAnalyzer < handle
                         elseif strcmp(this.ICSEOrMembrane, 'Membrane')
                             nameArray = this.imageImporter.getNameArrayOfFolder(folder);
                             secondaryNameArray = this.imageImporter.getSecondaryNameArrayOfFolder(folder);
-                            wellMeasurementInfo{well} = this.analyzeOneWell(well, nameArray, secondaryNameArray, wellID, directoryPath, folder);
+                            if this.imageProcessingParameters.detectionModel == this.imageProcessingParameters.IlastikModel
+                                for well = 1 : numel(wellID)   
+                                    if well == 1
+                                       measurementParams = this.configureWellMeasurementParameters(well, nameArray, secondaryNameArray, wellID, directoryPath, folder); 
+                                    else
+                                       measurementParams = [measurementParams, this.configureWellMeasurementParameters(well, nameArray, secondaryNameArray, wellID, directoryPath, folder)];
+                                    end                                   
+                                       %wellMeasurementInfo{well} = this.analyzeOneWell(well, nameArray, secondaryNameArray, wellID, directoryPath, folder);
+                                end
+                                IlastikAnalysis = str2func([class(this), '.performIlastikAnalysis']);
+                                measurementParams = IlastikAnalysis(measurementParams); 
+                                for imageIndex = 1 : numel(measurementParams)
+                                    wellMeasurementInfo{measurementParams(imageIndex).wellIndex}{measurementParams(imageIndex).picOfWell} = measurementParams(imageIndex).results;
+                                    wellMeasurementInfo{measurementParams(imageIndex).wellIndex}{measurementParams(imageIndex).picOfWell}.imageName = measurementParams(imageIndex).imageName;
+                                end                                 
+                            else                                
+                                wellMeasurementInfo{well} = this.analyzeOneWell(well, nameArray, secondaryNameArray, wellID, directoryPath, folder);
+                            end
                         end
                     end
             end
@@ -756,7 +778,7 @@ classdef ImageAnalyzer < handle
                  elseif strcmp(ICSEOrMembrane, 'Membrane')
                      %try
                         functionName = str2func([class(this), '.analyzeMembranesStatic']); 
-                        resultStructure = functionName(nameArrayOfWell{picOfWell}, secondaryNameArrayOfWell{picOfWell}, directoryPath, imageProcessingParams, timeParameters, thresholdFunctionHandle, 'Binary', qualityMasks{well}, this.parametersToCalculate);
+                        resultStructure = functionName(nameArrayOfWell{picOfWell}, secondaryNameArrayOfWell{picOfWell}, directoryPath, directoryPath, imageProcessingParams, timeParameters, thresholdFunctionHandle, 'Binary', qualityMasks{well}, this.parametersToCalculate, []);
                         wellMeasurementInfo{picOfWell}.averageMembraneIntensity = resultStructure.averageMembraneIntensity;
                         wellMeasurementInfo{picOfWell} = resultStructure;
                         wellMeasurementInfo{picOfWell}.imageName = nameArrayOfWell{picOfWell}; 
