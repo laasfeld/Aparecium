@@ -335,18 +335,18 @@ classdef ImageImporter < handle
                     swapBackWells{end + 1} = [wellID{i}(1), '0',wellID{i}(2)];
                     swapBackOriginals{end + 1} = wellID{i}; 
                 elseif isequal(numel(regexp(wellID{i},'([A-Z]{1,2})', 'match', 'once')), 2) && isequal(numel(regexp(wellID{i},'([0-9]{1,2})', 'match', 'once')), 1);
-                    twoLetterArray{end + 1} = [wellID{i}(1:2), '0',wellID{i}(2)];
-                    swapBackWells{end + 1} = [wellID{i}(1), '0',wellID{i}(2)];
+                    twoLetterArray{end + 1} = [wellID{i}(1:2), '0',wellID{i}(3)];
+                    swapBackWells{end + 1} = [wellID{i}(1:2), '0',wellID{i}(3)];
                     swapBackOriginals{end + 1} = wellID{i}; 
                 end
             end
-            swapBackWells = unique(swapBackWells);
+            swapBackWells = unique(swapBackWells, 'stable');
             swapBackOriginals = unique(swapBackOriginals, 'stable');
-            oneLetterArray = ImageImporter.sortWellNumbers(unique(oneLetterArray));
-            twoLetterArray = ImageImporter.sortWellNumbers(unique(twoLetterArray));
+            oneLetterArray = natsort(unique(oneLetterArray));
+            twoLetterArray = natsort(unique(twoLetterArray));
             
-            oneLetterArray = unique(oneLetterArray);
-            twoLetterArray = unique(twoLetterArray);
+            %oneLetterArray = unique(oneLetterArray);
+            %twoLetterArray = unique(twoLetterArray);
             wellID = [oneLetterArray, twoLetterArray];
             for index = 1 : numel(swapBackWells)
                 swapIndex = strcmp(wellID, swapBackWells(index));

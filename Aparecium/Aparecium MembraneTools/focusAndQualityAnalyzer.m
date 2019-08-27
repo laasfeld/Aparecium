@@ -150,13 +150,19 @@ try
     set(handles.fileName, 'String', ['Current image is ', handles.nameArray{handles.imagesOfWell{handles.wellIndex}(handles.imageIndex(handles.wellIndex))}]);
     if( isequal(get(handles.normalize,'Value'), 0) )
         image = imread([handles.directoryName, '\', handles.nameArray{handles.imagesOfWell{handles.wellIndex}(handles.imageIndex(handles.wellIndex))}]);
-        image(handles.masks{handles.wellIndex}) = 0;
+        mask = handles.masks{handles.wellIndex};
+        masked = image;
+        masked(mask) = 0;
+        image = cat(3, cat(3, image, masked), masked);
         imshow(image, 'Parent', handles.axes1);
     else
         image = double(imread([handles.directoryName, '\', handles.nameArray{handles.imagesOfWell{handles.wellIndex}(handles.imageIndex(handles.wellIndex))}]));
         image = (image - min(min(image)));
         image = image/max(max(image));
-        image(handles.masks{handles.wellIndex}) = 0;
+        mask = handles.masks{handles.wellIndex};
+        masked = image;
+        masked(mask) = 0;
+        image = cat(3, cat(3, image, masked), masked);
         imshow(image, 'Parent', handles.axes1);
     end
 catch
@@ -363,7 +369,10 @@ try
     %     end
     % end
     % image(mask) = image(mask) + 0.3*(image(round(rand(sum(sum(mask)), 1)*numel(image)))-mean(mean(image)));
-    image(mask) = 0;
+    masked = image;
+    masked(mask) = 0;
+    image = cat(3, cat(3, image, masked), masked);
+    %image(mask) = 0;
     imshow(image, 'Parent', handles.axes1);
 catch
     'stop'

@@ -416,7 +416,7 @@ classdef SBToolboxExporter <  ExportPanelController
                     
                     % loop and remove all measurement times where all
                     % measurement values are NaN
-                    experimentData(isnan(nansum(cell2mat(experimentData(:, 3:end)), 2)), :) = [];
+                    experimentData(isnan(sum(cell2mat(experimentData(:, 3:end)), 2)), :) = [];
                     experimentData(1,1) = {'Values'};
           
                     this.outputTableStruct{group}{subgroup}.SBTable = [Header;experimentData];

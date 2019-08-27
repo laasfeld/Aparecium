@@ -684,8 +684,10 @@ classdef ImageAnalyzer < handle
             thresholdFunctionHandle = this.thresholdFunctionHandle;
             imagesOfWell = [];
             
+            underscoreLocations = strfind(nameArray, '_');
+            
             for pic = 1 : numel(nameArray)
-                 if strfind(nameArray{pic}, wellID{well})
+                 if strfind(nameArray{pic}(1:underscoreLocations{pic}(1)-1), wellID{well})
                      imagesOfWell(end + 1) = pic;
                  end
             end
