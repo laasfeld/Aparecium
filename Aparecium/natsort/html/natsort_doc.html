@@ -1,0 +1,276 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>NATSORT Examples</title><meta name="generator" content="MATLAB 7.11"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2018-03-25"><meta name="DC.source" content="natsort_doc.m"><style type="text/css">
+
+body {
+  background-color: white;
+  margin:10px;
+}
+
+h1 {
+  color: #990000; 
+  font-size: x-large;
+}
+
+h2 {
+  color: #990000;
+  font-size: medium;
+}
+
+/* Make the text shrink to fit narrow windows, but not stretch too far in 
+wide windows. */ 
+p,h1,h2,div.content div {
+  max-width: 600px;
+  /* Hack for IE6 */
+  width: auto !important; width: 600px;
+}
+
+pre.codeinput {
+  background: #EEEEEE;
+  padding: 10px;
+}
+@media print {
+  pre.codeinput {word-wrap:break-word; width:100%;}
+} 
+
+span.keyword {color: #0000FF}
+span.comment {color: #228B22}
+span.string {color: #A020F0}
+span.untermstring {color: #B20000}
+span.syscmd {color: #B28C00}
+
+pre.codeoutput {
+  color: #666666;
+  padding: 10px;
+}
+
+pre.error {
+  color: red;
+}
+
+p.footer {
+  text-align: right;
+  font-size: xx-small;
+  font-weight: lighter;
+  font-style: italic;
+  color: gray;
+}
+
+  </style></head><body><div class="content"><h1>NATSORT Examples</h1><!--introduction--><p>The function <a href="https://www.mathworks.com/matlabcentral/fileexchange/34464"><tt>NATSORT</tt></a> sorts a cell array of strings (1xN char), taking into account any number values within the strings. This is known as a <i>natural order sort</i> or an <i>alphanumeric sort</i>. Note that MATLAB's inbuilt <a href="http://www.mathworks.com/help/matlab/ref/sort.html"><tt>SORT</tt></a> function sorts only by character order, as does <tt>SORT</tt> in most programming languages.</p><p>For sorting filenames or filepaths use <a href="https://www.mathworks.com/matlabcentral/fileexchange/47434"><tt>NATSORTFILES</tt></a>.</p><p>For sorting the rows of a cell array of strings use <a href="https://www.mathworks.com/matlabcentral/fileexchange/47433"><tt>NATSORTROWS</tt></a>.</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Basic Usage: Integer Numbers</a></li><li><a href="#2">Output 2: Sort Index</a></li><li><a href="#3">Output 3: Debugging Array</a></li><li><a href="#4">Regular Expression: Decimal Numbers, E-notation, +/- Sign</a></li><li><a href="#5">Regular Expression: Hexadecimal, Octal, and Binary Integers</a></li><li><a href="#6">Regular Expression: Interactive Regular Expression Tool</a></li><li><a href="#7"><tt>SSCANF</tt> Format String: Hexadecimal, Octal, Binary, and 64 Bit Integers</a></li><li><a href="#8">Sort Options: Case Sensitivity</a></li><li><a href="#9">Sort Options: Sort Direction</a></li><li><a href="#10">Sort Options: Order of Numbers Relative to Characters</a></li></ul></div><h2>Basic Usage: Integer Numbers<a name="1"></a></h2><p>By default <tt>NATSORT</tt> interprets consecutive digits as being part of a single integer, each number is considered to be as wide as one character:</p><pre class="codeinput">A = {<span class="string">'a2'</span>, <span class="string">'a10'</span>, <span class="string">'a1'</span>};
+sort(A)
+natsort(A)
+B = {<span class="string">'v10.6'</span>, <span class="string">'v9.10'</span>, <span class="string">'v9.5'</span>, <span class="string">'v10.10'</span>, <span class="string">'v9.10.20'</span>, <span class="string">'v9.10.8'</span>};
+sort(B)
+natsort(B)
+</pre><pre class="codeoutput">ans = 
+    'a1'    'a10'    'a2'
+ans = 
+    'a1'    'a2'    'a10'
+ans = 
+    'v10.10'    'v10.6'    'v9.10'    'v9.10.20'    'v9.10.8'    'v9.5'
+ans = 
+    'v9.5'    'v9.10'    'v9.10.8'    'v9.10.20'    'v10.6'    'v10.10'
+</pre><h2>Output 2: Sort Index<a name="2"></a></h2><p>The second output argument is a numeric array of the sort indices <tt>ndx</tt>, such that <tt>Y = X(ndx)</tt> where <tt>Y = natsort(X)</tt>:</p><pre class="codeinput">[~,ndx] = natsort(A)
+</pre><pre class="codeoutput">ndx =
+     3     1     2
+</pre><h2>Output 3: Debugging Array<a name="3"></a></h2><p>The third output is a cell array which contains individual characters and numbers (after converting to numeric). This is useful for confirming that the numbers are being correctly identified by the regular expression. Note that the rows of the debugging cell array are <a href="https://www.mathworks.com/company/newsletters/articles/matrix-indexing-in-matlab.html">linearly indexed</a> from the input cell array.</p><pre class="codeinput">[~,~,dbg] = natsort(B)
+</pre><pre class="codeoutput">dbg = 
+    'v'    [10]    '.'    [ 6]    ''     ''  
+    'v'    [ 9]    '.'    [10]    ''     ''  
+    'v'    [ 9]    '.'    [ 5]    ''     ''  
+    'v'    [10]    '.'    [10]    ''     ''  
+    'v'    [ 9]    '.'    [10]    '.'    [20]
+    'v'    [ 9]    '.'    [10]    '.'    [ 8]
+</pre><h2>Regular Expression: Decimal Numbers, E-notation, +/- Sign<a name="4"></a></h2><p>The <tt>NATSORT</tt> algorithm uses <a href="http://www.mathworks.com/help/matlab/ref/regexp.html"><tt>REGEXP</tt></a> to detect numbers in the strings, and so provides a convenient way to specify the format of the numbers, e.g. decimal, +/- sign, etc.. Simply provide an appropriate <a href="http://www.mathworks.com/help/matlab/matlab_prog/regular-expressions.html">regular expression</a> as the second input argument <tt>xpr</tt>:</p><pre class="codeinput">C = {<span class="string">'test+Inf'</span>, <span class="string">'test11.5'</span>, <span class="string">'test-1.4'</span>, <span class="string">'test'</span>, <span class="string">'test-Inf'</span>, <span class="string">'test+0.3'</span>};
+sort(C)
+natsort(C, <span class="string">'(-|+)?(Inf|\d+\.?\d*)'</span>)
+D = {<span class="string">'0.56e007'</span>, <span class="string">''</span>, <span class="string">'4.3E-2'</span>, <span class="string">'10000'</span>, <span class="string">'9.8'</span>};
+sort(D)
+natsort(D, <span class="string">'\d+\.?\d*(E(+|-)?\d+)?'</span>)
+</pre><pre class="codeoutput">ans = 
+    'test'    'test+0.3'    'test+Inf'    'test-1.4'    'test-Inf'    'test11.5'
+ans = 
+    'test'    'test-Inf'    'test-1.4'    'test+0.3'    'test11.5'    'test+Inf'
+ans = 
+    ''    '0.56e007'    '10000'    '4.3E-2'    '9.8'
+ans = 
+    ''    '4.3E-2'    '9.8'    '10000'    '0.56e007'
+</pre><h2>Regular Expression: Hexadecimal, Octal, and Binary Integers<a name="5"></a></h2><p>Integers encoded in hexadecimal, octal, or binary may also be parsed and sorted correctly. This requires both an appropriate regular expression that can detect the integers correctly and also a suitable <tt>SSCANF</tt> format string for converting the detected number string into numeric values (see the section " <tt>SSCANF</tt> Format String"):</p><pre class="codeinput">E = {<span class="string">'a0X7C4z'</span>, <span class="string">'a0X5z'</span>, <span class="string">'a0X18z'</span>, <span class="string">'aFz'</span>};
+sort(E)
+natsort(E, <span class="string">'(?&lt;=a)(0X)?[0-9A-F]+'</span>, <span class="string">'%x'</span>)
+F = {<span class="string">'a11111000100z'</span>, <span class="string">'a0B101z'</span>, <span class="string">'a0B000000000011000z'</span>, <span class="string">'a1111z'</span>};
+sort(F)
+natsort(F, <span class="string">'(0B)?[01]+'</span>, <span class="string">'%b'</span>)
+</pre><pre class="codeoutput">ans = 
+    'a0X18z'    'a0X5z'    'a0X7C4z'    'aFz'
+ans = 
+    'a0X5z'    'aFz'    'a0X18z'    'a0X7C4z'
+ans = 
+    'a0B000000000011000z'    'a0B101z'    'a11111000100z'    'a1111z'
+ans = 
+    'a0B101z'    'a1111z'    'a0B000000000011000z'    'a11111000100z'
+</pre><h2>Regular Expression: Interactive Regular Expression Tool<a name="6"></a></h2><p>Regular expressions are powerful and compact, but getting them right is not always easy. One assistance is to download my interactive tool <a href="https://www.mathworks.com/matlabcentral/fileexchange/48930"><tt>IREGEXP</tt></a>, which lets you quickly try different regular expressions and see all of <a href="https://www.mathworks.com/help/matlab/ref/regexp.html"><tt>REGEXP</tt></a>'s outputs displayed and updated as you type.</p><h2><tt>SSCANF</tt> Format String: Hexadecimal, Octal, Binary, and 64 Bit Integers<a name="7"></a></h2><p>The default format string <tt>'%f'</tt> will correctly parse many common number types: this includes decimal integers, decimal digits, <tt>NaN</tt>, <tt>Inf</tt>, and numbers written in E-notation. For hexadecimal, octal, binary, and 64-bit integers the format string must be specified as an input argument: the supported <a href="http://www.mathworks.com/help/matlab/ref/sscanf.html"><tt>SSCANF</tt></a> formats are shown in this table:</p><p>
+<table>
+ <tr><th>Format String</th><th>Number Types</th></tr>
+ <tr><td>%e, %f, %g</td>   <td>floating point numbers</td></tr>
+ <tr><td>%b</td>           <td>binary integer (custom parsing, not SSCANF)</td></tr>
+ <tr><td>%d</td>           <td>signed decimal</td></tr>
+ <tr><td>%i</td>           <td>signed decimal, octal, or hexadecimal</td></tr>
+ <tr><td>%ld, %li</td>     <td>signed 64 bit, decimal, octal, or hexadecimal</td></tr>
+ <tr><td>%u</td>           <td>unsigned decimal</td></tr>
+ <tr><td>%o</td>           <td>unsigned octal</td></tr>
+ <tr><td>%x</td>           <td>unsigned hexadecimal</td></tr>
+ <tr><td>%lu, %lo, %lx</td><td>unsigned 64-bit decimal, octal, or hexadecimal</td></tr>
+</table>
+</p><p>For example large integers can be converted to 64-bit numerics, with their full precision:</p><pre class="codeinput">natsort({<span class="string">'a18446744073709551615z'</span>, <span class="string">'a18446744073709551614z'</span>}, [], <span class="string">'%lu'</span>)
+</pre><pre class="codeoutput">ans = 
+    'a18446744073709551614z'    'a18446744073709551615z'
+</pre><h2>Sort Options: Case Sensitivity<a name="8"></a></h2><p>By default <tt>NATSORT</tt> provides a case-insensitive sort of the input strings. An optional argument controls the case sensitivity: the option <tt>'ignorecase'</tt> treats all letter characters as upper-case when sorting:</p><pre class="codeinput">G = {<span class="string">'a2'</span>, <span class="string">'A20'</span>, <span class="string">'A1'</span>, <span class="string">'a10'</span>,<span class="string">'A2'</span>, <span class="string">'a1'</span>};
+natsort(G, [], <span class="string">'ignorecase'</span>) <span class="comment">% default</span>
+natsort(G, [], <span class="string">'matchcase'</span>)
+</pre><pre class="codeoutput">ans = 
+    'A1'    'a1'    'a2'    'A2'    'a10'    'A20'
+ans = 
+    'A1'    'A2'    'A20'    'a1'    'a2'    'a10'
+</pre><h2>Sort Options: Sort Direction<a name="9"></a></h2><p>By default <tt>NATSORT</tt> provides an ascending sort of the input strings. An optional argument controls the sort direction (characters and numbers are either both ascending or both descending):</p><pre class="codeinput">H = {<span class="string">'2'</span>, <span class="string">'a'</span>, <span class="string">'3'</span>, <span class="string">'B'</span>, <span class="string">'1'</span>};
+natsort(H, [], <span class="string">'ascend'</span>) <span class="comment">% default</span>
+natsort(H, [], <span class="string">'descend'</span>)
+</pre><pre class="codeoutput">ans = 
+    '1'    '2'    '3'    'a'    'B'
+ans = 
+    'B'    'a'    '3'    '2'    '1'
+</pre><h2>Sort Options: Order of Numbers Relative to Characters<a name="10"></a></h2><p>By default <tt>NATSORT</tt> treats the detected numbers as if they sorted with the digit characters. An optional argument allows the numbers to be sorted before or after all characters:</p><pre class="codeinput">X = num2cell(char(32+randperm(63)));
+cell2mat(natsort(X, [], <span class="string">'asdigit'</span>)) <span class="comment">% default</span>
+cell2mat(natsort(X, [], <span class="string">'beforechar'</span>))
+cell2mat(natsort(X, [], <span class="string">'afterchar'</span>))
+</pre><pre class="codeoutput">ans =
+!"#$%&amp;'()*+,-./0123456789:;&lt;=&gt;?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_
+ans =
+0123456789!"#$%&amp;'()*+,-./:;&lt;=&gt;?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_
+ans =
+!"#$%&amp;'()*+,-./:;&lt;=&gt;?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_0123456789
+</pre><p class="footer"><br>
+      Published with MATLAB&reg; 7.11<br></p></div><!--
+##### SOURCE BEGIN #####
+%% NATSORT Examples
+% The function <https://www.mathworks.com/matlabcentral/fileexchange/34464
+% |NATSORT|> sorts a cell array of strings (1xN char), taking into account
+% any number values within the strings. This is known as a _natural order
+% sort_ or an _alphanumeric sort_. Note that MATLAB's inbuilt
+% <http://www.mathworks.com/help/matlab/ref/sort.html |SORT|> function sorts
+% only by character order, as does |SORT| in most programming languages.
+%
+% For sorting filenames or filepaths use
+% <https://www.mathworks.com/matlabcentral/fileexchange/47434 |NATSORTFILES|>.
+%
+% For sorting the rows of a cell array of strings use
+% <https://www.mathworks.com/matlabcentral/fileexchange/47433 |NATSORTROWS|>.
+%
+%% Basic Usage: Integer Numbers
+% By default |NATSORT| interprets consecutive digits as being part of a
+% single integer, each number is considered to be as wide as one character:
+A = {'a2', 'a10', 'a1'};
+sort(A)
+natsort(A)
+B = {'v10.6', 'v9.10', 'v9.5', 'v10.10', 'v9.10.20', 'v9.10.8'};
+sort(B)
+natsort(B)
+%% Output 2: Sort Index
+% The second output argument is a numeric array of the sort indices |ndx|,
+% such that |Y = X(ndx)| where |Y = natsort(X)|:
+[~,ndx] = natsort(A)
+%% Output 3: Debugging Array
+% The third output is a cell array which contains individual characters and
+% numbers (after converting to numeric). This is useful for confirming that
+% the numbers are being correctly identified by the regular expression.
+% Note that the rows of the debugging cell array are
+% <https://www.mathworks.com/company/newsletters/articles/matrix-indexing-in-matlab.html
+% linearly indexed> from the input cell array.
+[~,~,dbg] = natsort(B)
+%% Regular Expression: Decimal Numbers, E-notation, +/- Sign
+% The |NATSORT| algorithm uses <http://www.mathworks.com/help/matlab/ref/regexp.html
+% |REGEXP|> to detect numbers in the strings, and so provides a convenient
+% way to specify the format of the numbers, e.g. decimal, +/- sign, etc..
+% Simply provide an appropriate <http://www.mathworks.com/help/matlab/matlab_prog/regular-expressions.html
+% regular expression> as the second input argument |xpr|:
+C = {'test+Inf', 'test11.5', 'test-1.4', 'test', 'test-Inf', 'test+0.3'};
+sort(C)
+natsort(C, '(-|+)?(Inf|\d+\.?\d*)')
+D = {'0.56e007', '', '4.3E-2', '10000', '9.8'};
+sort(D)
+natsort(D, '\d+\.?\d*(E(+|-)?\d+)?')
+%% Regular Expression: Hexadecimal, Octal, and Binary Integers
+% Integers encoded in hexadecimal, octal, or binary may also be parsed and
+% sorted correctly. This requires both an appropriate regular expression
+% that can detect the integers correctly and also a suitable |SSCANF|
+% format string for converting the detected number string into numeric
+% values (see the section " |SSCANF| Format String"):
+E = {'a0X7C4z', 'a0X5z', 'a0X18z', 'aFz'};
+sort(E)
+natsort(E, '(?<=a)(0X)?[0-9A-F]+', '%x')
+F = {'a11111000100z', 'a0B101z', 'a0B000000000011000z', 'a1111z'};
+sort(F)
+natsort(F, '(0B)?[01]+', '%b')
+%% Regular Expression: Interactive Regular Expression Tool
+% Regular expressions are powerful and compact, but getting them right is
+% not always easy. One assistance is to download my interactive tool
+% <https://www.mathworks.com/matlabcentral/fileexchange/48930 |IREGEXP|>,
+% which lets you quickly try different regular expressions and see all of
+% <https://www.mathworks.com/help/matlab/ref/regexp.html |REGEXP|>'s
+% outputs displayed and updated as you type.
+%% |SSCANF| Format String: Hexadecimal, Octal, Binary, and 64 Bit Integers
+% The default format string |'%f'| will correctly parse many common number
+% types: this includes decimal integers, decimal digits, |NaN|, |Inf|,
+% and numbers written in E-notation. For hexadecimal, octal, binary, and
+% 64-bit integers the format string must be specified as an input argument:
+% the supported <http://www.mathworks.com/help/matlab/ref/sscanf.html
+% |SSCANF|> formats are shown in this table:
+%
+% <html>
+% <table>
+%  <tr><th>Format String</th><th>Number Types</th></tr>
+%  <tr><td>%e, %f, %g</td>   <td>floating point numbers</td></tr>
+%  <tr><td>%b</td>           <td>binary integer (custom parsing, not SSCANF)</td></tr>
+%  <tr><td>%d</td>           <td>signed decimal</td></tr>
+%  <tr><td>%i</td>           <td>signed decimal, octal, or hexadecimal</td></tr>
+%  <tr><td>%ld, %li</td>     <td>signed 64 bit, decimal, octal, or hexadecimal</td></tr>
+%  <tr><td>%u</td>           <td>unsigned decimal</td></tr>
+%  <tr><td>%o</td>           <td>unsigned octal</td></tr>
+%  <tr><td>%x</td>           <td>unsigned hexadecimal</td></tr>
+%  <tr><td>%lu, %lo, %lx</td><td>unsigned 64-bit decimal, octal, or hexadecimal</td></tr>
+% </table>
+% </html>
+%
+% For example large
+% integers can be converted to 64-bit numerics, with their full precision:
+natsort({'a18446744073709551615z', 'a18446744073709551614z'}, [], '%lu')
+%% Sort Options: Case Sensitivity
+% By default |NATSORT| provides a case-insensitive sort of the input
+% strings. An optional argument controls the case sensitivity: the option
+% |'ignorecase'| treats all letter characters as upper-case when sorting:
+G = {'a2', 'A20', 'A1', 'a10','A2', 'a1'};
+natsort(G, [], 'ignorecase') % default
+natsort(G, [], 'matchcase')
+%% Sort Options: Sort Direction
+% By default |NATSORT| provides an ascending sort of the input strings. An
+% optional argument controls the sort direction (characters and numbers
+% are either both ascending or both descending):
+H = {'2', 'a', '3', 'B', '1'};
+natsort(H, [], 'ascend') % default
+natsort(H, [], 'descend')
+%% Sort Options: Order of Numbers Relative to Characters
+% By default |NATSORT| treats the detected numbers as if they sorted with
+% the digit characters. An optional argument allows the numbers to be
+% sorted before or after all characters:
+X = num2cell(char(32+randperm(63)));
+cell2mat(natsort(X, [], 'asdigit')) % default
+cell2mat(natsort(X, [], 'beforechar'))
+cell2mat(natsort(X, [], 'afterchar'))
+##### SOURCE END #####
+--></body></html>
