@@ -598,7 +598,7 @@ classdef ImageAnalyzer < handle
                                 measurementParams(imageIndex).results = ''; % create a field so parfor does not crash
                             end
                             functionName = str2func([class(this), '.analyzeMembranesStatic']);
-                            if this.imageProcessingParameters.detectionModel == this.imageProcessingParameters.IlastikModel
+                            if strcmp(this.imageProcessingParameters.detectionModel, this.imageProcessingParameters.IlastikModel)
                                 IlastikAnalysis = str2func([class(this), '.performIlastikAnalysis']);
                                 measurementParams = IlastikAnalysis(measurementParams); 
                             else
