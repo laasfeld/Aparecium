@@ -139,17 +139,17 @@ function handles = generateTable(hObject, handles)
 
 for readIndex = 1 : numel(handles.experimentDataStructureArray)
     tableData{readIndex, 1} = readIndex;
-    tableData{readIndex, 2} = handles.sortedListOfReads{readIndex}.interval * handles.sortedListOfReads{readIndex}.numberOfCycles;
+    tableData{readIndex, 2} = handles.sortedListOfReads{readIndex}.interval * handles.sortedListOfReads{readIndex}.numberOfCycles + handles.sortedListOfReads{readIndex}.getTimeOfFirstRead();
     tableData{readIndex, 3} = 0;
     if isequal(readIndex, 1)
         tableData{readIndex, 4} = 0;
         tableData{readIndex, 5} = 0;
         tableData{readIndex, 6} = true;
     else
-        tableData{readIndex, 4} = handles.sortedListOfReads{readIndex - 1}.interval * handles.sortedListOfReads{readIndex - 1}.numberOfCycles;
+        tableData{readIndex, 4} = handles.sortedListOfReads{readIndex - 1}.interval * handles.sortedListOfReads{readIndex - 1}.numberOfCycles + handles.sortedListOfReads{readIndex - 1}.getTimeOfFirstRead();
         sum = 0;
         for sumIndex = 1 : readIndex - 1;           
-            sum = sum + handles.sortedListOfReads{sumIndex}.interval * handles.sortedListOfReads{sumIndex}.numberOfCycles; 
+            sum = sum + handles.sortedListOfReads{sumIndex}.interval * handles.sortedListOfReads{sumIndex}.numberOfCycles + handles.sortedListOfReads{sumIndex}.getTimeOfFirstRead(); 
         end
         tableData{readIndex, 5} = sum;
         if strcmp(handles.experimentDataStructureArray{readIndex}.readWasEmpty(), 'No')

@@ -522,7 +522,8 @@ classdef NeoASCIIReader < handle
                    measurements = leadingRead.getAndDeleteAppendMeasurements(sortedListOfReads{activeReadIndex}.getNumberOfCycles());
                    temperature = leadingRead.getAndDeleteAppendTemperatures(sortedListOfReads{activeReadIndex}.getNumberOfCycles());
                    time = leadingRead.getAndDeleteTimepoints(sortedListOfReads{activeReadIndex}.getNumberOfCycles());
-                   time = time - leadingRead.measurementTimepoints(end) - leadingRead.interval; % this subtraction will make the read such that it would be equivalent to the case when no append was used. The time between reads is still recorded in the measurement time data of the first read.
+                   %time = time - leadingRead.measurementTimepoints(end) - leadingRead.interval; % this subtraction will make the read such that it would be equivalent to the case when no append was used. The time between reads is still recorded in the measurement time data of the first read.
+                   time = time - leadingRead.getCorrespondingTimepointForAppendSubtraction() - leadingRead.interval;              
                    sortedListOfReads{activeReadIndex}.setMeasurements(measurements);
                    sortedListOfReads{activeReadIndex}.setWellIDs(leadingRead.getWellIDs());
                    sortedListOfReads{activeReadIndex}.setTimepoints(time);

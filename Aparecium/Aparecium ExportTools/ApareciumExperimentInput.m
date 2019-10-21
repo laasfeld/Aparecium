@@ -105,6 +105,11 @@ classdef ApareciumExperimentInput < handle
            timeMoments = this.timeMoments; 
         end
         
+        function timeMoments = getCycleTimeMomentsOfWell(this, wellID)
+            wellIndex = this.getIndexOfWell(wellID);
+            timeMoments = this.timeMoments(wellIndex, :);
+        end
+        
         function groups = getGroups(this)
             groups = this.groups;
         end

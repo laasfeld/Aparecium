@@ -11,11 +11,12 @@ classdef CalculationMethod < handle
         channelNames
         subgroupStartValue = 1;
         previousValues = 0;
+        apareciumExperimentInput = [];
     end
     
     methods
-        function this = CalculationMethod()
-            
+        function this = CalculationMethod(ApareciumExperimentInput)
+            this.apareciumExperimentInput = ApareciumExperimentInput;
         end
         
         function addFormulae(this, formulae)
@@ -48,6 +49,7 @@ classdef CalculationMethod < handle
                 this.channelNames = experiment.getChannelNames();
                 this.groupWells(experiment, groupingStructure, sharedBlankStructure, timewiseBlankMatrix);
                 this.generateMeasurementsStructure(experiment);
+                useEnteredValuesAsBlanks = 0;
                 if this.formulaIsSet
                     for calculationStep = 1 : numel(this.formulae)
                        acronyme = this.formulae{calculationStep}.acronyme;
@@ -81,12 +83,12 @@ classdef CalculationMethod < handle
                                          
                                          if exist('blankValues', 'var')
                                             someBlankValueExists = ~isempty(find(isnan(blankValues)==0, 1));
-                                            someNanValueExists = ~isempty(find(isnan(blankValues)==1, 1));                                            
-                                            if someNanValueExists && someBlankValueExists  
+                                            someNanValueExists = ~isempty(find(isnan(blankValues)==1, 1));
+                                            if someNanValueExists && someBlankValueExists
                                                newBlankValues = blankValues;
                                                for row = 1 : size(blankValues, 1)
                                                   nonNanIndices = find(~isnan(blankValues(row, :)) == 1);
-                                                  for col = 1 : size(blankValues, 2)                                                 
+                                                  for col = 1 : size(blankValues, 2)                                              
                                                      if isnan(blankValues(row, col))
                                                          differenceIndex = abs(col - nonNanIndices);
                                                          [unneeded, bestIndex] = min(differenceIndex);
@@ -102,9 +104,33 @@ classdef CalculationMethod < handle
                                             %resultStructure{group}{subgroup}{well}{channel} = eval(formula);
                                             insertionStructure = [eval(formula),insertionStructure];
                                             %this.measurementStructure{group}{subgroup}{well} = [eval(formula), this.measurementStructure{group}{subgroup}{well}];
+                                         elseif isequal(useEnteredValuesAsBlanks, 1)
+                                             blankValues = zeros(size(valuesToBeBlanked)) * externalBlankArray(channel);
+                                             formula = [functionName, '(valuesToBeBlanked, blankValues)'];
+                                             %resultStructure{group}{subgroup}{well}{channel} = eval(formula);
+                                             insertionStructure = [eval(formula),insertionStructure];
+                                             
                                          else
-                                             errordlg('One of the groups had no blank value. Cannot perform blank correction!')
-                                             error('One of the groups had no blank value. Cannot perform blank correction!')
+                                             answer = questdlg('One of the groups had no blank value. Would you like to enter a value which should be used to blank these groups (external blank)?', 'Blanking question', 'Yes', 'No', 'Yes');
+                                             switch answer
+                                                
+                                                 case 'Yes'
+                                                    useEnteredValuesAsBlanks = 1;
+                                                    externalBlankArray = zeros(1, numel(this.channelNames));
+                                                    for channelIndex = numel(this.channelNames): -1 :1
+                                                         result = inputdlg(['Enter external blank value for ', this.channelNames{channelIndex}]);
+                                                         externalBlankArray(channelIndex) = str2double(result{1});
+                                                    end
+                                                    
+                                                    blankValues = zeros(size(valuesToBeBlanked)) * externalBlankArray(channel);
+                                                    formula = [functionName, '(valuesToBeBlanked, blankValues)'];
+                                                    %resultStructure{group}{subgroup}{well}{channel} = eval(formula);
+                                                    insertionStructure = [eval(formula),insertionStructure];
+                                             
+                                                 case 'No'
+                                                    warndlg('One of the groups had no blank value. Cannot perform blank correction!')
+                                                    error('One of the groups had no blank value. Cannot perform blank correction!')
+                                             end
                                          end
                                       end
                                       this.measurementStructure{group}{subgroup}{well} = [insertionStructure, this.measurementStructure{group}{subgroup}{well}];
@@ -244,6 +270,49 @@ classdef CalculationMethod < handle
                                end        
                            end 
                            %this.measurementStructure = resultStructure;
+                       elseif strcmp(acronyme, 'Linear time model blank correction')
+                           resultStructure = cell(numel(this.groups), 1); 
+                           warningDisplayed = 0;
+                           for group = 1 : numel(this.groups)
+                               for subgroup = this.subgroupStartValue : numel(this.groups{group})
+                                  if ~isempty(this.measurementStructure{group}{subgroup})
+                                      for well = 1 : numel(this.groups{group}{subgroup})
+                                          insertionStructure = cell(0,0);
+                                          for channel = numel(this.channelNames):-1:1
+                                             blankValues = [];
+                                             valuesToBeBlanked = this.measurementStructure{group}{subgroup}{well}{channel};
+                                             valuesToBeBlankedTimes = this.apareciumExperimentInput.getCycleTimeMomentsOfWell(this.groups{group}{subgroup}{well});
+                                                                                           
+                                             for blankWell = 1 : numel(this.measurementStructure{group}{1})
+                                                blankValues(blankWell, :) = this.measurementStructure{group}{1}{blankWell}{channel};
+                                             end
+                                             % find the time for each blank
+                                             % measurement to serve as the
+                                             % X variable of linear
+                                             % regression model
+                                             blankTimes = [];
+                                             
+                                             for blankWell = 1 : numel(this.measurementStructure{group}{1})
+                                                 blankTimes(blankWell, :) = this.apareciumExperimentInput.getCycleTimeMomentsOfWell(this.groups{group}{1}{blankWell});
+                                             end
+                                                 
+                                             if exist('blankValues', 'var')
+                                                formula = [functionName, '(valuesToBeBlanked, valuesToBeBlankedTimes, blankValues, blankTimes)'];
+                                                %resultStructure{group}{subgroup}{well}{channel} = eval(formula);
+                                                insertionStructure = [eval(formula),insertionStructure];
+                                                
+                                             else                                         
+                                                 errordlg('One of the wells had no blank value. Cannot perform timewise blank correction!')
+                                                 error('One of the wells had no blank value. Cannot perform timewise blank correction!')
+                                             end            
+                                          end
+                                          this.measurementStructure{group}{subgroup}{well} = [insertionStructure, this.measurementStructure{group}{subgroup}{well}];
+                                      end
+                                  else
+                                      ['No measurements in subgoup ', subgroup];
+                                  end
+                               end        
+                           end 
                        else
                            [usedChannels, usedChannelNames] = this.findUsedChannels(calculationStep);
                            %replace spaces since spaces will break inline and

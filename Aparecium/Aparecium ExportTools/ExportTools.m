@@ -175,7 +175,7 @@ switch handles.mode
 end
 
 handles = initializeShowBlank(handles);
-handles.calculationMethod = CalculationMethod();
+handles.calculationMethod = CalculationMethod(handles.apareciumExperimentInput);
 
 guidata(hObject, handles);
 
@@ -1794,7 +1794,7 @@ subgroupNames = handles.plateSimulatorInterface.getSubgroupNames();
 groupStructure = handles.plateSimulatorInterface.getGroupStructure();
 subgroupNames = reshapeSubgroupNames(groupStructure, subgroupNames);
 export.subgroupNames = subgroupNames;
-calculationMethod = CalculationMethod();
+calculationMethod = CalculationMethod(handles.apareciumExperimentInput);
 if get(handles.showBlank, 'Value')
     subgroupStartValue = 1;
 else

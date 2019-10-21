@@ -20,6 +20,8 @@ classdef Gen5Read < handle
         cyclesByLineCount             
         fastKineticsMeasurementsTimepoints
         appendsIndex = 0; % 0 if not part of appended reads
+        timepointForAppendSubtraction = 0;
+        timepointForAppendStorage = 0;
         
     end
     
@@ -92,6 +94,7 @@ classdef Gen5Read < handle
         
         function setTimepoints(this, timepoints)
             this.measurementTimepoints = timepoints;
+            this.timepointForAppendStorage = this.measurementTimepoints(this.numberOfCycles);
         end
         
         function setMeasurements(this, measurements)
@@ -141,8 +144,7 @@ classdef Gen5Read < handle
             end
         end
         
-        function calculateTheoreticalTimepoints(this, runs)
-            
+        function calculateTheoreticalTimepoints(this, runs)         
             this.measurementTimepoints = 0 : this.interval : this.interval*(runs - 1);
             if isempty(this.measurementTimepoints)
                 this.measurementTimepoints = 0;
@@ -229,7 +231,17 @@ classdef Gen5Read < handle
         
         function timepoints = getAndDeleteTimepoints(this, nrOfCycles)
             timepoints = this.measurementTimepoints(this.numberOfCycles + 1: nrOfCycles + this.numberOfCycles);
+            this.timepointForAppendSubtraction = this.timepointForAppendStorage;
+            this.timepointForAppendStorage = timepoints(end);
             this.measurementTimepoints(this.numberOfCycles + 1: nrOfCycles + this.numberOfCycles) = [];
+        end
+        
+        function timepointForAppendSubtraction = getCorrespondingTimepointForAppendSubtraction(this)
+            timepointForAppendSubtraction = this.timepointForAppendSubtraction;
+        end
+        
+        function timeOfFirstRead = getTimeOfFirstRead(this)
+           timeOfFirstRead = this.measurementTimepoints(1);
         end
     end    
 end
