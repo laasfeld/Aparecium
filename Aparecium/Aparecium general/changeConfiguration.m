@@ -1,7 +1,7 @@
 function [ handles ] = changeConfiguration(filename, handles)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
-    load(filename,'dimensionalityTR','namesTR','unitsTR','valuesTR');
+    load(filename,'dimensionalityTR','namesTR','unitsTR','valuesTR', 'treatmentStructure');
     handles = changeDimensionality(handles, num2str(dimensionalityTR));
     for treatment = 1 : size(valuesTR, 2)
        valuesTR{treatment} = regexprep(num2str(valuesTR{treatment}),'       ',' '); 

@@ -76,7 +76,7 @@ classdef PlateSimulatorInterface < handle
                     cycles = this.experiment.getNumberOfCycles();
                     measurements = this.experiment.getMeasurements();
                     groups = this.experiment.getGroups();
-                    [probableEventCycles, probableEventTimes] = this.predictEvents();
+                    [probableEventCycles, probableEventTimes, probableEventComments] = this.predictEvents(this.experiment.getStopwatchTimes());
                     if strfind(mode, 'groupWells')   
                         this.PlateSimulator = plateSimulator.PlateSimulator(treatments, concentrations, units, mode, wellNames, inUse, cycles, measurements, groups);
                         timewiseBlankStructure = this.generateStandardTimewiseBlankStructure(inUse, cycles, measurements);
@@ -84,7 +84,7 @@ classdef PlateSimulatorInterface < handle
                         this.experiment.setHasChanged(0);
                     elseif strfind(mode, 'addTreatments')
                         try
-                            this.PlateSimulator = plateSimulator.PlateSimulator(treatments, concentrations, units, mode, wellNames, inUse, cycles, probableEventCycles, probableEventTimes);
+                            this.PlateSimulator = plateSimulator.PlateSimulator(treatments, concentrations, units, mode, wellNames, inUse, cycles, probableEventCycles, probableEventTimes, probableEventComments);
                         catch MException
                             this.PlateSimulator = plateSimulator.PlateSimulator(treatments, concentrations, units, mode, wellNames, inUse, cycles);
                         end
@@ -123,6 +123,7 @@ classdef PlateSimulatorInterface < handle
             end
             this.PlateSimulator.setVisible(true);
             [a, simPlateHandle] = javacomponent(this.PlateSimulator, [0, 0 , 1277, 620], handles.figure1);
+
             this.isPlateSimulatorInitialized = 1;
         end
         
@@ -184,8 +185,10 @@ classdef PlateSimulatorInterface < handle
             [treatmentStruct.eventTimes, sortedEventSequence] = sort(treatmentStruct.eventTimes);
             counter = 0;
             for event = sortedEventSequence'
+                tic
                 counter = counter + 1;
-                treatments = this.PlateSimulator.getTreatmentStructure(event);
+                treatments = this.PlateSimulator.getTreatmentStructure(event - 1);
+                toc
                 numberOfRows = size(this.experiment.inUse, 2);
                 numberOfColumns = size(this.experiment.inUse, 1);
                 results = cell(0,0);
@@ -206,6 +209,7 @@ classdef PlateSimulatorInterface < handle
                     end
                 end
                 treatmentStruct.eventStruct{counter} = results;
+                toc
             end
             treatmentStruct.results = treatmentStruct.eventStruct{1};
         end
@@ -221,10 +225,11 @@ classdef PlateSimulatorInterface < handle
             this.PlateSimulator.regeneratePlateSimulatorFromEventsStructure(eventsStructure, wells, eventTimes);
         end
         
-        function [probableEventCycles, probableEventTimes] = predictEvents(this)
+        function [probableEventCycles, probableEventTimes, eventComment] = predictEvents(this, stopwatchTimes)
             cycleTimeMoments = this.experiment.getCycleTimeMoments();
             probableEventCycles = [];
             probableEventTimes = [];
+            eventComment = {'(cycle duration change)'};
             probableEventCycles(end + 1) = 1;
             if numel(cycleTimeMoments > 0)
                 probableEventTimes(end + 1) = cycleTimeMoments(1);
@@ -239,6 +244,7 @@ classdef PlateSimulatorInterface < handle
                            delta = newDelta;
                         elseif ~isequal(delta, newDelta) && isequal(expectingDelta, 1) 
                            probableEventCycles(end + 1) = i - 1;
+                           eventComment{end + 1} = '(cycle duration change)';
                            probableEventTimes(end + 1) = cycleTimeMoments(i - 1);
                            delta = newDelta;
                            expectingDelta = 0;
@@ -247,7 +253,10 @@ classdef PlateSimulatorInterface < handle
                         end
                     end
                 end
-            end          
+            end
+            probableEventCycles = PlateSimulatorInterface.treatmentsAsStringArray(num2cell([probableEventCycles, nan(1, numel(stopwatchTimes))]));
+            probableEventTimes = [probableEventTimes, stopwatchTimes'];
+            eventComment = PlateSimulatorInterface.treatmentsAsStringArray([eventComment, repmat({'(stopwatch times)'}, 1, numel(stopwatchTimes))]);
         end             
     end
     

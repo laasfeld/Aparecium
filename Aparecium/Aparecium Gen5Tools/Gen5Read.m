@@ -94,7 +94,7 @@ classdef Gen5Read < handle
         
         function setTimepoints(this, timepoints)
             this.measurementTimepoints = timepoints;
-            this.timepointForAppendStorage = this.measurementTimepoints(this.numberOfCycles);
+            this.timepointForAppendStorage = this.measurementTimepoints(min([this.numberOfCycles, numel(this.measurementTimepoints)]));
         end
         
         function setMeasurements(this, measurements)
@@ -220,20 +220,24 @@ classdef Gen5Read < handle
         end
         
         function measurements = getAndDeleteAppendMeasurements(this, nrOfCycles)
-            measurements = this.measurements(:,this.numberOfCycles + 1: nrOfCycles + this.numberOfCycles, :);
-            this.measurements(:,this.numberOfCycles + 1: nrOfCycles + this.numberOfCycles, :) = [];
+            measurements = this.measurements(:,this.numberOfCycles + 1: min([nrOfCycles + this.numberOfCycles, size(this.measurements, 2)]), :);
+            this.measurements(:,this.numberOfCycles + 1: min([nrOfCycles + this.numberOfCycles, size(this.measurements, 2)]), :) = [];
         end
         
         function temperatures = getAndDeleteAppendTemperatures(this, nrOfCycles)
-            temperatures = this.temperature(:, this.numberOfCycles + 1: nrOfCycles + this.numberOfCycles);
-            this.temperature(:, this.numberOfCycles + 1: nrOfCycles + this.numberOfCycles) = [];
+            temperatures = this.temperature(:, this.numberOfCycles + 1: min([nrOfCycles + this.numberOfCycles, size(this.temperature, 2)]));
+            this.temperature(:, this.numberOfCycles + 1: min([nrOfCycles + this.numberOfCycles, size(this.temperature, 2)])) = [];
         end
         
         function timepoints = getAndDeleteTimepoints(this, nrOfCycles)
-            timepoints = this.measurementTimepoints(this.numberOfCycles + 1: nrOfCycles + this.numberOfCycles);
+            timepoints = this.measurementTimepoints(this.numberOfCycles + 1: min([nrOfCycles + this.numberOfCycles, numel(this.measurementTimepoints)]));
             this.timepointForAppendSubtraction = this.timepointForAppendStorage;
-            this.timepointForAppendStorage = timepoints(end);
-            this.measurementTimepoints(this.numberOfCycles + 1: nrOfCycles + this.numberOfCycles) = [];
+            if ~isempty(timepoints)
+                this.timepointForAppendStorage = timepoints(end);
+            else
+                this.timepointForAppendStorage = [];
+            end
+            this.measurementTimepoints(this.numberOfCycles + 1: min([nrOfCycles + this.numberOfCycles, numel(this.measurementTimepoints)])) = [];
         end
         
         function timepointForAppendSubtraction = getCorrespondingTimepointForAppendSubtraction(this)

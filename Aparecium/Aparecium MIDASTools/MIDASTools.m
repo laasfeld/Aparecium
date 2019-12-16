@@ -211,11 +211,11 @@ function LoadPrimaryMIDAS_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 loadPrimaryMIDASFile_Callback(hObject, eventdata, handles);
-successBox('MIDAS file successfully loaded', 'Success');
 handles.mainMIDASTable.setVisible('on');
 set(handles.MIDASInformationText, 'String', ['MIDAS file ', handles.midasTableController.fileName, ' loaded']);
 handles.fileName = handles.midasTableController.fileName;
 initializeExperimentConfigurationPanel(handles);
+successBox('MIDAS file successfully loaded', 'Success');
 
 function initializeExperimentConfigurationPanel(handles)
 handles =  MidasToApareciumExperimentInput(handles.midasTableController, handles);

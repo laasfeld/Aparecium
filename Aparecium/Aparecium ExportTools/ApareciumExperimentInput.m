@@ -21,6 +21,7 @@ classdef ApareciumExperimentInput < handle
         concentrationChangeEvents = [];
         fastKinetics = 0;
         hasChanged = 1;
+        stopwatchTimes = [];
     end
     
     methods
@@ -364,6 +365,14 @@ classdef ApareciumExperimentInput < handle
                 eventIndices(eventIndex) = suitableIndices(1);% in cases when event has same time as measurement it is assumed that the event comes first and therefore the concentrations can be taken from the first suitable option;
             end
             concentrationsAtEvents = this.predefinedConcentrations(:,:,eventIndices,:);
+        end
+        
+        function setStopwatchTimes(this, stopwatchTimes)
+           this.stopwatchTimes = stopwatchTimes; 
+        end
+        
+        function stopwatchTimes = getStopwatchTimes(this)
+           stopwatchTimes = this.stopwatchTimes; 
         end
     end
 end

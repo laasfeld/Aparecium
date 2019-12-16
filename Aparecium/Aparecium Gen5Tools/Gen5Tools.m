@@ -22,7 +22,7 @@ function varargout = Gen5Tools(varargin)
 
 % Edit the above text to modify the response to help Gen5Tools
 
-% Last Modified by GUIDE v2.5 10-Aug-2017 15:46:54
+% Last Modified by GUIDE v2.5 05-Dec-2019 11:54:34
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -72,6 +72,9 @@ handles = ExperimentConfigurationPanelFunc(handles);
 handles = MIDASOptionsPanelFunc(handles);
 guidata(hObject, handles)
 initializeChannelsTable(handles);
+handles.stopwatchLoaded = false;
+handles.stopwatchTimes = [];
+
 
 
 % Update handles structure
@@ -146,6 +149,8 @@ if allow
 
     setChannels(handles);
     handles.midasTableController.setData(rawData);
+    handles.stopwatchTimes = handles.neoAsciiReader.getEventTimes();
+    handles.apareciumExperimentInput.setStopwatchTimes(handles.stopwatchTimes);
     successBox('Gen5 ASCII file successfully loaded', 'Success');
 else
 end
@@ -657,3 +662,16 @@ function figure1_ResizeFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ApareciumCommonImporterFunctions.figure1_ResizeFcn(hObject, eventdata, handles);
+
+
+% --- Executes on button press in loadStopwatchTime.
+function loadStopwatchTime_Callback(hObject, eventdata, handles)
+% hObject    handle to loadStopwatchTime (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+fileChooser = FileChooser();
+stopwatchFilePath = fileChooser.getStopwatchPath();
+handles.stopwatchTimes = readStopwatch(stopwatchFilePath);
+handles.neoAsciiReader.setEventTimes(handles.stopwatchTimes);
+handles.apareciumExperimentInput.setStopwatchTimes(handles.stopwatchTimes);
+guidata(hObject, handles);

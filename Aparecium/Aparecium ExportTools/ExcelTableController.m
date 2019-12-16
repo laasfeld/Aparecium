@@ -309,6 +309,10 @@ classdef ExcelTableController < ExportPanelController
         end
         
         function convertDataToConcentrationSubgroupTable(this, data, groups)
+            
+            % this function needs to be cleaned up from the old coloring
+            % system
+            
             tableType = get(this.dropdownHandle, 'Value');
                
             groupNames = this.experiment.getGroups();
@@ -391,6 +395,9 @@ classdef ExcelTableController < ExportPanelController
             place = 2;% reset writable column to 2
             row = 2;
             col = 1;
+            cr = ColoredFieldCellRenderer(java.awt.Color.white);
+            cr.setDisabled(true);
+            crShift = size(Header, 2);
             for group = 1 : size(data, 2)
                 maxNumberOfSubgroups{group} = 0;
                 for subgroup = this.subgroupStartValue : numel(data{group})
@@ -412,11 +419,15 @@ classdef ExcelTableController < ExportPanelController
                            switch mod(timeIndex+subgroup, 2)
                                 case 0
                                     colorCode = 'E4EFF7';
+                                    colorRGB = [228	239	247]/255;
                                 case 1
                                     colorCode = 'E8D8E4';
+                                    colorRGB = [232	216	228]/255;
                             end
                             experimentData(row, col) = {data{group}{subgroup}{subgroupElement}{1}(cyclesInUse(timeIndex))}; 
                             visualExperimentData(row, col) = {colorgen(colorCode, num2str(data{group}{subgroup}{subgroupElement}{1}(cyclesInUse(timeIndex))))};
+                            cr.setCellBgColor(row - 1, col - 1 + crShift, java.awt.Color(colorRGB(1), colorRGB(2), colorRGB(3)));
+                            cr.setCellFgColor(row - 1, col - 1 + crShift, java.awt.Color(0, 0, 0));
                             col = col + 1;                            
                             
                         end
@@ -456,10 +467,29 @@ classdef ExcelTableController < ExportPanelController
                 end
             end
             
+            for row = 1 : size(Header, 1)
+                for col = 1 : size(Header, 2)
+                    
+                    cr.setCellBgColor(row - 1, col - 1, java.awt.Color(1, 1, 1));
+                    cr.setCellFgColor(row - 1, col - 1, java.awt.Color(1, 0, 0));
+                    %control{row, col} = 1;
+                end
+            end
+            
             tableData = [newHeaderData, newExperimentData];
             visualData = [newHeaderData, newVisualExperimentData];
             this.setTableData(tableData);
-            this.setVisualTableData(visualData);
+            
+            this.setTableData(tableData);
+            jtable = this.tableHandle.getTable;        
+            this.setVisualTableData(tableData);
+            %set(this.tableHandle,'ColumnFormat',[]);
+            for colIdx = 1 : size(tableData, 2)
+                %disp([num2str(colIdx),' /',num2str(size(tableData, 2))])                
+                jtable.getColumnModel.getColumn(colIdx-1).setCellRenderer(cr);              
+            end
+            
+            %this.setVisualTableData(visualData);
         end
         
         function convertDataToKineticTable(this, data, groups)

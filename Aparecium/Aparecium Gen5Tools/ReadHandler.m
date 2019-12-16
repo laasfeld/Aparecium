@@ -22,7 +22,7 @@ function varargout = ReadHandler(varargin)
 
 % Edit the above text to modify the response to help ReadHandler
 
-% Last Modified by GUIDE v2.5 18-Aug-2016 16:20:51
+% Last Modified by GUIDE v2.5 15-Nov-2019 19:13:04
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -58,10 +58,19 @@ handles.experimentDataStructureArray = varargin{1};
 handles.sortedListOfReads = varargin{2};
 handles.listOfKinetics = varargin{3};
 handles.listOfNonKineticReads = varargin{4};
-handles.experimentDataStructure = [];
-handles = mergeReadsInSameKinetics(handles);
-% Update handles structure
 handles = generateTable(hObject, handles);
+handles = mergeReadsInSameKinetics(handles);
+if ~isempty(varargin{5})
+   handles.stopwatchLoaded = true;
+   handles = setStopwatchTimes(handles, varargin{5});
+else
+   handles.stopwatchLoaded = false;
+   handles.stopwatchTimes = [];
+end
+handles.experimentDataStructure = [];
+
+% Update handles structure
+
 guidata(hObject, handles);
 uiwait(handles.figure1);
 
@@ -79,10 +88,11 @@ function varargout = ReadHandler_OutputFcn(hObject, eventdata, handles)
 
 % Get default command line output from handles structure
 varargout{1} = handles.experimentDataStructure;
+varargout{2} = handles.stopwatchTimes;
 delete(handles.figure1);
 
 function handles = mergeReadsInSameKinetics(handles)
-    newListOfReads = cell(0,0)
+    newListOfReads = cell(0,0);
     for kineticsIndex = 1 : numel(handles.listOfKinetics)
         counter = 1;
         orderIndeces = zeros(1, numel(handles.listOfKinetics{kineticsIndex}.listOfReads));
@@ -145,6 +155,7 @@ for readIndex = 1 : numel(handles.experimentDataStructureArray)
         tableData{readIndex, 4} = 0;
         tableData{readIndex, 5} = 0;
         tableData{readIndex, 6} = true;
+        tableData{readIndex, 7} = 'N/A';
     else
         tableData{readIndex, 4} = handles.sortedListOfReads{readIndex - 1}.interval * handles.sortedListOfReads{readIndex - 1}.numberOfCycles + handles.sortedListOfReads{readIndex - 1}.getTimeOfFirstRead();
         sum = 0;
@@ -157,6 +168,7 @@ for readIndex = 1 : numel(handles.experimentDataStructureArray)
         else
             tableData{readIndex, 6} = false;
         end
+        tableData{readIndex, 7} = 'N/A';
     end
     
 end
@@ -180,22 +192,37 @@ for readIndex = eventdata.Indices(1) : numel(handles.experimentDataStructureArra
         if isequal(eventdata.Indices(2), 3)
             tableData{readIndex, 4} = tableData{readIndex, 3};
             tableData{readIndex, 5} = tableData{readIndex, 3};
+            tableData{readIndex, 7} = 'use manual time';
         elseif isequal(eventdata.Indices(2), 4)
             tableData{readIndex, 3} = tableData{readIndex, 4};
             tableData{readIndex, 5} = tableData{readIndex, 4};
+            tableData{readIndex, 7} = 'use manual time';
         elseif isequal(eventdata.Indices(2), 5)
             tableData{readIndex, 3} = tableData{readIndex, 5};
             tableData{readIndex, 4} = tableData{readIndex, 5};
+            tableData{readIndex, 7} = 'use manual time';
         elseif isequal(eventdata.Indices(2), 6)
             if strcmp(handles.experimentDataStructureArray{readIndex}.readWasEmpty(), 'Yes')
                 tableData{readIndex, 6} = false;
                 warndlg('This read contains no measurements possibly due to aborted measurement. It can´t be included in MIDAS file')
+            end
+        elseif isequal(eventdata.Indices(2), 7)
+            if isequal(handles.stopwatchLoaded, true)
+                timeVec = constructStopwatchTimesColumn(handles.stopwatchTimes);
+                timeIndex = find(ismember(timeVec, eventdata.NewData)) - 1;
+                if ~isequal(timeIndex, 0)
+                    tableData{readIndex, 7} = timeVec{timeIndex + 1};
+                    tableData{readIndex, 5} = handles.stopwatchTimes(timeIndex);
+                    tableData{readIndex, 3} = tableData{readIndex, 5};
+                    tableData{readIndex, 4} = tableData{readIndex, 5};
+                end
             end
         end
     else
         if isequal(eventdata.Indices(2), 3)
             tableData{readIndex, 4} = tableData{readIndex, 3} + tableData{readIndex - 1, 2};
             tableData{readIndex, 5} = tableData{readIndex - 1, 2} + tableData{readIndex - 1, 5} + tableData{readIndex, 3};
+            tableData{readIndex, 7} = 'use manual time';
         elseif isequal(eventdata.Indices(2), 4)
             tableData{readIndex, 3} = tableData{readIndex, 4} - tableData{readIndex - 1, 2};
             sum = 0;
@@ -203,6 +230,7 @@ for readIndex = eventdata.Indices(1) : numel(handles.experimentDataStructureArra
                 sum = sum + tableData{sumIndex, 2} + tableData{sumIndex, 3}; 
             end
             tableData{readIndex, 5} = sum + tableData{readIndex, 3};
+            tableData{readIndex, 7} = 'use manual time';
         elseif isequal(eventdata.Indices(2), 5)
             sum = 0;
             for sumIndex = 1 : readIndex - 1;
@@ -210,16 +238,38 @@ for readIndex = eventdata.Indices(1) : numel(handles.experimentDataStructureArra
                 sum = sum + tableData{sumIndex, 2} + tableData{sumIndex, 3}; 
             end
             tableData{readIndex, 3} = tableData{readIndex, 5} - sum;
-            tableData{readIndex, 4} = tableData{readIndex, 3} + tableData{readIndex - 1, 2};            
+            tableData{readIndex, 4} = tableData{readIndex, 3} + tableData{readIndex - 1, 2};
+            if isequal(readIndex, eventdata.Indices(1))
+                tableData{readIndex, 7} = 'use manual time'; 
+            end
         elseif isequal(eventdata.Indices(2), 6) && isequal(eventdata.Indices(1), readIndex)
             if strcmp(handles.experimentDataStructureArray{readIndex}.readWasEmpty, 'Yes')
                 tableData{readIndex, 6} = false;
                 warndlg('This read contains no measurements possibly due to aborted measurement. It can´t be included in MIDAS file')
             end
+        elseif isequal(eventdata.Indices(2), 7)
+            if isequal(handles.stopwatchLoaded, true) && isequal(readIndex, eventdata.Indices(1))
+                timeVec = constructStopwatchTimesColumn(handles.stopwatchTimes);
+                timeIndex = find(ismember(timeVec, eventdata.NewData)) - 1;
+                if ~isequal(timeIndex, 0)
+                    tableData{readIndex, 7} = timeVec{timeIndex + 1};
+                    tableData{readIndex, 5} = handles.stopwatchTimes(timeIndex);
+                    sum = 0;
+                    for sumIndex = 1 : readIndex - 1;
+
+                        sum = sum + tableData{sumIndex, 2} + tableData{sumIndex, 3}; 
+                    end
+                    tableData{readIndex, 3} = tableData{readIndex, 5} - sum;
+                    tableData{readIndex, 4} = tableData{readIndex, 3} + tableData{readIndex - 1, 2};
+                end
+            end
         end
     end
+    
 end
 set(hObject, 'data', tableData);
+timeVec = constructStopwatchTimesColumn(handles.stopwatchTimes);
+set(handles.experimentTable,'ColumnFormat', {'numeric','numeric','numeric','numeric','numeric','logical', timeVec});
 %handles = generateDataStructure(handles);
 guidata(hObject, handles);
 
@@ -532,3 +582,37 @@ else
     delete(handles.figure1);
     guidata(hObject, handles);
 end
+
+
+% --- Executes on button press in loadStopwatch.
+function loadStopwatch_Callback(hObject, eventdata, handles)
+% hObject    handle to loadStopwatch (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+fileChooser = FileChooser();
+stopwatchFilePath = fileChooser.getStopwatchPath();
+times = readStopwatch(stopwatchFilePath);
+handles = setStopwatchTimes(handles, times);
+guidata(hObject, handles);
+
+function handles = setStopwatchTimes(handles, times)
+data = get(handles.experimentTable, 'data');
+readCount = size(data, 1);
+timeCol = cell(readCount, 1);
+%set(handles.uitable1, 'data', [handles.formulaChannels', handles.formulaChannels'])
+timeVec = constructStopwatchTimesColumn(times);
+set(handles.experimentTable,'ColumnFormat', {'numeric','numeric','numeric','numeric','numeric','logical', timeVec});
+handles.stopwatchLoaded = true;
+handles.stopwatchTimes = times;
+tableData = get(handles.experimentTable, 'data');
+tableData(:, 7) = repmat({'use manual time'}, size(tableData, 1), 1);
+set(handles.experimentTable, 'data', tableData)
+
+function timeVec = constructStopwatchTimesColumn(times)
+timeVec = cell(1, numel(times)+1);
+timeVec{1} = 'use manual time';
+for timeIndex = 2 : numel(times)+1
+   timeVec{timeIndex} = [datestr(seconds(times(timeIndex-1)),'HH:MM:SS'), ' (',num2str(times(timeIndex-1)),' s)']; 
+end
+
+

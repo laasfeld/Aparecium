@@ -600,13 +600,50 @@ classdef FileChooser < handle
         %% model library methods
         
         function path = getModelLibraryPath(this)
-             if isfield(this.settings, 'modelLibraryPath')
+            if isfield(this.settings, 'modelLibraryPath')
                 startingPath = this.settings.modelLibraryPath;
             else
                 startingPath = '';
             end
-
             path = startingPath;
+        end
+        
+        %% Stopwatch loading functions
+        
+        function fullFilePath = getStopwatchPath(this)
+    
+            if isfield(this.settings, 'stopwatchPath')
+                startingPath = this.settings.stopwatchPath;
+            else
+                startingPath = '';
+            end
+            
+            [fileName, filePath] = uigetfile({'*.txt'}, 'Choose the stopwatch file for this experiment',  startingPath);
+
+            if isequal(filePath, 0)
+               error('User selected Cancel')
+            end
+                      
+            fullFilePath = [filePath, fileName];
+
+            if isequal(fullFilePath(1,1),0)
+               error('User selected Cancel')
+            end
+            this.registerStopwatchPath(filePath);
+        end
+        
+        function registerStopwatchPath(this, filePath)
+            if isfield(this.settings, 'stopwatchPath_useLast')
+               if isequal(this.settings.stopwatchPath_useLast, true)
+                   this.settings.stopwatchPath = path;
+                   settings = this.settings; % ignore warning, it is used in the save
+                   if isdeployed
+                        save([pwd, '\', 'settings.mat'], 'settings');
+                   else
+                        save([this.settingsPath, 'settings.mat'], 'settings');
+                   end
+               end
+           end
         end
     end
     

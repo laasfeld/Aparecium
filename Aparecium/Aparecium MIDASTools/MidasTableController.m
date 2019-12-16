@@ -328,12 +328,14 @@ classdef MidasTableController < handle
         
         function success = useEvents(this)
             if ~isempty(this.treatmentStructure)
+                tic
                 this.includeEvents = 1;         
                 eventTimes = this.switchUnit(this.treatmentStructure.eventTimes);
                 cycleBeginningTimes = this.calculateCycleBeginningTimes();
                 eventBlocks = this.generateEventBlocks(eventTimes);
                 this.eventData = this.tableData;
                 noOfWells = numel(this.treatmentStructure.resultWells);
+                toc
                 for event = size(eventTimes, 1) : -1 : 1
                     eventFound = 0;
                     for cycleBeginningTime = size(cycleBeginningTimes, 1): -1 : 1
@@ -348,19 +350,27 @@ classdef MidasTableController < handle
                         this.eventData = [eventBlocks{event}; this.eventData(1 : end, :)];
                     end
                 end
+                
+                %%% consider removing this block as it seems to be
+                %%% duplicating the last block
+                toc
                 cycleBeginningTimesWithEvents = sort([cycleBeginningTimes; eventTimes]);
+                toc
                 for event = 1 : size(eventTimes, 1)
-                    for cycleBeginningTime = 1 : size(cycleBeginningTimesWithEvents, 1)
-                        if eventTimes(event) == cycleBeginningTimesWithEvents(cycleBeginningTime)
-                           treatmentData = eventBlocks{event}(:, this.informativeColumns + 1:this.informativeColumns + this.treatmentColumns);
-                           for remainingBlocks = cycleBeginningTime + 1 : size(cycleBeginningTimesWithEvents, 1)
-                              treatmentData = [treatmentData; eventBlocks{event}(:, this.informativeColumns + 1:this.informativeColumns+this.treatmentColumns)];
-                           end
-                           this.eventData( (cycleBeginningTime - 1)*noOfWells + 1 : end, this.informativeColumns + 1:this.informativeColumns+this.treatmentColumns)  = treatmentData;      
-                        end
-                    end
+                    cycleBeginningTime = find(eventTimes(event) == cycleBeginningTimesWithEvents);
+                     if event < size(eventTimes, 1)
+                         nextCycleBeginningTime = find(eventTimes(event + 1) == cycleBeginningTimesWithEvents);
+                     else
+                         nextCycleBeginningTime = size(this.eventData, 1)/noOfWells;
+                     end                   
+                     for remainingBlocks = cycleBeginningTime : nextCycleBeginningTime - 1
+                        this.eventData( (remainingBlocks - 1)*noOfWells + 1 : (remainingBlocks)*noOfWells, this.informativeColumns + 1:this.informativeColumns+this.treatmentColumns) = eventBlocks{event}(:, this.informativeColumns + 1:this.informativeColumns+this.treatmentColumns);      
+                     end
                 end
+                %%% end of potential code removal
+                toc
                 this.addEventsData();
+                toc
                 success = 1;
             else
                warndlg('No events are defined, use PlateSimulator to create events'); 
@@ -692,7 +702,7 @@ classdef MidasTableController < handle
         function treatmentStructure = getTreatmentStructure(this)
             
             %locate event times
-            inputStructure.data = this.getRawExcelNumericalData();
+            inputStructure.data = cell2mat(this.eventData(:,this.informativeColumns + 1:end));%this.getRawExcelNumericalData();
             inputStructure.noOfWells = numel(this.getWellID());
             inputStructure.noOfCycles = size(this.getRawExcelNumericalData(), 1)/inputStructure.noOfWells;
             inputStructure.numberOfChannels = this.measurementColumns;

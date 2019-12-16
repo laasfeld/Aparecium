@@ -19,6 +19,7 @@ classdef NeoASCIIReader < handle
         lineShiftFromVersion = 0;
         nextLine = 1; % indicates what line number will be read when getNextLine() is called
         lineToByteArray = zeros(1);
+        eventTimes = [];
     end
     
     methods
@@ -920,7 +921,7 @@ classdef NeoASCIIReader < handle
                    end
                end 
                sortedListOfReads(deleteReads) = [];
-               this.experimentDataStructure = ReadHandler(experimentDataStructureArray, sortedListOfReads, this.kinetics, this.reads);
+               [this.experimentDataStructure, this.eventTimes] = ReadHandler(experimentDataStructureArray, sortedListOfReads, this.kinetics, this.reads, this.eventTimes);
                if ~isequal(overflowStruct, [])
                     ShowOverflow(overflowStruct);
                end
@@ -930,6 +931,14 @@ classdef NeoASCIIReader < handle
         
         function dataStructure = getExperimentDataStructure(this)
             dataStructure = this.experimentDataStructure;
+        end
+        
+        function setEventTimes(this, eventTimes)
+           this.eventTimes = eventTimes; 
+        end
+        
+        function eventTimes = getEventTimes(this)
+           eventTimes = this.eventTimes; 
         end
     end
     

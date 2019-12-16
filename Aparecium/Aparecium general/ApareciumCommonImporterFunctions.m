@@ -19,6 +19,16 @@ classdef ApareciumCommonImporterFunctions
             guidata(hObject, handles);
             ApareciumCommonImporterFunctions.treatments_Table_CellEditCallback(handles.treatments_Table, eventdata, handles);
             handles = guidata(hObject);
+            if strcmp(handles.fromTreatmentStructure, 'Yes')
+                handles.midasTableController.updateTreatments(handles.treatmentStructure);
+                handles.plateSimulatorInterface.addExperiment(handles.apareciumExperimentInput);
+                handles.simPlateHandle = handles.plateSimulatorInterface.generatePlateSimulator(handles); %% does not show the PlateSimulator
+                handles.plateSimulatorInterface.regeneratePlateSimulatorFromTreatmentStructure(handles.treatmentStructure);
+                set(handles.simPlateHandle, 'visible', 'off');
+                drawnow();
+            else
+                
+            end
             successBox('Configuration file successfully loaded', 'Success');
             guidata(hObject, handles);
         end
@@ -164,6 +174,7 @@ classdef ApareciumCommonImporterFunctions
             
             treatmentStructure = handles.plateSimulatorInterface.getTreatmentStructure();
             handles.midasTableController.updateTreatments(treatmentStructure);
+            drawnow()
         end      
         
         function handles = setUIModeToPlateSim(handles)
