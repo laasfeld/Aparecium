@@ -593,6 +593,7 @@ fileChooser = FileChooser();
 stopwatchFilePath = fileChooser.getStopwatchPath();
 times = readStopwatch(stopwatchFilePath);
 handles = setStopwatchTimes(handles, times);
+successBox('Stopwatch file successfully loaded', 'Success');
 guidata(hObject, handles);
 
 function handles = setStopwatchTimes(handles, times)

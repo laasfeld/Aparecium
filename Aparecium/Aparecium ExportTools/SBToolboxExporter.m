@@ -67,7 +67,7 @@ classdef SBToolboxExporter <  ExportPanelController
             this.includeParameter = include';
             data = [treatments', userDefNames', num2cell(strcmp(stateOrParam, 'state')'), num2cell(strcmp(stateOrParam, 'param')'), include'];
             set(this.experimentParamNameTable, 'data', data);
-        end                          
+        end
       
         function subgroups = getSubgroupsOfGroup(this, group)
             subgroups = cell(0,0);
@@ -140,20 +140,19 @@ classdef SBToolboxExporter <  ExportPanelController
         end
         
         function calculateNewTable(this, exportMode, outputVariable)
-
+           this.experiment = this.experimentSimplifier.simplifyEventsAndStartingConditions();
            [data, this.groups] = this.calculationMethod.calculate(this.experiment, this.groupStructure, this.sharedBlankStructure, this.timewiseBlankStructure);
            if isequal(this.subgroupNames, [])
                 this.subgroupNames = generateStandardSubgroupNames(data, 1);
            end
            channelNames = this.calculationMethod.getChannelNames();
-           data = this.mergeOrAverage(data, exportMode);
-           this.data = data;
+           this.data = this.mergeOrAverage(data, exportMode);
            this.outputValue = outputVariable{1};
            for i = 2 : numel(outputVariable)
               this.outputValue = [this.outputValue, '_', outputVariable{i}]; 
            end
            
-           this.convertDataToSBToolboxFormat(data, this.groups, channelNames, outputVariable, exportMode);
+           this.convertDataToSBToolboxFormat(this.data, this.groups, channelNames, outputVariable, exportMode);
 
         end
         
@@ -168,8 +167,7 @@ classdef SBToolboxExporter <  ExportPanelController
             switch exportMode
                 case 'Average'
                     for group = 1 : numel(data)
-                        for subgroup = this.subgroupStartValue : numel(data{group})
-                            
+                        for subgroup = this.subgroupStartValue : numel(data{group})                            
                             for channel = 1 : numel(data{group}{subgroup}{1})
                                 measurements = [];
                                 for subgroupElement = 1 : numel(data{group}{subgroup})
@@ -273,14 +271,14 @@ classdef SBToolboxExporter <  ExportPanelController
             this.loadingBar.vizualize();
             eventTimes = this.experiment.getEventTimes();
             for well = 1 : numel(eventTimes)
-               eventTimes{well} = eventTimes{well}*this.timeController.getUnitConversionConstant(); 
+               eventTimes{well} = eventTimes{well}*this.timeController.getUnitConversionConstant();
             end
             for group = 1 : numel(this.groups)
                 for subgroup = this.subgroupStartValue : numel(this.groups{group})
                     this.loadingBar.setLoadingBarPercent( 100* (((group-1)/numel(this.groups))+(subgroup-1)/(numel(this.groups{group})*numel(this.groups))));
                     outputValue = this.outputTableStruct{group}{subgroup}.outputValue;
                     mkdir(FilePath,[this.prefix, outputValue, '_Group_', groupNames{group}, '_', this.subgroupNames{group}{subgroup}, this.suffix]);
-                    tempFilePath = [FilePath,'\',this.prefix,outputValue,'_Group_',groupNames{group}, '_', this.subgroupNames{group}{subgroup}, this.suffix];
+                    tempFilePath = [FilePath,'\',this.prefix, outputValue,'_Group_',groupNames{group}, '_', this.subgroupNames{group}{subgroup}, this.suffix];
                     outputFilenameMIDAS = [tempFilePath, '\', this.outputTableStruct{group}{subgroup}.path, '.xls'];
                     outputFilenameEXP = [tempFilePath, '\', this.outputTableStruct{group}{subgroup}.path, '.exp'];
                     initialConditions = this.outputTableStruct{group}{subgroup}.initialConditions;
@@ -531,7 +529,7 @@ classdef SBToolboxExporter <  ExportPanelController
         end
         
         function project = createIQMmeasurements(this, project, counterStart)              
-            counter = counterStart
+            counter = counterStart;
 
             groupNames = this.experiment.getGroups();
             for group = 1 : numel(this.groups)

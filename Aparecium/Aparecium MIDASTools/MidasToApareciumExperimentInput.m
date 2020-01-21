@@ -151,6 +151,7 @@ inputStructure.numberOfChannels = numberOfChannels;
 measurements = generateMeasurements(originalWellID, wellID, measurements, numberOfCycles, numberOfChannels, width, height);
 handles.apareciumExperimentInput.setMode('groupWells')
 handles.apareciumExperimentInput.setWells(wellID);
+handles.apareciumExperimentInput.setOriginalWells(originalWellID);
 handles.apareciumExperimentInput.setInUse(inUse);
 handles.apareciumExperimentInput.setTreatments(namesTR);
 handles.apareciumExperimentInput.setNumberOfCycles(numberOfCycles);
@@ -249,4 +250,3 @@ function [ concChangeEvent, eventTimes ] = eventReader(handles)
         end
     end
 end
-

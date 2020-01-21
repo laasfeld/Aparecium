@@ -39,7 +39,7 @@ function varargout = ICSETools(varargin)
 
 % Edit the above text to modify the response to help ICSETools
 
-% Last Modified by GUIDE v2.5 24-Jul-2018 04:59:35
+% Last Modified by GUIDE v2.5 07-Jan-2020 14:37:55
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -109,6 +109,10 @@ set(handles.popupmenu1, 'String', thresholdFunctionNames);
 handles.imageAnalyzer.thresholdFunctionHandle = eval(['@',thresholdFunctionNames{1}]);
 %%
 handles = removeIncludedParamsFromPossibleParams(handles);
+
+% InitializeCustomCallbacks
+set(handles.loadStopwatchTime, 'Callback', createCallback('LoadConfigurationFile_Callback'));
+
 % Update handles structure
 guidata(hObject, handles);
 
@@ -1102,3 +1106,10 @@ function fromImageTickBox_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of fromImageTickBox
 handles.cameraAndLensParameters.fromImage = get(handles.fromImageTickBox, 'Value');
 guidata(hObject, handles);
+
+
+% --- Executes on button press in loadStopwatchTime.
+function loadStopwatchTime_Callback(hObject, eventdata, handles)
+% hObject    handle to loadStopwatchTime (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)

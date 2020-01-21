@@ -18,6 +18,10 @@ classdef ExportTimeMomentController < handle
             this.experiment = experiment;
         end
         
+        function setApareciumExperimentInput(this, experiment)
+            this.experiment = experiment;
+        end
+        
         function fastKinetics = getFastKinetics(this)
            fastKinetics = this.fastKinetics; 
         end

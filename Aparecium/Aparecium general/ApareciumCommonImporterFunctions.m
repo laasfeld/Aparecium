@@ -355,6 +355,18 @@ classdef ApareciumCommonImporterFunctions
             guidata(hObject, handles)
         end
         
+        function loadStopwatchTime_Callback(hObject, eventdata, handles)
+            % hObject    handle to loadStopwatchTime (see GCBO)
+            % eventdata  reserved - to be defined in a future version of MATLAB
+            % handles    structure with handles and user data (see GUIDATA)
+            fileChooser = FileChooser();
+            stopwatchFilePath = fileChooser.getStopwatchPath();
+            handles.stopwatchTimes = readStopwatch(stopwatchFilePath);
+            handles.apareciumExperimentInput.setStopwatchTimes(handles.stopwatchTimes);
+            successBox('Stopwatch file successfully loaded', 'Success');
+            guidata(hObject, handles);
+        end
+        
     end
     
 end

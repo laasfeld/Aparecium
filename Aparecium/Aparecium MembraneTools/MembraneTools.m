@@ -39,7 +39,7 @@ function varargout = MembraneTools(varargin)
 
 % Edit the above text to modify the response to help MembraneTools
 
-% Last Modified by GUIDE v2.5 13-Aug-2019 13:22:08
+% Last Modified by GUIDE v2.5 07-Jan-2020 14:37:50
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -111,6 +111,10 @@ thresholdFunctionNames = ['None', ICSEThresholdManager.getThresholdFunctionNames
 set(handles.popupmenu1, 'String', thresholdFunctionNames);
 handles.imageAnalyzer.thresholdFunctionHandle = eval(['@',thresholdFunctionNames{1}]);
 %%
+
+% InitializeCustomCallbacks
+set(handles.loadStopwatchTime, 'Callback', createCallback('LoadConfigurationFile_Callback'));
+
 % Update handles structure
 guidata(hObject, handles);
 
@@ -1210,3 +1214,10 @@ function ilastikMembraneLabelIndex_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in loadStopwatchTime.
+function loadStopwatchTime_Callback(hObject, eventdata, handles)
+% hObject    handle to loadStopwatchTime (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)

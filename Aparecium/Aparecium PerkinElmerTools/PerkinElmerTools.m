@@ -22,7 +22,7 @@ function varargout = PerkinElmerTools(varargin)
 
 % Edit the above text to modify the response to help PerkinElmerTools
 
-% Last Modified by GUIDE v2.5 10-Dec-2018 18:54:20
+% Last Modified by GUIDE v2.5 07-Jan-2020 15:30:52
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -75,6 +75,8 @@ handles = MIDASOptionsPanelFunc(handles);
 guidata(hObject, handles)
 initializeChannelsTable(handles);
 
+% InitializeCustomCallbacks
+set(handles.loadStopwatchTime, 'Callback', createCallback('LoadConfigurationFile_Callback'));
 
 % Update handles structure
 guidata(hObject, handles);
@@ -606,3 +608,10 @@ function figure1_ResizeFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ApareciumCommonImporterFunctions.figure1_ResizeFcn(hObject, eventdata, handles);
+
+
+% --- Executes on button press in loadStopwatchTime.
+function loadStopwatchTime_Callback(hObject, eventdata, handles)
+% hObject    handle to loadStopwatchTime (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)

@@ -15,9 +15,28 @@ classdef ExportPanelController < handle
         sharedBlankStructure;
         timewiseBlankStructure;
         subgroupStartValue = 1;
+        assumeEquilibriumBeforeFirstEvent = false;
+        assumeEquilibriumBeforeLastEvent = false;
+        experimentSimplifier = [];
     end
     
     methods
+        
+        function setAssumeEquilibriumBeforeFirstEvent(this, value)
+            this.assumeEquilibriumBeforeFirstEvent = value;
+        end
+        
+        function assumeEquilibriumBeforeFirstEvent = getAssumeEquilibriumBeforeFirstEvent(this)
+            assumeEquilibriumBeforeFirstEvent = this.assumeEquilibriumBeforeFirstEvent;
+        end
+        
+        function setAssumeEquilibriumBeforeLastEvent(this, value)
+            this.assumeEquilibriumBeforeLastEvent = value;
+        end
+        
+        function assumeEquilibriumBeforeLastEvent = getAssumeEquilibriumBeforeLastEvent(this)
+            assumeEquilibriumBeforeLastEvent = this.assumeEquilibriumBeforeLastEvent;
+        end
         
         function addExperiment(this, experiment) % ApareciumExperimentInput
             this.experiment = experiment;
@@ -51,6 +70,10 @@ classdef ExportPanelController < handle
             this.subgroupStartValue = subgroupStartValue;
         end
         
+        function addExperimentSimplifier(this, experimentSimplifier)
+            this.experimentSimplifier = experimentSimplifier;
+        end
+        
         function uniquenessTable = createTreatmentUniquenessTable(this, numberOfGroups, groups, data)
             concentrationsOfGroup = cellfun(@str2num, this.experiment.getTreatmentsConcentrationsOfGroup(groups{1}, 1));
             for group = 2 : numberOfGroups
@@ -70,8 +93,8 @@ classdef ExportPanelController < handle
         end
         
         function exportData = mergeOrAverage(this, data, exportMode)
-        this.experimentParamsNames = this.readParamsNames();
-        timePoints = this.timeController.getCycleTimes();
+            this.experimentParamsNames = this.readParamsNames();
+            timePoints = this.timeController.getCycleTimes();
             switch exportMode
                 case 'Average'
                     for group = 1 : size(data, 2)
@@ -140,7 +163,6 @@ classdef ExportPanelController < handle
                 end                
             end
         end
-
     end
     
     methods (Abstract)

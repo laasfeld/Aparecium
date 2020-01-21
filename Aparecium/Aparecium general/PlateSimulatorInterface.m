@@ -257,6 +257,9 @@ classdef PlateSimulatorInterface < handle
             probableEventCycles = PlateSimulatorInterface.treatmentsAsStringArray(num2cell([probableEventCycles, nan(1, numel(stopwatchTimes))]));
             probableEventTimes = [probableEventTimes, stopwatchTimes'];
             eventComment = PlateSimulatorInterface.treatmentsAsStringArray([eventComment, repmat({'(stopwatch times)'}, 1, numel(stopwatchTimes))]);
+            if isempty(probableEventTimes)
+               probableEventTimes = NaN; 
+            end
         end             
     end
     

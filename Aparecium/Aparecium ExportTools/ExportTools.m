@@ -25,7 +25,7 @@ function varargout = ExportTools(varargin)
 
 % Edit the above text to modify the response to help ExportTools
 
-% Last Modified by GUIDE v2.5 26-Mar-2019 13:13:15
+% Last Modified by GUIDE v2.5 14-Jan-2020 19:01:49
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
@@ -68,6 +68,7 @@ handles.loadingBar = loadingBar();
 %try
     handles.midasTableController = varargin{1};
     handles = MidasToApareciumExperimentInput(handles.midasTableController, handles);
+    handles.experimentSimplifier = experimentSimplifier(handles.apareciumExperimentInput);
     handles.exportTimeMomentController = ExportTimeMomentController(handles.apareciumExperimentInput);
     handles.exportTimeMomentController.setCycleListHandle(handles.timeRemoval);
     handles.exportTimeMomentController.setOutputTimeUnitDrowdownHandle(handles.outputTimeUnitDropdown);
@@ -666,7 +667,7 @@ controllers{3} = handles.graphicalPreviewController;
 controllers{4} = handles.copasiPreviewController;
 controllers{5} = handles.prismPanelController;
 
-addParametersToControllers(controllers, handles.apareciumExperimentInput, groupStructure, subgroupNames, sharedBlankStructure, timewiseBlankStructure, handles.excelTableConfiguration)
+addParametersToControllers(controllers, handles.apareciumExperimentInput, groupStructure, subgroupNames, sharedBlankStructure, timewiseBlankStructure, handles.excelTableConfiguration, handles.experimentSimplifier)
 
 set(handles.groupsOKIndicator, 'String', 'OK', 'BackgroundColor', [0 1 0]);
 set(handles.savePlateConfig, 'Enable', 'on');
@@ -694,7 +695,7 @@ end
 
 
 
-function addParametersToControllers(controllers, experiment, groupStructure, subgroupNames, sharedBlankStructure, timewiseBlankStructure, excelTableConfiguration)
+function addParametersToControllers(controllers, experiment, groupStructure, subgroupNames, sharedBlankStructure, timewiseBlankStructure, excelTableConfiguration, experimentSimplifier)
 if isequal(excelTableConfiguration, 1)
     mode = 'kinetics';
 else
@@ -703,6 +704,7 @@ end
 
 
 for index = 1 : numel(controllers)
+   controllers{index}.addExperimentSimplifier(experimentSimplifier);
    controllers{index}.addExperiment(experiment, mode);
    controllers{index}.addGroupStructure(groupStructure);
    controllers{index}.addSubgroupNames(subgroupNames);
@@ -1084,14 +1086,6 @@ applyFormulaToSBToolboxPreview(hObject, eventdata, handles);
 handles.SBExporter.toSBProject();
 
 
-
-% --------------------------------------------------------------------
-function activex1_Click(hObject, eventdata, handles)
-% hObject    handle to activex1 (see GCBO)
-% eventdata  structure with parameters passed to COM event listener
-% handles    structure with handles and user data (see GUIDATA)
-
-
 % --- Executes on selection change in outputTimeUnitDropdown.
 function outputTimeUnitDropdown_Callback(hObject, eventdata, handles)
 % hObject    handle to outputTimeUnitDropdown (see GCBO)
@@ -1232,7 +1226,7 @@ if exist('groupStructure', 'var') && exist('groupNames', 'var');
         controllers{3} = handles.graphicalPreviewController;
         controllers{4} = handles.copasiPreviewController;
         controllers{5} = handles.prismPanelController;
-        addParametersToControllers(controllers, handles.apareciumExperimentInput, groupStructure, subgroupNames, sharedBlankStructure, timewiseBlankStructure, handles.excelTableConfiguration);            
+        addParametersToControllers(controllers, handles.apareciumExperimentInput, groupStructure, subgroupNames, sharedBlankStructure, timewiseBlankStructure, handles.excelTableConfiguration, handles.experimentSimplifier);            
         
         handles.plateSimulatorInterface.addExperiment(handles.apareciumExperimentInput);
         handles.simPlateHandle = handles.plateSimulatorInterface.generatePlateSimulator(handles);
@@ -2403,3 +2397,52 @@ function addToSBProject_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 applyFormulaToSBToolboxPreview(hObject, eventdata, handles);
 handles.SBExporter.addToExistingProject();
+
+
+% --- Executes on button press in checkbox11.
+function checkbox11_Callback(hObject, eventdata, handles)
+% hObject    handle to checkbox11 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkbox11
+
+
+% --- Executes on button press in AssumeEquilibriumBeforeFirstEvent.
+function AssumeEquilibriumBeforeFirstEvent_Callback(hObject, eventdata, handles)
+% hObject    handle to AssumeEquilibriumBeforeFirstEvent (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of AssumeEquilibriumBeforeFirstEvent
+handles.experimentSimplifier.setAssumeEquilibriumBeforeFirstEvent(get(hObject,'Value'));
+if get(hObject,'Value')
+    set(handles.AssumeEquilibriumBeforeLastEvent, 'Value', false);
+    handles.experimentSimplifier.setAssumeEquilibriumBeforeLastEvent(false);
+end
+handles.exportTimeMomentController.setApareciumExperimentInput(handles.experimentSimplifier.simplifyEventsAndStartingConditions());
+handles.exportTimeMomentController.resetToExperiment();
+guidata(hObject, handles);
+
+% --- Executes on button press in AssumeEquilibriumBeforeLastEvent.
+function AssumeEquilibriumBeforeLastEvent_Callback(hObject, eventdata, handles)
+% hObject    handle to AssumeEquilibriumBeforeLastEvent (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of AssumeEquilibriumBeforeLastEvent
+handles.experimentSimplifier.setAssumeEquilibriumBeforeLastEvent(get(hObject,'Value'));
+if get(hObject,'Value')
+    set(handles.AssumeEquilibriumBeforeFirstEvent, 'Value', false);
+    handles.experimentSimplifier.setAssumeEquilibriumBeforeFirstEvent(false);
+end
+handles.exportTimeMomentController.setApareciumExperimentInput(handles.experimentSimplifier.simplifyEventsAndStartingConditions());
+handles.exportTimeMomentController.resetToExperiment();
+guidata(hObject, handles);
+
+% --- Executes on button press in pushbutton50.
+function pushbutton50_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton50 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+simplificationStructure = AdvancedSimplification(handles.apareciumExperimentInput, handles.plateSimulatorInterface.getSubgroupNames());

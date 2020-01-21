@@ -9,6 +9,7 @@ classdef ApareciumExperimentInput < handle
         mode
         measurements
         wells
+        originalWellID
         inUse
         numberOfCycles  
         numberOfChannels
@@ -149,7 +150,19 @@ classdef ApareciumExperimentInput < handle
         
         function wells = getWells(this)
            wells = this.wells; 
-        end            
+        end
+        
+        function setOriginalWells(this, wells)
+           this.originalWellID = wells; 
+        end
+        
+        function wells = getOriginalWells(this)
+            wells = this.originalWellID;
+        end
+        
+        function wellIndex = getOriginalWellIDOfIndex(this, wellIndex)
+            wellIndex = this.originalWellID{wellIndex};
+        end
         
         function setInUse(this, inUse)
            this.inUse = inUse; 
@@ -373,6 +386,22 @@ classdef ApareciumExperimentInput < handle
         
         function stopwatchTimes = getStopwatchTimes(this)
            stopwatchTimes = this.stopwatchTimes; 
+        end
+        
+        function clonedApareciumExperimentInput = getSimplificationInvariantClone(this)
+            clonedApareciumExperimentInput = ApareciumExperimentInput();
+            clonedApareciumExperimentInput.setMode(this.getMode());
+            clonedApareciumExperimentInput.setWells(this.getWells());
+            clonedApareciumExperimentInput.setOriginalWells(this.getOriginalWells());
+            clonedApareciumExperimentInput.setInUse(this.getInUse());
+            clonedApareciumExperimentInput.setTreatments(this.getTreatments());
+            clonedApareciumExperimentInput.setNumberOfCycles(this.getNumberOfCycles());
+            clonedApareciumExperimentInput.setMeasurements(this.getMeasurements());
+            clonedApareciumExperimentInput.setChannelNames(this.getChannelNames());
+            clonedApareciumExperimentInput.updateConcentrations(this.getConcentrations());
+            clonedApareciumExperimentInput.updateUnits(this.getUnits());
+            clonedApareciumExperimentInput.setFastKinetics(this.getFastKinetics());
+            clonedApareciumExperimentInput.setGroups(this.getGroups());
         end
     end
 end

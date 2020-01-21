@@ -640,7 +640,7 @@ if(handles.midasTableController.channelNamesAreValid())
     handles.midasTableController.setEventDataEqualToData();
     ExportTools(handles.midasTableController);
 else
-     h = warndlg(['The channel names are not valid. The channel name can not start with a number or contain the following characters:"+ - * / ^ [ ] ( ) { }" or any other matlab functions'], 'Warning');
+     h = warndlg('The channel names are not valid. The channel name can not start with a number or contain the following characters:"+ - * / ^ [ ] ( ) { }" or any other matlab functions', 'Warning');
 end
 
 % --- Executes on button press in pushbutton10.
@@ -674,4 +674,5 @@ stopwatchFilePath = fileChooser.getStopwatchPath();
 handles.stopwatchTimes = readStopwatch(stopwatchFilePath);
 handles.neoAsciiReader.setEventTimes(handles.stopwatchTimes);
 handles.apareciumExperimentInput.setStopwatchTimes(handles.stopwatchTimes);
+successBox('Stopwatch file successfully loaded', 'Success');
 guidata(hObject, handles);
