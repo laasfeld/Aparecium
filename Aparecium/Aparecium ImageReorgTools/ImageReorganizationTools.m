@@ -22,7 +22,7 @@ function varargout = ImageReorganizationTools(varargin)
 
 % Edit the above text to modify the response to help ImageReorganizationTools
 
-% Last Modified by GUIDE v2.5 01-Jan-2010 00:55:27
+% Last Modified by GUIDE v2.5 06-Feb-2020 08:38:54
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -56,7 +56,7 @@ function ImageReorganizationTools_OpeningFcn(hObject, eventdata, handles, vararg
 handles.output = hObject;
 handles.inputDirectory = [];
 handles.outputDirectory = [];
-handles.reorganizationLogic = 1; 
+handles.reorganizationLogic = 1;
 % 1 - By timepoint
 % 2 - By read
 % 3 - By read and then timepoint
@@ -188,3 +188,78 @@ function edit3_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in radiobutton4.
+function radiobutton4_Callback(hObject, eventdata, handles)
+% hObject    handle to radiobutton4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of radiobutton4
+handles.reorganizationLogic = 3;
+guidata(hObject, handles);
+
+% --- Executes on button press in radiobutton2.
+function radiobutton2_Callback(hObject, eventdata, handles)
+% hObject    handle to radiobutton2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of radiobutton2
+handles.reorganizationLogic = 1;
+guidata(hObject, handles);
+
+% --- Executes on button press in radiobutton3.
+function radiobutton3_Callback(hObject, eventdata, handles)
+% hObject    handle to radiobutton3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of radiobutton3
+handles.reorganizationLogic = 2;
+guidata(hObject, handles);
+
+
+% --- Executes on button press in cut.
+function cut_Callback(hObject, eventdata, handles)
+% hObject    handle to cut (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of cut
+handles.copyOrCut = 1;
+guidata(hObject, handles);
+
+
+% --- Executes on button press in copy.
+function copy_Callback(hObject, eventdata, handles)
+% hObject    handle to copy (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of copy
+handles.copyOrCut = 2;
+guidata(hObject, handles);
+
+
+% --- Executes on button press in radiobutton5.
+function radiobutton5_Callback(hObject, eventdata, handles)
+% hObject    handle to radiobutton5 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of radiobutton5
+handles.nameSource = 1;
+guidata(hObject, handles);
+
+
+% --- Executes on button press in radiobutton6.
+function radiobutton6_Callback(hObject, eventdata, handles)
+% hObject    handle to radiobutton6 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of radiobutton6
+handles.nameSource = 2;
+guidata(hObject, handles);
