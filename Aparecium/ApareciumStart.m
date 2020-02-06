@@ -22,7 +22,7 @@ function varargout = ApareciumStart(varargin)
 
 % Edit the above text to modify the response to help ApareciumStart
 
-% Last Modified by GUIDE v2.5 11-Feb-2019 16:12:37
+% Last Modified by GUIDE v2.5 22-Jan-2020 13:29:49
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -257,4 +257,22 @@ function protdegradeTools_CreateFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 handles.protdegradeTools = hObject;
+guidata(hObject, handles);
+
+
+% --- Executes during object creation, after setting all properties.
+function axes1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to axes1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: place code in OpeningFcn to populate axes1
+fullPath = [mfilename('fullpath'),'RANDOM556874'];
+if isdeployed
+    folderPath = [pwd, '\'];
+else  
+    folderPath = regexprep(fullPath, 'ApareciumStartRANDOM556874','', 'once');
+end
+apareciumLogo = [folderPath, 'Icons\', 'Aparecium logo.png'];
+imshow(apareciumLogo, 'Parent', hObject);
 guidata(hObject, handles);

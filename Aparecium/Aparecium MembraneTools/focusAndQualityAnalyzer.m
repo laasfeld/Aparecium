@@ -58,26 +58,35 @@ handles.requiredPattern = varargin{2};
 handles.lowerBound = varargin{3}(1);
 handles.upperBound = varargin{3}(2);
 handles.spaceAllowed = 1;
-handles.wellID = ImageImporter.getWellIDOfFolder(handles.directoryName, handles.requiredPattern);
+[handles.wellID, handles.wellID_location_indices] = ImageImporter.getWellIDOfFolder(handles.directoryName, handles.requiredPattern);
 handles.wellIndex = 1;
+handles.imageInWellIndex = 1;
 handles.selectingBadAreas = 0;
 if numel(varargin) > 3
     handles.imageIndex = varargin{4};
     handles.standardIndex = varargin{4};
     set(handles.undefinedFocus, 'enable', 'on');
 else
-    handles.imageIndex = ones(numel(handles.wellID), 1)*-1;
+    handles.imageIndex = cell(numel(handles.wellID), 1);
+    for index = 1 : numel(handles.imageIndex)
+        handles.imageIndex{index} = ones(numel(handles.wellID_location_indices{index}), 1)*-1;
+    end
+    
     set(handles.undefinedFocus, 'enable', 'off');
     set(handles.focusDown, 'enable', 'off');
 end
 handles.imagesOfWell = [];
 handles.masks = cell(numel(handles.wellID), 1);
 for wellIndex = 1 : numel(handles.wellID)
-    handles.masks{wellIndex} = false(904, 1224);
+    for wellImageLocation = 1 : numel(handles.wellID_location_indices{wellIndex})
+        handles.masks{wellIndex}{wellImageLocation} = false(904, 1224);
+    end
 end
 handles.focusImageNames = cell(numel(handles.wellID), 1);
 for index = 1 : numel(handles.focusImageNames)
-   handles.focusImageNames{index} = []; 
+    for wellImageLocation = 1 : numel(handles.wellID_location_indices{wellIndex})
+        handles.focusImageNames{index}{wellImageLocation} = []; 
+    end
 end
 handles = createImageNameArrays(handles);
 handles = displayImages(handles);
@@ -122,49 +131,62 @@ for i = 1 : length(fileListArray)
     end
 end
 handles.nameArray(cellfun(@isempty,handles.nameArray)) = [];
-handles.imagesOfWell = cell(numel(handles.wellID), 1);
-for wellIndex = 1 : numel(handles.wellID)
-    handles.imagesOfWell{wellIndex} = [];
-    for pic = 1 : size(handles.nameArray,1)
-         if strfind(handles.nameArray{pic}, handles.wellID{wellIndex})
-             zindex = strfind(handles.nameArray{pic}, '1Z') + 1;
-             if(strcmp(handles.nameArray{pic}(zindex+2), '_'))
-                 imageIndex = str2num(handles.nameArray{pic}(zindex+1))+1;
-             else
-                 imageIndex = str2num(handles.nameArray{pic}(zindex+1:zindex+2))+1;
-             end
-             handles.imagesOfWell{wellIndex}(imageIndex) = pic;
-         end
+handles.imagesOfWellAtLocation = cell(numel(handles.wellID), 1);
+for pic = 1 : size(handles.nameArray, 1)
+    wellID = ImageImporter.findWellIDOfString(handles.nameArray{pic});
+    wellIDIndex = find(strcmp(handles.wellID, wellID));
+    imagingLocation = ImageImporter.getImageInWellIndexOfString(handles.nameArray{pic});
+    imagingLocationIndex = handles.wellID_location_indices{wellIDIndex} == imagingLocation;
+    ZplaneIndex = ImageImporter.getImagePlaneIndexOfString(handles.nameArray{pic}) + 1;
+    handles.imagesOfWell{wellIDIndex}{imagingLocationIndex}(ZplaneIndex) = pic;
+end
+% if some images were missing then remove zeros
+for wellIDIndex = 1 : numel(handles.imagesOfWell)
+    for imageLocationIndex = 1 : numel(handles.imagesOfWell{wellIDIndex})
+        handles.imagesOfWell{wellIDIndex}{imageLocationIndex}(handles.imagesOfWell{wellIDIndex}{imageLocationIndex} == 0) = [];
     end
 end
 
+% for wellIndex = 1 : numel(handles.wellID)
+%     handles.imagesOfWell{wellIndex} = [];
+%     for pic = 1 : size(handles.nameArray,1)
+%          if strfind(handles.nameArray{pic}, handles.wellID{wellIndex})
+%              zindex = strfind(handles.nameArray{pic}, '1Z') + 1;
+%              if(strcmp(handles.nameArray{pic}(zindex+2), '_'))
+%                  imageIndex = str2num(handles.nameArray{pic}(zindex+1))+1;
+%              else
+%                  imageIndex = str2num(handles.nameArray{pic}(zindex+1:zindex+2))+1;
+%              end
+%              handles.imagesOfWell{wellIndex}(imageIndex) = pic;
+%          end
+%     end
+% end
+
 function handles = displayImages(handles)
 try
-    if handles.imageIndex(handles.wellIndex) <= handles.lowerBound
-        if handles.wellIndex <= handles.lowerBound + 1
-            handles.imageIndex(handles.wellIndex) = handles.lowerBound + 1;
+    if handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) <= handles.lowerBound % impossible image index in this context
+        if isequal(handles.wellIndex, 1) && isequal(handles.imageInWellIndex, 1) % handle the case where no previous image focus is available
+            handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) = handles.lowerBound + 1;
+        elseif isequal(handles.imageInWellIndex, 1); % handle the case where previous image focus is available but in previous well
+            handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) = handles.imageIndex{handles.wellIndex - 1}(end);
         else
-            handles.imageIndex(handles.wellIndex) = handles.imageIndex(handles.wellIndex-1);
+            handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) = handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex - 1);
         end
     end
-    set(handles.fileName, 'String', ['Current image is ', handles.nameArray{handles.imagesOfWell{handles.wellIndex}(handles.imageIndex(handles.wellIndex))}]);
+    fileName = handles.nameArray{handles.imagesOfWell{handles.wellIndex}{handles.imageInWellIndex}(handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex))};
+    set(handles.fileName, 'String', ['Current image is ', fileName]);
     if( isequal(get(handles.normalize,'Value'), 0) )
-        image = imread([handles.directoryName, '\', handles.nameArray{handles.imagesOfWell{handles.wellIndex}(handles.imageIndex(handles.wellIndex))}]);
-        mask = handles.masks{handles.wellIndex};
-        masked = image;
-        masked(mask) = 0;
-        image = cat(3, cat(3, image, masked), masked);
-        imshow(image, 'Parent', handles.axes1);
+        image = imread([handles.directoryName, '\', fileName]);
     else
-        image = double(imread([handles.directoryName, '\', handles.nameArray{handles.imagesOfWell{handles.wellIndex}(handles.imageIndex(handles.wellIndex))}]));
+        image = double(imread([handles.directoryName, '\', fileName]));
         image = (image - min(min(image)));
         image = image/max(max(image));
-        mask = handles.masks{handles.wellIndex};
-        masked = image;
-        masked(mask) = 0;
-        image = cat(3, cat(3, image, masked), masked);
-        imshow(image, 'Parent', handles.axes1);
     end
+    mask = handles.masks{handles.wellIndex}{handles.imageInWellIndex};
+    masked = image;
+    masked(mask) = 0;
+    image = cat(3, cat(3, image, masked), masked);
+    imshow(image, 'Parent', handles.axes1);
 catch
     
 end
@@ -176,10 +198,10 @@ function focusUp_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-handles.imageIndex(handles.wellIndex) = handles.imageIndex(handles.wellIndex) + 1;
+handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) = handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) + 1;
 handles = displayImages(handles);
 set(handles.focusDown, 'Enable', 'on');
-if handles.imageIndex(handles.wellIndex) >= numel(handles.imagesOfWell{handles.wellIndex}) - handles.upperBound
+if handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) >= numel(handles.imagesOfWell{handles.wellIndex}{handles.imageInWellIndex}) - handles.upperBound
     set(hObject, 'Enable', 'off'); 
 end
 guidata(hObject, handles);
@@ -189,10 +211,10 @@ function focusDown_Callback(hObject, eventdata, handles)
 % hObject    handle to focusDown (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.imageIndex(handles.wellIndex) = handles.imageIndex(handles.wellIndex) - 1;
+handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) = handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) - 1;
 handles = displayImages(handles);
 set(handles.focusUp, 'Enable', 'on');
-if handles.imageIndex(handles.wellIndex) <= handles.lowerBound + 1
+if handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) <= handles.lowerBound + 1
     set(hObject, 'Enable', 'off');  
 end
 guidata(hObject, handles);
@@ -231,30 +253,39 @@ function acceptImage_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
- handles.focusImageNames{handles.wellIndex} = handles.nameArray{handles.imagesOfWell{handles.wellIndex}(handles.imageIndex(handles.wellIndex))};
- set(handles.previousImage, 'Enable', 'on'); 
- if(handles.wellIndex < numel(handles.wellID))   
-    handles.wellIndex = handles.wellIndex + 1;
+handles.focusImageNames{handles.wellIndex}{handles.imageInWellIndex} = handles.nameArray{handles.imagesOfWell{handles.wellIndex}{handles.imageInWellIndex}(handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex))};
+set(handles.previousImage, 'Enable', 'on'); 
+if handles.imageInWellIndex < numel(handles.wellID_location_indices{handles.wellIndex})  
+    handles.imageInWellIndex = handles.imageInWellIndex + 1;
     try
         handles = displayImages(handles);
     catch
-        
+
     end
- else
+elseif handles.wellIndex < numel(handles.wellID)
+    handles.wellIndex = handles.wellIndex + 1;
+    handles.imageInWellIndex = 1;
+    try
+        handles = displayImages(handles);
+    catch
+
+    end  
+else
     set(handles.done, 'Enable', 'on');  
- end
-if handles.imageIndex(handles.wellIndex) >= numel(handles.imagesOfWell{handles.wellIndex}) - handles.upperBound
+end
+if handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) >= numel(handles.imagesOfWell{handles.wellIndex}{handles.imageInWellIndex}) - handles.upperBound
     set(handles.focusUp, 'Enable', 'off'); 
 else
     set(handles.focusUp, 'Enable', 'on'); 
 end
 
-if handles.imageIndex(handles.wellIndex) <= handles.lowerBound + 1
+if handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) <= handles.lowerBound + 1
     set(handles.focusDown, 'Enable', 'off');  
 else
     set(handles.focusDown, 'Enable', 'on');
 end
- guidata(hObject, handles);
+guidata(hObject, handles);
+
 % --- Executes on button press in previousImage.
 function previousImage_Callback(hObject, eventdata, handles)
 % hObject    handle to previousImage (see GCBO)

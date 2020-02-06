@@ -19,8 +19,8 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             fileChooser = FileChooser();
             ilastikPath = fileChooser.getIlastikExecutablePath();
             
-            parfor i = 1 : numel(measurementParams)
-                slopeImages{i} = MembraneImageAnalyzer.createSlopeImage(measurementParams(i))
+            parfor i = 1 : numel(measurementParams) % parfor should be here
+                slopeImages{i} = MembraneImageAnalyzer.createSlopeImage(measurementParams(i));
             end
             binaryImages = MembraneImageAnalyzer.createBinaryImages(slopeImages, measurementParams, ilastikPath);
             for imageIndex = 1 : numel(measurementParams)
@@ -45,8 +45,11 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             sLength = 5;
             %generate random string
             randString = s( ceil(rand(1,sLength)*numRands) );
-            
             tempPath = [tempdir,'Aparecium\MembraneToolsTempDir\'];
+            if ~exist(tempPath, 'dir')
+               mkdir(tempPath);
+            end
+            
             IlastikCallString = ['!ilastik.exe --headless --project=', measurementParams(1).imageProcessingParams.ilastikModelPath, ' '];
             for imageIndex = 1 : numel(slopeImages)
                 IlastikCallString = [IlastikCallString, tempPath,'\', num2str(imageIndex), randString,'.tif '];
@@ -119,16 +122,18 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             cellContents = struct2cell(contents);
             possibleNames = cellContents(1, :);
             % prepare Zstack image names
-            ZIndex = strfind(secondaryPicName, '_1Z');
+            ZIndex = regexp(secondaryPicName, '_\d{1,2}Z\d{1,2}');
+            substr = regexp(secondaryPicName, '_\d{1,2}Z\d{1,2}', 'match', 'once');
+            ZIndex = ZIndex + regexp(substr, 'Z') - 1;
             names = cell(1, numel(possibleNames));
             index = 0;
             while 1
-                pathlessName = [secondaryPicName(1:ZIndex+2), num2str(index), '_RFP_', secondaryPicName(end-6:end)];
+                pathlessName = [secondaryPicName(1:ZIndex), num2str(index), '_RFP_', secondaryPicName(end-6:end)];
                 if isequal(sum(strcmp(possibleNames, pathlessName)), 0)
                    break; 
                 end
                 
-                names{index + 1} = [filePath, secondaryPicName(1:ZIndex+2), num2str(index), '_RFP_', secondaryPicName(end-6:end)];
+                names{index + 1} = [filePath, secondaryPicName(1:ZIndex), num2str(index), '_RFP_', secondaryPicName(end-6:end)];
                 index = index + 1;
             end
             

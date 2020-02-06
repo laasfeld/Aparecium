@@ -602,7 +602,7 @@ classdef ImageAnalyzer < handle
                                 IlastikAnalysis = str2func([class(this), '.performIlastikAnalysis']);
                                 measurementParams = IlastikAnalysis(measurementParams); 
                             else
-                                parfor imageIndex = 1 : numel(measurementParams)% parfor should be here                            
+                                for imageIndex = 1 : numel(measurementParams)% parfor should be here                            
                                     measurementParams(imageIndex).results = functionName(...
                                     measurementParams(imageIndex).wellName, measurementParams(imageIndex).secondaryPicOfWell, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).imageProcessingParams,...
                                     measurementParams(imageIndex).timeParameters, measurementParams(imageIndex).thresholdFunctionHandle, measurementParams(imageIndex).calculationMethod, measurementParams(imageIndex).qualityMask, ...
@@ -655,7 +655,7 @@ classdef ImageAnalyzer < handle
                         elseif strcmp(this.ICSEOrMembrane, 'Membrane')
                             nameArray = this.imageImporter.getNameArrayOfFolder(folder);
                             secondaryNameArray = this.imageImporter.getSecondaryNameArrayOfFolder(folder);
-                            if this.imageProcessingParameters.detectionModel == this.imageProcessingParameters.IlastikModel
+                            if strcmp(this.imageProcessingParameters.detectionModel, this.imageProcessingParameters.IlastikModel)
                                 for well = 1 : numel(wellID)   
                                     if well == 1
                                        measurementParams = this.configureWellMeasurementParameters(well, nameArray, secondaryNameArray, wellID, directoryPath, folder); 
@@ -733,7 +733,7 @@ classdef ImageAnalyzer < handle
                      resultStructure(picOfWell).imageName = nameArrayOfWell{picOfWell};
                      resultStructure(picOfWell).parametersToCalculate = this.parametersToCalculate;
                      resultStructure(picOfWell).calculationMethod = 'Binary';
-                     resultStructure(picOfWell).qualityMask = qualityMasks{well}; % this logic may fail if there is more than one image of a well
+                     resultStructure(picOfWell).qualityMask = qualityMasks{well}{picOfWell}; 
 
                      %resultStructure = analyzeMembranesStatic(nameArrayOfWell{picOfWell}, secondaryNameArrayOfWell{picOfWell}, directoryPath, imageProcessingParams, timeParameters, thresholdFunctionHandle, 'Binary', qualityMasks{well});
                      %wellMeasurementInfo{picOfWell}.averageMembraneIntensity = resultStructure.averageMembraneIntensity;
@@ -780,7 +780,7 @@ classdef ImageAnalyzer < handle
                  elseif strcmp(ICSEOrMembrane, 'Membrane')
                      %try
                         functionName = str2func([class(this), '.analyzeMembranesStatic']); 
-                        resultStructure = functionName(nameArrayOfWell{picOfWell}, secondaryNameArrayOfWell{picOfWell}, directoryPath, directoryPath, imageProcessingParams, timeParameters, thresholdFunctionHandle, 'Binary', qualityMasks{well}, this.parametersToCalculate, []);
+                        resultStructure = functionName(nameArrayOfWell{picOfWell}, secondaryNameArrayOfWell{picOfWell}, directoryPath, directoryPath, imageProcessingParams, timeParameters, thresholdFunctionHandle, 'Binary', qualityMasks{well}{picOfWell}, this.parametersToCalculate, []);
                         wellMeasurementInfo{picOfWell}.averageMembraneIntensity = resultStructure.averageMembraneIntensity;
                         wellMeasurementInfo{picOfWell} = resultStructure;
                         wellMeasurementInfo{picOfWell}.imageName = nameArrayOfWell{picOfWell}; 

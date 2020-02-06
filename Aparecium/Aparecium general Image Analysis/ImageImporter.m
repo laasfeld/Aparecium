@@ -88,26 +88,28 @@ classdef ImageImporter < handle
                     
                     %create a more sophisticated pattern
                     pat = '^(';
-                    nameIndex = 1;
-                    if numel(BFnameArray) > 1
-                        for nameIndex = 1 : numel(BFnameArray)-1
-                            if(BFnameArray{nameIndex}(4) == '_')
-                                pat = [pat, BFnameArray{nameIndex}(1:3),'|'];
-                            else
-                                pat = [pat, BFnameArray{nameIndex}(1:4),'|'];
-                            end
+                    %if numel(BFnameArray) > 1 || numel(BFnameArray{1}) > 1
+                    %    for nameIndex = 1 : numel(BFnameArray)-1
+                            
+                    %        if(BFnameArray{nameIndex}(4) == '_')
+                    %            pat = [pat, BFnameArray{nameIndex}(1)(1:3),'|'];
+                    %        else
+                    %            pat = [pat, BFnameArray{nameIndex}(1)(1:4),'|'];
+                    %        end
+                    %    end
+                    %end                
+
+                    for nameIndex = 1 : numel(BFnameArray)
+                        for imageInWellIndes = 1 : numel(BFnameArray{nameIndex})
+                            wellID = ImageImporter.findWellIDOfString(BFnameArray{nameIndex}{imageInWellIndes});
+                            imageInWellIndex = num2str(ImageImporter.getImageInWellIndexOfString(BFnameArray{nameIndex}{imageInWellIndes}));
+
+                            pat = [pat, wellID, '_\d{1,2}_\d{1}_', imageInWellIndex, 'Z|'];
                         end
-                    end
-                    if(BFnameArray{nameIndex}(4) == '_')
-                        pat = [pat, BFnameArray{end}(1:3), ')(\w*)RFP'];
-                    else
-                        pat = [pat, BFnameArray{end}(1:4), ')(\w*)RFP'];
-                    end
-                    %this.nameArray{folder} = BFnameArray;
-                    %nameArray = BFnameArray;
-                    %for index = 1 : numel(BFnameArray)
-                    %   this.secondaryNameArray{folder}{index} = regexprep(BFnameArray{index}, 'Bright Field', 'RFP'); 
-                    %end
+                    end                
+
+                    pat = [pat,')(\w*)RFP'];
+                    
                     try
                         secondaryNameArray = focusAndQualityAnalyzer([mainDir,'\',chosenDirectories{folder}], pat,[0 0], standardFocus);
                     catch MException
@@ -124,35 +126,8 @@ classdef ImageImporter < handle
                 
                 %% reorganize the fileListArray to get all the file names
 
-
                 this.wellID{folder} = cell(0,0);
                 this.wellID{folder} = ImageImporter.getWellIDOfStringArray(nameArray, '.tif');
-%                 for well = 1 : length(ID)
-%                      for pic = 1 : numel(nameArray)
-%                          if isequal(numel(ID{well}), 3) && isequal(strcmp(ID{well}(2), '0'), 1)
-%                             secondType = [ID{well}(1), ID{well}(3)];
-%                          else
-%                             secondType = ID{well};
-%                          end
-%                          if ~isequal(strfind(nameArray{pic}, ID{well}), [])
-%                              index = strfind(nameArray{pic}, ID{well}) + numel(ID{well});
-%                              if strcmp(nameArray{pic}(index), '_')
-%                                  if isequal(sum(cell2mat(strfind(this.wellID{folder}, ID{well}))),0)
-%                                     this.wellID{folder}{end+1,1} = ID{well};
-%                                     break;
-%                                  end
-%                              end
-%                          elseif ~isequal(strfind(nameArray{pic}, secondType), [])
-%                              index = strfind(nameArray{pic}, ID{well}) + numel(ID{well});
-%                              if strcmp(nameArray{pic}(index), '_')
-%                                  if isequal(sum(cell2mat(strfind(this.wellID{folder}, ID{well}))),0)
-%                                     this.wellID{folder}{end+1,1} = secondType;
-%                                     break;
-%                                  end
-%                              end
-%                          end
-%                      end
-%                 end
                 this.time{folder, 1} = 0;
                 this.numberOfChannels{folder} = 6;%% a standard parameter for now
                 this.generateExperimentDataStructure(folder);
@@ -160,19 +135,30 @@ classdef ImageImporter < handle
         end
         
         function nameArray = removeIncompatibleImages(this, nameArray, secondaryNameArray, folder)
-            tempNameArray = cell(0,0);
-            tempSecondaryNameArray = cell(0,0);
-            for nameIndex = 1 : numel(nameArray)
-               for secondaryNameIndex = 1 : numel(secondaryNameArray)
-                   if(strcmp(nameArray{nameIndex}(1:6), secondaryNameArray{secondaryNameIndex}(1:6)))
-                      tempNameArray{end + 1} = nameArray{nameIndex};
-                      tempSecondaryNameArray{end + 1} = secondaryNameArray{secondaryNameIndex};
-                   end
-               end
-            end
-            this.nameArray{folder} = tempNameArray;
-            this.secondaryNameArray{folder} = tempSecondaryNameArray;
-            nameArray = tempNameArray;
+
+            unwrappedNameArray = vertcat(nameArray{:});
+            unwrappedSecondaryNameArray = vertcat(secondaryNameArray{:});
+            unwrappedNameArray = reshape(unwrappedNameArray, numel(unwrappedNameArray), 1);
+            unwrappedSecondaryNameArray = reshape(unwrappedSecondaryNameArray, numel(unwrappedSecondaryNameArray), 1);
+            
+            nameArrayMatchEquivalent = ImageImporter.generateNameArrayMatchEquivalent(nameArray);
+            secondaryNameArrayMatchEquivalent = ImageImporter.generateNameArrayMatchEquivalent(secondaryNameArray);
+            
+             [~, nameArrayIndices, secondaryNameArrayIndices] = intersect(nameArrayMatchEquivalent, secondaryNameArrayMatchEquivalent);
+%             
+%             tempNameArray = cell(0,0);
+%             tempSecondaryNameArray = cell(0,0);
+%             for nameIndex = 1 : numel(nameArray)
+%                for secondaryNameIndex = 1 : numel(secondaryNameArray)
+%                    if(strcmp(nameArray{nameIndex}(1:6), secondaryNameArray{secondaryNameIndex}(1:6)))
+%                       tempNameArray{end + 1} = nameArray{nameIndex};
+%                       tempSecondaryNameArray{end + 1} = secondaryNameArray{secondaryNameIndex};
+%                    end
+%                end
+%             end
+            this.nameArray{folder} = unwrappedNameArray(sort(nameArrayIndices));
+            this.secondaryNameArray{folder} = unwrappedSecondaryNameArray(sort(secondaryNameArrayIndices));
+            nameArray = unwrappedNameArray(sort(nameArrayIndices));
         end
         
         function nameArray = getNameArrayOfFolder(this, folder)
@@ -304,6 +290,15 @@ classdef ImageImporter < handle
     
     methods(Static)
         
+        function nameArrayMatchEquivalent = generateNameArrayMatchEquivalent(nameArray)
+            unwrappedNameArray = vertcat(nameArray{:});            
+            unwrappedNameArray = reshape(unwrappedNameArray, numel(unwrappedNameArray), 1);
+            nameArrayMatchEquivalent = cell(numel(unwrappedNameArray), 1);         
+            for nameIndex = 1 : numel(unwrappedNameArray)
+                nameArrayMatchEquivalent{nameIndex} = [ImageImporter.findWellIDOfString(unwrappedNameArray{nameIndex}), '_', num2str(ImageImporter.getImageInWellIndexOfString(unwrappedNameArray{nameIndex}))];
+            end
+        end
+        
         function wellID = getWellIDOfStringArray(nameArray, pattern)
             wellID = cell(0,0);
             for pic = numel(nameArray) : -1 : 1
@@ -316,8 +311,20 @@ classdef ImageImporter < handle
             for pic = 1 : numel(nameArray)
                 wellID{end+1} = regexp(nameArray{pic},'([A-Z]{1,2}\d{1,2})', 'match', 'once');
             end
-            wellID = ImageImporter.sortWellID(wellID)';
-            
+            wellID = ImageImporter.sortWellID(wellID)';        
+        end
+        
+        function wellID = findWellIDOfString(name)
+            wellIDCell = ImageImporter.getWellIDOfStringArray({name}, '[A-Z]{1,100}');
+            wellID = wellIDCell{1};
+        end
+        
+        function imageInWellIndex = getImageInWellIndexOfString(name)
+            imageInWellIndex = str2double(regexp(regexp(name,'(_\d{1,2}Z)', 'match', 'once'), '(\d{1,3})', 'match', 'once'));
+        end
+        
+        function imagePlaneIndex = getImagePlaneIndexOfString(name)
+           imagePlaneIndex = str2double(regexp(regexp(regexp(name,'(_\d{1,2}Z\d{1,2})', 'match', 'once'), '(Z\d{1,3})', 'match', 'once'), '(\d{1,3})', 'match', 'once'));
         end
         
         function wellID = sortWellID(wellID)% sorts the cell array according to cell naming logic instead of standard string and number logic. 
@@ -363,76 +370,9 @@ classdef ImageImporter < handle
             wellID = wellID(indices);
         end
         
-        function wellID = getWellIDOfStringArrayOld(nameArray, pattern)
-            load plate96WellLayout
 
-            a = ExtendedRowLabels;
-            for i = 1 : numel(a);
-                for j = 1 : 48
-                    if j < 10
-                        plate96WellLayout{j, i} = [a{i},'0', num2str(j)];
-                    else
-                        plate96WellLayout{j, i} = [a{i}, num2str(j)];
-                    end
-                end
-            end
-            ID = reshape(plate96WellLayout,1,numel(plate96WellLayout));
-
-            wellID = cell(0,0);
-
-            for pic = size(nameArray,1) : -1 : 1
-                 if ~isempty(regexp(nameArray{pic}, pattern, 'once'))
-
-                 else
-                     nameArray(pic) = [];
-                 end
-            end
-
-            for well = 1 : length(ID)
-                well
-                 if isequal(numel(ID{well}), 3) && isequal(strcmp(ID{well}(2), '0'), 1)
-                    secondType = [ID{well}(1), ID{well}(3)];
-                 elseif isequal(numel(ID{well}), 4) && isequal(strcmp(ID{well}(3), '0'), 1)
-                    secondType = [ID{well}(1:2), ID{well}(4)]; 
-                 else
-                    secondType = ID{well};
-                 end
-
-                 for pic = 1 : numel(nameArray)
-                     if ~isequal(strfind(nameArray{pic}, ID{well}), []) 
-                         if isequal(sum(cell2mat(strfind(wellID, ID{well}))),0) % make sure that the well is unique
-                            index = strfind(nameArray{pic}, ID{well});
-                            if isequal(index(1), 1) % make sure that the found match is at the start of the name, otherwise it indicates Z stack and this is not a match
-                                wellID{end+1,1} = ID{well};
-                                nameArray(~cellfun(@isempty, strfind(nameArray, ID{well}))) = [];
-                                break;
-                            else
-                                'siin'
-                            end
-                         end
-                     elseif ~isequal(strfind(nameArray{pic}, secondType), [])
-                          if ~isequal(strfind(nameArray{pic}, secondType), [])
-                             index = strfind(nameArray{pic}, secondType);
-                             if ~isequal(index(1), 1) % make sure that the found match is at the start of the name, otherwise it indicates Z stack and this is not a match
-                                 continue;
-                             else
-                                 'siin'
-                             end
-                             wellNameLenghtParam = numel(ID{well}) - 1;
-                             if  numel(nameArray{pic}) >= index + wellNameLenghtParam && ~isempty(str2num(nameArray{pic}(index + wellNameLenghtParam))) % to avoid matches like A1 in something like A10_ we check that a number is not following
-                                continue;
-                             end
-                         end
-                         if isequal(sum(cell2mat(strfind(wellID, ID{well}))),0)
-                            wellID{end+1,1} = secondType;
-                            break;
-                         end
-                     end                         
-                 end
-            end
-        end
         
-        function wellID = getWellIDOfFolder(folder, pattern)
+        function [wellIDs, wellID_ImageLocations] = getWellIDOfFolder(folder, pattern)
             fileListArray = dir([folder, '\*.tif']);
 
             %% reorganize the fileListArray to get all the file names
@@ -441,7 +381,7 @@ classdef ImageImporter < handle
             for i = 1 : length(fileListArray)
                 nameArray{i} = fileListArray(i).name;
             end
-            wellID = cell(0,0);
+            wellIDs = cell(0,0);
 
             for pic = numel(nameArray) : -1 : 1
                  if ~isempty(regexp(nameArray{pic}, pattern, 'once'))
@@ -452,90 +392,25 @@ classdef ImageImporter < handle
             end
 
             for pic = 1 : numel(nameArray)
-                wellID{end+1} = regexp(nameArray{pic},'([A-Z]{1,2}\d{1,2})', 'match', 'once');
+                wellIDs{end+1} = regexp(nameArray{pic},'([A-Z]{1,2}\d{1,2})', 'match', 'once');
             end
-            wellID = ImageImporter.sortWellID(wellID)';
-        end
-        
-        function wellID = getWellIDOfFolderOld(folder, pattern) % this function has been replaced by a new one which is more general and around 10 times faster
-                load plate96WellLayout
             
-                a = ExtendedRowLabels;
-                for i = 1 : numel(a);
-                    for j = 1 : 48
-                        if j < 10
-                            plate96WellLayout{j, i} = [a{i},'0', num2str(j)];
-                        else
-                            plate96WellLayout{j, i} = [a{i}, num2str(j)];
-                        end
-                    end
-                end
-                ID = reshape(plate96WellLayout,1,numel(plate96WellLayout));
-                
-                fileListArray = dir([folder, '\*.tif']);
-
-                %% reorganize the fileListArray to get all the file names
-
-                nameArray = cell(length(fileListArray),1);
-                for i = 1 : length(fileListArray)
-                    nameArray{i} = fileListArray(i).name;
-                end
-                wellID = cell(0,0);
-                
-                for pic = size(nameArray,1) : -1 : 1
-                     if ~isempty(regexp(nameArray{pic}, pattern, 'once'))
-                         
-                     else
-                         nameArray(pic) = [];
-                     end
-                end
-                
-                for well = 1 : length(ID)
-                    %well
-                     if isequal(numel(ID{well}), 3) && isequal(strcmp(ID{well}(2), '0'), 1)
-                        secondType = [ID{well}(1), ID{well}(3)];
-                     elseif isequal(numel(ID{well}), 4) && isequal(strcmp(ID{well}(3), '0'), 1)
-                        secondType = [ID{well}(1:2), ID{well}(4)]; 
-                     else
-                        secondType = ID{well};
-                     end
-                     
-                     for pic = 1 : size(nameArray,1)
-                         if ~isequal(strfind(nameArray{pic}, ID{well}), []) 
-                             if isequal(sum(cell2mat(strfind(wellID, ID{well}))),0) % make sure that the well is unique
-                                index = strfind(nameArray{pic}, ID{well});
-                                if isequal(index(1), 1) % make sure that the found match is at the start of the name, otherwise it indicates Z stack and this is not a match
-                                    wellID{end+1,1} = ID{well};
-                                    nameArray(~cellfun(@isempty, strfind(nameArray, ID{well}))) = [];
-                                    break;
-                                else
-                                    %'siin'
-                                end
-                             end
-                         elseif ~isequal(strfind(nameArray{pic}, secondType), [])
-                              if ~isequal(strfind(nameArray{pic}, secondType), [])
-                                 index = strfind(nameArray{pic}, secondType);
-                                 if ~isequal(index(1), 1) % make sure that the found match is at the start of the name, otherwise it indicates Z stack and this is not a match
-                                     continue;
-                                 else
-                                     %'siin'
-                                 end
-                                 index = index(1); % in case of image from Z10 for example two Z-s are found, we are interested only in the first one of them
-                                 wellNameLenghtParam = numel(ID{well}) - 1;
-
-                                 if  numel(nameArray{pic}) >= index + wellNameLenghtParam && ~isempty(str2num(nameArray{pic}(index + wellNameLenghtParam))) % to avoid matches like A1 in something like A10_ we check that a number is not following
-                                    continue;
-                                 end
-                             end
-                             if isequal(sum(cell2mat(strfind(wellID, ID{well}))),0)
-                                wellID{end+1,1} = secondType;
-                                break;
-                             end
-                         end                         
-                     end
-                end
+            wellIDs = ImageImporter.sortWellID(wellIDs)';
+            wellID_ImageLocations = cell(numel(wellIDs), 1);
+            
+            for pic = 1 : numel(nameArray)
+               wellID = regexp(nameArray{pic},'([A-Z]{1,2}\d{1,2})', 'match', 'once');
+               wellID = ImageImporter.sortWellID({wellID});
+               imageLocationIndex = ImageImporter.getImageInWellIndexOfString(nameArray{pic});
+               index = find(strcmp(wellIDs, wellID{1}));
+               wellID_ImageLocations{index} = [wellID_ImageLocations{index}, imageLocationIndex];
+            end
+            
+            for index = 1 : numel(wellID_ImageLocations)
+                wellID_ImageLocations{index} = unique(wellID_ImageLocations{index});
+            end
+            
         end
-    end
-    
+    end  
 end
 
