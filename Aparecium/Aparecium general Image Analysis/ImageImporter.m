@@ -360,7 +360,7 @@ classdef ImageImporter < handle
                 wellID{swapIndex} = swapBackOriginals{index};
             end
         end
-        
+
         function wellID = sortWellNumbers(wellID) % this function will not sort the wellID-s by name, use sortWellID for sorting both ways
             wellIndices = zeros(numel(wellID), 1);
             for i = 1 : numel(wellID)
