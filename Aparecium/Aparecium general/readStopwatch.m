@@ -1,4 +1,4 @@
-function times = readStopwatch(fileName)
+function [times, labels] = readStopwatch(fileName)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
     fileHandle = fopen(fileName,'r', 'b');
@@ -6,16 +6,18 @@ function times = readStopwatch(fileName)
     fclose(fileHandle);
 
     times = zeros(numel(g{1}) - 1, 1);
+    labels = cell(numel(g{1}) - 1, 1);
     for lineIndex = 3 : numel(g{1})   
         lineSplits = textscan(g{1}{lineIndex}, '%s');
-        additionalLabelParts = numel(lineSplits) - 9;
+        additionalLabelParts = numel(lineSplits{1}) - 9;
         if strcmp(lineSplits{1}{2}, 'Pause')
             times(lineIndex - 1:end) = [];
             break;     
         end
         temp = textscan(lineSplits{1}{4 + additionalLabelParts}, '%s');
         timeSplit = strsplit(temp{1}{1}, ':');
-        times(lineIndex - 1) = str2double(timeSplit{1})*3600 + str2double(timeSplit{2})*60 + str2double(timeSplit{3});  
+        times(lineIndex - 1) = str2double(timeSplit{1})*3600 + str2double(timeSplit{2})*60 + str2double(timeSplit{3});
+        labels{lineIndex - 1} = strjoin(lineSplits{1}(2:2+additionalLabelParts));
     end
 
 end

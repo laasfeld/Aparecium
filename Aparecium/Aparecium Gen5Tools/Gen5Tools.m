@@ -22,7 +22,7 @@ function varargout = Gen5Tools(varargin)
 
 % Edit the above text to modify the response to help Gen5Tools
 
-% Last Modified by GUIDE v2.5 05-Dec-2019 11:54:34
+% Last Modified by GUIDE v2.5 09-Feb-2020 22:50:22
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -419,9 +419,9 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on button press in pushbutton4.
-function pushbutton4_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton4 (see GCBO)
+% --- Executes on button press in loadASCIIfile.
+function loadASCIIfile_Callback(hObject, eventdata, handles)
+% hObject    handle to loadASCIIfile (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 menu_ASCII_Callback(hObject, eventdata, handles)
@@ -675,4 +675,73 @@ handles.stopwatchTimes = readStopwatch(stopwatchFilePath);
 handles.neoAsciiReader.setEventTimes(handles.stopwatchTimes);
 handles.apareciumExperimentInput.setStopwatchTimes(handles.stopwatchTimes);
 successBox('Stopwatch file successfully loaded', 'Success');
+guidata(hObject, handles);
+
+
+% --- Executes on button press in loadSeveralASCIIFiles.
+function loadSeveralASCIIFiles_Callback(hObject, eventdata, handles)
+% hObject    handle to loadSeveralASCIIFiles (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+menu_severalASCII_Callback(hObject, eventdata, handles)
+
+% --------------------------------------------------------------------
+function menu_severalASCII_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_severalASCII (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if isequal(handles.fileName, [])
+    allow = 1;
+else
+    answer = questdlg('Doing this will reset channels, treatments and the MIDAS file, are you sure you want to do that?','reset?','No');
+    if strcmp(answer, 'Yes')
+        allow = 1;
+    else 
+        allow = 0;
+    end
+end
+if allow
+    handles = resetToOriginalState(handles);
+    fullFilePathArray = cell(0, 0);
+    fileNameArray = cell(0, 0);
+    while true
+        fileChooser = FileChooser();
+        [fullFilePathArray{end + 1}, fileNameArray{end + 1 }] = fileChooser.userChooseNeoASCIIFile();
+        answer = questdlg('Would you like to load more files?', 'Load ASCII files','Yes', 'No', 'Yes');
+        switch answer
+            case 'Yes'
+                
+            case 'No'
+                break;
+        end
+    end
+    
+    neoAsciiReaderArray = cell(numel(fullFilePathArray), 0);
+    
+    for fileIndex = 1 : numel(fullFilePathArray)
+        neoAsciiReaderArray{fileIndex} = NeoASCIIReader();
+        neoAsciiReaderArray{fileIndex}.readFileWithoutDatastruct(fullFilePathArray{fileIndex});
+    end
+    [handles.experimentDataStructure, handles.stopwatchTimes] = NeoASCIIReader.generateExperimentDataStructureFromArray(neoAsciiReaderArray);
+    
+    
+    handles.fileName = 'Multi file combination';
+    handles.MIDAS_table.setVisible('on');
+    set(handles.MIDASInformationText,'String', 'Multi file combination');
+    
+    handles = generateApareciumExperimentInput(handles, handles.experimentDataStructure);
+    numberOfChannels = handles.apareciumExperimentInput.getNumberOfChannels;
+    if isequal(numberOfChannels, 1)
+        handles.midasTableController.startWithOneMeasurementColumnOneTreatmentColumn();
+    end
+    rawData = sendDataToMidasTable(handles.experimentDataStructure, handles.dimensionality);
+
+    setChannels(handles);
+    handles.midasTableController.setData(rawData);
+    handles.stopwatchTimes = handles.neoAsciiReader.getEventTimes();
+    handles.apareciumExperimentInput.setStopwatchTimes(handles.stopwatchTimes);
+    successBox('Gen5 ASCII file successfully loaded', 'Success');
+else
+    
+end
 guidata(hObject, handles);

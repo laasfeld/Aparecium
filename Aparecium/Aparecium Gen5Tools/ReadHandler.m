@@ -136,7 +136,15 @@ function handles = mergeReadsInSameKinetics(handles)
               finalIndex = index;
            end
         end
-        handles.sortedListOfReads = [handles.sortedListOfReads(1 : finalIndex - 1), {newRead}, handles.sortedListOfReads(finalIndex : end)]; 
+        if isempty(handles.sortedListOfReads(finalIndex : end))
+            try % the shape of these arrays must be standardized instead of error catching. Error occurs when concetenating several ASCII files
+                handles.sortedListOfReads = [handles.sortedListOfReads(1 : finalIndex - 1)', {newRead}];
+            catch
+                handles.sortedListOfReads = [handles.sortedListOfReads(1 : finalIndex - 1), {newRead}];
+            end
+        else
+            handles.sortedListOfReads = [handles.sortedListOfReads(1 : finalIndex - 1), {newRead}, handles.sortedListOfReads(finalIndex : end)];
+        end
     end
     handles.experimentDataStructureArray = [];
     for readIndex = 1 : numel(handles.sortedListOfReads)
@@ -208,7 +216,7 @@ for readIndex = eventdata.Indices(1) : numel(handles.experimentDataStructureArra
             end
         elseif isequal(eventdata.Indices(2), 7)
             if isequal(handles.stopwatchLoaded, true)
-                timeVec = constructStopwatchTimesColumn(handles.stopwatchTimes);
+                timeVec = constructStopwatchTimesColumn(handles.stopwatchTimes, handles.labels);
                 timeIndex = find(ismember(timeVec, eventdata.NewData)) - 1;
                 if ~isequal(timeIndex, 0)
                     tableData{readIndex, 7} = timeVec{timeIndex + 1};
@@ -249,7 +257,7 @@ for readIndex = eventdata.Indices(1) : numel(handles.experimentDataStructureArra
             end
         elseif isequal(eventdata.Indices(2), 7)
             if isequal(handles.stopwatchLoaded, true) && isequal(readIndex, eventdata.Indices(1))
-                timeVec = constructStopwatchTimesColumn(handles.stopwatchTimes);
+                timeVec = constructStopwatchTimesColumn(handles.stopwatchTimes, handles.labels);
                 timeIndex = find(ismember(timeVec, eventdata.NewData)) - 1;
                 if ~isequal(timeIndex, 0)
                     tableData{readIndex, 7} = timeVec{timeIndex + 1};
@@ -268,7 +276,7 @@ for readIndex = eventdata.Indices(1) : numel(handles.experimentDataStructureArra
     
 end
 set(hObject, 'data', tableData);
-timeVec = constructStopwatchTimesColumn(handles.stopwatchTimes);
+timeVec = constructStopwatchTimesColumn(handles.stopwatchTimes, handles.labels);
 set(handles.experimentTable,'ColumnFormat', {'numeric','numeric','numeric','numeric','numeric','logical', timeVec});
 %handles = generateDataStructure(handles);
 guidata(hObject, handles);
@@ -591,29 +599,30 @@ function loadStopwatch_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 fileChooser = FileChooser();
 stopwatchFilePath = fileChooser.getStopwatchPath();
-times = readStopwatch(stopwatchFilePath);
-handles = setStopwatchTimes(handles, times);
+[times, labels] = readStopwatch(stopwatchFilePath);
+handles = setStopwatchTimes(handles, times, labels);
 successBox('Stopwatch file successfully loaded', 'Success');
 guidata(hObject, handles);
 
-function handles = setStopwatchTimes(handles, times)
+function handles = setStopwatchTimes(handles, times, labels)
 data = get(handles.experimentTable, 'data');
 readCount = size(data, 1);
 timeCol = cell(readCount, 1);
 %set(handles.uitable1, 'data', [handles.formulaChannels', handles.formulaChannels'])
-timeVec = constructStopwatchTimesColumn(times);
+timeVec = constructStopwatchTimesColumn(times, labels);
 set(handles.experimentTable,'ColumnFormat', {'numeric','numeric','numeric','numeric','numeric','logical', timeVec});
 handles.stopwatchLoaded = true;
 handles.stopwatchTimes = times;
+handles.labels = labels;
 tableData = get(handles.experimentTable, 'data');
 tableData(:, 7) = repmat({'use manual time'}, size(tableData, 1), 1);
 set(handles.experimentTable, 'data', tableData)
 
-function timeVec = constructStopwatchTimesColumn(times)
+function timeVec = constructStopwatchTimesColumn(times, labels)
 timeVec = cell(1, numel(times)+1);
 timeVec{1} = 'use manual time';
 for timeIndex = 2 : numel(times)+1
-   timeVec{timeIndex} = [datestr(seconds(times(timeIndex-1)),'HH:MM:SS'), ' (',num2str(times(timeIndex-1)),' s)']; 
+   timeVec{timeIndex} = [labels{timeIndex - 1},': ',datestr(seconds(times(timeIndex-1)),'HH:MM:SS'), ' (',num2str(times(timeIndex-1)),' s)']; 
 end
 
 

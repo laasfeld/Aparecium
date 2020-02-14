@@ -28,9 +28,13 @@ classdef NeoASCIIReader < handle
         end
         
         function readFile(this, fileName)
-           this.fileName = fileName;
-           this.readHeader();
+           this.readFileWithoutDatastruct(fileName);
            this.generateExperimentDataStructure();
+        end
+        
+        function readFileWithoutDatastruct(this, fileName)
+            this.fileName = fileName;
+            this.readHeader();
         end
         
         function readHeader(this)
@@ -939,6 +943,128 @@ classdef NeoASCIIReader < handle
         
         function eventTimes = getEventTimes(this)
            eventTimes = this.eventTimes; 
+        end
+    end
+    
+    methods(Static)
+        function [experimentDataStructure, eventTimes] = generateExperimentDataStructureFromArray(NeoASCIIReaders)
+            experimentDataStructureArrayArray = cell(numel(NeoASCIIReaders), 1);
+            sortedListOfReadsArray = cell(numel(NeoASCIIReaders), 1);
+            kineticsArray = cell(numel(NeoASCIIReaders), 1);
+            readsArray = cell(numel(NeoASCIIReaders), 1);
+            eventTimesArray = cell(numel(NeoASCIIReaders), 1);
+            
+            for readerIndex = 1 : numel(NeoASCIIReaders)
+                this = NeoASCIIReaders{readerIndex};
+                overflowStruct = [];
+                if isequal(this.totalNumberOfReads, 1)
+                   experimentDataStructureArray = cell(1,1);
+                   sortedListOfReads = this.generateSortedListOfReads();
+                   read = sortedListOfReads{1};
+                   rawWellID = read.wellID;
+                   for wellIndex = 1 : numel(rawWellID)
+                        wellID{wellIndex} = rawWellID{wellIndex}{1}; 
+                   end
+                   experimentDataStructureArray{1}.numberOfChannels = numel(read.channels);
+                   experimentDataStructureArray{1}.wellID = wellID;
+                   experimentDataStructureArray{1}.cycleTime = read.interval;
+                   experimentDataStructureArray{1}.timeOfMeasurements = read.measurementTimepoints';
+                   experimentDataStructureArray{1}.channelNames = read.channels;
+                   experimentDataStructureArray{1}.timeOfFastKineticsMeasurements = fastKineticsCalculator(wellID', 11 , read.interval, read.measurementTimepoints)';
+                   experimentDataStructureArray{1}.readWasEmpty = read.getReadWasEmpty;
+                   experimentDataStructureArray{1}.runtime = read.runtime;
+                   measurements = read.measurements;
+                   for wellIndex = 1 : numel(read.wellID)
+                       rawWellMeasurements = measurements(:, :, wellIndex);
+                       reshapedWellMeasurements = reshape(rawWellMeasurements, numel(rawWellMeasurements), 1);
+                       measurementsAsDouble = zeros(numel(reshapedWellMeasurements), 1);
+                       for measurementNumber = 1 : numel(reshapedWellMeasurements)
+                          if strcmp(reshapedWellMeasurements{measurementNumber}, 'OVRFLW')
+                            measurementsAsDouble(measurementNumber) = NaN;  
+                            overflowStruct{end + 1} = [read.wellID{wellIndex}{1} ,'at read 1 ', 'at cycle ', num2str(floor(measurementNumber/numel(read.channels))+1)];
+                          elseif ~isempty(strfind(reshapedWellMeasurements{measurementNumber},'>'))
+                            measurementsAsDouble(measurementNumber) = NaN;  
+                            overflowStruct{end + 1} = [read.wellID{wellIndex}{1} ,'at read 1 ', 'at cycle ', num2str(floor(measurementNumber/numel(read.channels))+1)]; 
+                          else
+                            measurementsAsDouble(measurementNumber) = str2double(reshapedWellMeasurements{measurementNumber}); 
+                          end
+                       end
+                       
+                       experimentDataStructureArray{1}.measurements{wellIndex} = measurementsAsDouble;
+                   end
+                   experimentDataStructureArrayArray{readerIndex} = experimentDataStructureArray;
+                   sortedListOfReadsArray{readerIndex} = sortedListOfReads;
+                   kineticsArray{readerIndex} = this.kinetics;
+                   readsArray{readerIndex} = this.reads;
+                   eventTimesArray{readerIndex} = this.eventTimes;
+               
+                else
+                   sortedListOfReads = this.generateSortedListOfReads();
+                   experimentDataStructureArray = cell(numel(sortedListOfReads), 1);
+                   legalReadIndex = 0;
+                   deleteReads = zeros(1, 0);
+                   for readIndex = 1 : numel(sortedListOfReads)
+                       if(~strcmp(sortedListOfReads{readIndex}.readType, 'Fluorescence Spectrum'))
+                           legalReadIndex = legalReadIndex + 1;
+                           read = sortedListOfReads{readIndex};
+                           rawWellID = read.wellID;
+                           wellID = cell(1, 0);
+                           for wellIndex = 1 : numel(rawWellID)
+                                wellID{wellIndex} = rawWellID{wellIndex}{1}; 
+                           end
+                           experimentDataStructureArray{legalReadIndex}.readWasEmpty = read.getReadWasEmpty;
+                           experimentDataStructureArray{legalReadIndex}.numberOfChannels = numel(read.channels);
+                           experimentDataStructureArray{legalReadIndex}.wellID = wellID;
+                           experimentDataStructureArray{legalReadIndex}.cycleTime = read.interval;
+                           experimentDataStructureArray{legalReadIndex}.runtime = read.runtime;
+                           experimentDataStructureArray{legalReadIndex}.timeOfMeasurements = read.measurementTimepoints';
+                           if ~isempty(read.measurementTimepoints)
+                                experimentDataStructureArray{legalReadIndex}.timeOfFastKineticsMeasurements = fastKineticsCalculator(wellID', 11 , read.interval, read.measurementTimepoints)';
+                           else
+                               try
+                                experimentDataStructureArray{legalReadIndex}.timeOfFastKineticsMeasurements = fastKineticsCalculator(wellID', 11 , read.interval, 0)';
+                               catch
+                                  'siin' 
+                               end
+                           end
+                           experimentDataStructureArray{legalReadIndex}.channelNames = read.channels;
+                           measurements = read.measurements;
+                           for wellIndex = 1 : numel(read.wellID)
+                               rawWellMeasurements = measurements(:, :, wellIndex);
+                               reshapedWellMeasurements = reshape(rawWellMeasurements, numel(rawWellMeasurements), 1);
+                               measurementsAsDouble = zeros(numel(reshapedWellMeasurements), 1);
+                               for measurementNumber = 1 : numel(reshapedWellMeasurements)
+                                  if strcmp(reshapedWellMeasurements{measurementNumber}, 'OVRFLW')
+                                    measurementsAsDouble(measurementNumber) = NaN; 
+                                    overflowStruct{end + 1} = [read.wellID{wellIndex}{1},' at read ', num2str(legalReadIndex), ' at cycle ', num2str(floor(measurementNumber/numel(read.channels))+1)];
+                                  else
+                                    measurementsAsDouble(measurementNumber) = str2double(reshapedWellMeasurements{measurementNumber}); 
+                                  end
+                               end
+                               experimentDataStructureArray{legalReadIndex}.measurements{wellIndex} = measurementsAsDouble;
+
+                           end
+                       else
+                           deleteReads(end + 1) = readIndex;                       
+                       end
+                   end 
+                   sortedListOfReads(deleteReads) = [];
+                   
+                   experimentDataStructureArrayArray{readerIndex} = experimentDataStructureArray;
+                   sortedListOfReadsArray{readerIndex} = sortedListOfReads';
+                   kineticsArray{readerIndex} = this.kinetics'; 
+                   readsArray{readerIndex} = this.reads';
+                   eventTimesArray{readerIndex} = this.eventTimes;
+                   
+                   
+                   if ~isequal(overflowStruct, [])
+                        ShowOverflow(overflowStruct);
+                   end
+                end
+                
+            end
+            [experimentDataStructure, eventTimes] = ReadHandler(vertcat(experimentDataStructureArrayArray{:}), vertcat(sortedListOfReadsArray{:}), vertcat(kineticsArray{:}), vertcat(readsArray{:}), vertcat(eventTimesArray{:}));
+
         end
     end
     
