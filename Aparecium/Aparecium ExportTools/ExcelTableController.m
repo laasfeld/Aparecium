@@ -888,10 +888,24 @@ classdef ExcelTableController < ExportPanelController
                     Table(1).XColumn.Subcolumn.d = timeMoments(cyclesInUse);
                     xValues = [];
                     wellsInGroup = this.findAllWellsInGroup(groups{group}, this.subgroupStartValue);
+                    largestDimTreatmentIndex = findLargestDimention(concentrationsOfGroup, treatmentUniquenessTable{group}{2});
                     for subgroup = this.subgroupStartValue : numel(data{group})
                         for subgroupElement = 1 : size(groups{group}{subgroup}, 1)
                             if isequal(subgroupElement, 1)
-                                Table(subgroup - (this.subgroupStartValue - 1)).YColumn(subgroupElement).Title = this.subgroupNames{group}{subgroup};
+                                switch tableType
+                                    case 1
+                                        Table(subgroup - (this.subgroupStartValue - 1)).YColumn(subgroupElement).Title = this.subgroupNames{group}{subgroup};
+                                    case 2
+                                        treatmentIndex = largestDimTreatmentIndex;
+                                        well = groups{group}{subgroup}{1};
+                                        [treatments, concs] = this.experiment.getTreatmentsOfWell(well,1);
+                                        Table(subgroup - (this.subgroupStartValue - 1)).YColumn(subgroupElement).Title = [treatments{treatmentIndex}{1}, ' ', concs{treatmentIndex}];
+                                    otherwise
+                                        well = groups{group}{subgroup}{1};
+                                        treatmentIndex = tableType - 2;
+                                        [treatments, concs] = this.experiment.getTreatmentsOfWell(well,1);
+                                        Table(subgroup - (this.subgroupStartValue - 1)).YColumn(subgroupElement).Title = [treatments{treatmentIndex}{1}, ' ', concs{treatmentIndex}];
+                                end
                             end
                             for row = 1 : numel(wellsInGroup)*numel(cyclesInUse)
                                 Table(subgroup - (this.subgroupStartValue - 1)).YColumn(subgroupElement).Subcolumn(row).d = '';
