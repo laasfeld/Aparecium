@@ -78,7 +78,7 @@ guidata(hObject, handles)
 initializeChannelsTable(handles);
 
 % InitializeCustomCallbacks
-set(handles.loadStopwatchTime, 'Callback', createCallback('LoadConfigurationFile_Callback'));
+set(handles.loadStopwatchTime, 'Callback', createCallback('loadStopwatchTime_Callback'));
 
 % Update handles structure
 guidata(hObject, handles);
@@ -195,7 +195,11 @@ if allow
     [fullFilePath, fileName, parameterStructure] = fileChooser.userChoosePheraStarDatabase();
     handles.pheraStarDatabaseReader.readFile(fullFilePath, parameterStructure);
     handles.fileName = fileName;
-    set(handles.MIDAS_table,'visible', 'on');
+    try
+       set(handles.MIDAS_table,'visible', 'on');
+    catch
+       handles.MIDAS_table.setVisible('on');
+    end
     set(handles.MIDASInformationText,'String', ['PheraSTAR Database file ', fileName, ' loaded']);
     handles.experimentDataStructure = handles.pheraStarDatabaseReader.experimentDataStructure;
     rawData = sendDataToMidasTable(handles.pheraStarDatabaseReader.experimentDataStructure, handles.dimensionality);
@@ -699,10 +703,3 @@ function figure1_ResizeFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ApareciumCommonImporterFunctions.figure1_ResizeFcn(hObject, eventdata, handles);
-
-
-% --- Executes on button press in loadStopwatchTime.
-function loadStopwatchTime_Callback(hObject, eventdata, handles)
-% hObject    handle to loadStopwatchTime (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)

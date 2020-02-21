@@ -22,7 +22,7 @@ function varargout = Gen5Tools(varargin)
 
 % Edit the above text to modify the response to help Gen5Tools
 
-% Last Modified by GUIDE v2.5 09-Feb-2020 22:50:22
+% Last Modified by GUIDE v2.5 17-Feb-2020 17:09:25
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -74,6 +74,7 @@ guidata(hObject, handles)
 initializeChannelsTable(handles);
 handles.stopwatchLoaded = false;
 handles.stopwatchTimes = [];
+handles.stopwatchLabels = [];
 
 
 
@@ -151,6 +152,7 @@ if allow
     handles.midasTableController.setData(rawData);
     handles.stopwatchTimes = handles.neoAsciiReader.getEventTimes();
     handles.apareciumExperimentInput.setStopwatchTimes(handles.stopwatchTimes);
+    handles.apareciumExperimentInput.setStopwatchLabels(handles.stopwatchLabels);
     successBox('Gen5 ASCII file successfully loaded', 'Success');
 else
 end
@@ -671,9 +673,15 @@ function loadStopwatchTime_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 fileChooser = FileChooser();
 stopwatchFilePath = fileChooser.getStopwatchPath();
-handles.stopwatchTimes = readStopwatch(stopwatchFilePath);
+[handles.stopwatchTimes, handles.stopwatchLabels] = readStopwatch(stopwatchFilePath);
 handles.neoAsciiReader.setEventTimes(handles.stopwatchTimes);
 handles.apareciumExperimentInput.setStopwatchTimes(handles.stopwatchTimes);
+handles.apareciumExperimentInput.setStopwatchLabels(handles.stopwatchLabels);
+try
+    set(handles.measurementStartStopwatch, 'enable', 'on');
+catch
+
+end
 successBox('Stopwatch file successfully loaded', 'Success');
 guidata(hObject, handles);
 
@@ -745,3 +753,11 @@ else
     
 end
 guidata(hObject, handles);
+
+
+% --- Executes on button press in measurementStartStopwatch.
+function measurementStartStopwatch_Callback(hObject, eventdata, handles)
+% hObject    handle to measurementStartStopwatch (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[Selection, ok] = listdlg('ListString' ,listString,'ListSize',[600 300],'SelectionMode','multiple','Name','Select folders to be analyzed');

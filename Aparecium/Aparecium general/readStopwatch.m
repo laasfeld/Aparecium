@@ -7,11 +7,14 @@ function [times, labels] = readStopwatch(fileName)
 
     times = zeros(numel(g{1}) - 1, 1);
     labels = cell(numel(g{1}) - 1, 1);
+    lineSplits = textscan(g{1}{2}, '%s');
+    labels{1} = strjoin(lineSplits{1}(1:numel(lineSplits{1}) - 7));
     for lineIndex = 3 : numel(g{1})   
         lineSplits = textscan(g{1}{lineIndex}, '%s');
         additionalLabelParts = numel(lineSplits{1}) - 9;
         if strcmp(lineSplits{1}{2}, 'Pause')
-            times(lineIndex - 1:end) = [];
+            times(lineIndex - 1 : end) = [];
+            labels(lineIndex - 1 : end) = [];
             break;     
         end
         temp = textscan(lineSplits{1}{4 + additionalLabelParts}, '%s');

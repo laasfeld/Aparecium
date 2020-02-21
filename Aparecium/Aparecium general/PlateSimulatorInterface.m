@@ -76,7 +76,7 @@ classdef PlateSimulatorInterface < handle
                     cycles = this.experiment.getNumberOfCycles();
                     measurements = this.experiment.getMeasurements();
                     groups = this.experiment.getGroups();
-                    [probableEventCycles, probableEventTimes, probableEventComments] = this.predictEvents(this.experiment.getStopwatchTimes());
+                    [probableEventCycles, probableEventTimes, probableEventComments] = this.predictEvents(this.experiment.getStopwatchTimes(), this.experiment.getStopwatchLabels());
                     if strfind(mode, 'groupWells')   
                         this.PlateSimulator = plateSimulator.PlateSimulator(treatments, concentrations, units, mode, wellNames, inUse, cycles, measurements, groups);
                         timewiseBlankStructure = this.generateStandardTimewiseBlankStructure(inUse, cycles, measurements);
@@ -225,38 +225,53 @@ classdef PlateSimulatorInterface < handle
             this.PlateSimulator.regeneratePlateSimulatorFromEventsStructure(eventsStructure, wells, eventTimes);
         end
         
-        function [probableEventCycles, probableEventTimes, eventComment] = predictEvents(this, stopwatchTimes)
+        function [probableEventCycles, probableEventTimes, eventComment] = predictEvents(this, stopwatchTimes, stopwatchLabels)
             cycleTimeMoments = this.experiment.getCycleTimeMoments();
             probableEventCycles = [];
             probableEventTimes = [];
-            eventComment = {'(cycle duration change)'};
-            probableEventCycles(end + 1) = 1;
-            if numel(cycleTimeMoments > 0)
-                probableEventTimes(end + 1) = cycleTimeMoments(1);
+            if isempty(stopwatchTimes)
+                eventComment = {'(cycle duration change)'};
+                probableEventCycles(end + 1) = 1;
 
-                if(numel(cycleTimeMoments) > 1)
-                    delta = 0;
-                    expectingDelta = 0;
-                    for i = 2 : numel(cycleTimeMoments)
-                        newDelta = cycleTimeMoments(i) - cycleTimeMoments(i - 1);
-                        if ~isequal(delta, newDelta) && isequal(expectingDelta, 0) 
-                           expectingDelta = 1;
-                           delta = newDelta;
-                        elseif ~isequal(delta, newDelta) && isequal(expectingDelta, 1) 
-                           probableEventCycles(end + 1) = i - 1;
-                           eventComment{end + 1} = '(cycle duration change)';
-                           probableEventTimes(end + 1) = cycleTimeMoments(i - 1);
-                           delta = newDelta;
-                           expectingDelta = 0;
-                        else
-                           expectingDelta = 0;
+                if numel(cycleTimeMoments > 0)
+                    probableEventTimes(end + 1) = cycleTimeMoments(1);
+
+                    if(numel(cycleTimeMoments) > 1)
+                        delta = 0;
+                        expectingDelta = 0;
+                        for i = 2 : numel(cycleTimeMoments)
+                            newDelta = cycleTimeMoments(i) - cycleTimeMoments(i - 1);
+                            if ~isequal(delta, newDelta) && isequal(expectingDelta, 0) 
+                               expectingDelta = 1;
+                               delta = newDelta;
+                            elseif ~isequal(delta, newDelta) && isequal(expectingDelta, 1) 
+                               probableEventCycles(end + 1) = i - 1;
+                               eventComment{end + 1} = '(cycle duration change)';
+                               probableEventTimes(end + 1) = cycleTimeMoments(i - 1);
+                               delta = newDelta;
+                               expectingDelta = 0;
+                            else
+                               expectingDelta = 0;
+                            end
                         end
                     end
                 end
+                eventComment = PlateSimulatorInterface.treatmentsAsStringArray(eventComment);
+                probableEventCycles = PlateSimulatorInterface.treatmentsAsStringArray(num2cell([probableEventCycles, nan(1, numel(stopwatchTimes))]));
+            else
+                probableEventCycles = cell(numel(stopwatchTimes), 1);
+                for stopwatchIndex = 1 : numel(stopwatchTimes)
+                    orderIndex = find(sort([this.experiment.timeMoments; stopwatchTimes(stopwatchIndex)]) == stopwatchTimes(stopwatchIndex));
+                    if isequal(numel(orderIndex), 2)
+                        probableEventCycles{stopwatchIndex} = ['at ',num2str(orderIndex(1))];
+                    elseif isequal(numel(orderIndex), 1)
+                        probableEventCycles{stopwatchIndex} = [num2str(orderIndex - 1), '->', num2str(orderIndex)];
+                    end
+                end
+             
+                probableEventTimes = stopwatchTimes';
+                eventComment = stopwatchLabels';
             end
-            probableEventCycles = PlateSimulatorInterface.treatmentsAsStringArray(num2cell([probableEventCycles, nan(1, numel(stopwatchTimes))]));
-            probableEventTimes = [probableEventTimes, stopwatchTimes'];
-            eventComment = PlateSimulatorInterface.treatmentsAsStringArray([eventComment, repmat({'(stopwatch times)'}, 1, numel(stopwatchTimes))]);
             if isempty(probableEventTimes)
                probableEventTimes = NaN; 
             end

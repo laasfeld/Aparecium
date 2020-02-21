@@ -361,13 +361,31 @@ classdef ApareciumCommonImporterFunctions
             % handles    structure with handles and user data (see GUIDATA)
             fileChooser = FileChooser();
             stopwatchFilePath = fileChooser.getStopwatchPath();
-            handles.stopwatchTimes = readStopwatch(stopwatchFilePath);
+            [handles.stopwatchTimes, handles.stopwatchLabels] = readStopwatch(stopwatchFilePath);
             handles.apareciumExperimentInput.setStopwatchTimes(handles.stopwatchTimes);
+            handles.apareciumExperimentInput.setStopwatchLabels(handles.stopwatchLabels);
             successBox('Stopwatch file successfully loaded', 'Success');
+            try
+            	set(handles.measurementStartStopwatch, 'enable', 'on');
+            catch
+                
+            end
             guidata(hObject, handles);
         end
         
-    end
-    
+        function measurementStartStopwatch_Callback(hObject, eventdata, handles)
+            listString = cell(size(handles.stopwatchTimes));
+            stopwatchLabels = handles.stopwatchLabels;
+            for timeIndex = 1 : numel(handles.stopwatchTimes)
+                alignmentSpace = repmat('&nbsp;', 1, max(cellfun(@numel, stopwatchLabels)) - numel(stopwatchLabels{timeIndex}));
+                listString{timeIndex} = ['<html><tt>',stopwatchLabels{timeIndex},' : ', alignmentSpace, datestr(seconds(handles.stopwatchTimes(timeIndex)),'HH:MM:SS'), ' (',num2str(handles.stopwatchTimes(timeIndex)),' s)', '</html>'];
+            end
+            [Selection, ok] = listdlg('ListString' ,listString,'ListSize',[600 300], 'SelectionMode', 'single','Name','Select measurement start stopwatch timepoint');
+            if ok
+                set(handles.timeShift, 'String', num2str(handles.stopwatchTimes(Selection)));
+                ApareciumCommonImporterFunctions.timeShift_Callback(handles.timeShift, eventdata, handles);
+            end
+        end
+    end    
 end
 

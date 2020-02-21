@@ -111,7 +111,7 @@ handles.imageAnalyzer.thresholdFunctionHandle = eval(['@',thresholdFunctionNames
 handles = removeIncludedParamsFromPossibleParams(handles);
 
 % InitializeCustomCallbacks
-set(handles.loadStopwatchTime, 'Callback', createCallback('LoadConfigurationFile_Callback'));
+set(handles.loadStopwatchTime, 'Callback', createCallback('loadStopwatchTime_Callback'));
 
 % Update handles structure
 guidata(hObject, handles);
