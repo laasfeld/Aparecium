@@ -101,10 +101,11 @@ classdef ImageImporter < handle
 
                     for nameIndex = 1 : numel(BFnameArray)
                         for imageInWellIndes = 1 : numel(BFnameArray{nameIndex})
-                            wellID = ImageImporter.findWellIDOfString(BFnameArray{nameIndex}{imageInWellIndes});
-                            imageInWellIndex = num2str(ImageImporter.getImageInWellIndexOfString(BFnameArray{nameIndex}{imageInWellIndes}));
-
-                            pat = [pat, wellID, '_\d{1,2}_\d{1}_', imageInWellIndex, 'Z|'];
+                            if ~isempty(BFnameArray{nameIndex}{imageInWellIndes})
+                                wellID = ImageImporter.findWellIDOfString(BFnameArray{nameIndex}{imageInWellIndes});
+                                imageInWellIndex = num2str(ImageImporter.getImageInWellIndexOfString(BFnameArray{nameIndex}{imageInWellIndes}));
+                                pat = [pat, wellID, '_\d{1,2}_\d{1}_', imageInWellIndex, 'Z|'];
+                            end                           
                         end
                     end                
 
@@ -144,7 +145,10 @@ classdef ImageImporter < handle
             nameArrayMatchEquivalent = ImageImporter.generateNameArrayMatchEquivalent(nameArray);
             secondaryNameArrayMatchEquivalent = ImageImporter.generateNameArrayMatchEquivalent(secondaryNameArray);
             
-             [~, nameArrayIndices, secondaryNameArrayIndices] = intersect(nameArrayMatchEquivalent, secondaryNameArrayMatchEquivalent);
+            nameArrayMatchEquivalent(cellfun(@isempty, nameArrayMatchEquivalent)) = {'first_channel_placeholder'};
+            secondaryNameArrayMatchEquivalent(cellfun(@isempty, secondaryNameArrayMatchEquivalent)) = {'second_channel_placeholder'};
+            
+            [~, nameArrayIndices, secondaryNameArrayIndices] = intersect(nameArrayMatchEquivalent, secondaryNameArrayMatchEquivalent);
 %             
 %             tempNameArray = cell(0,0);
 %             tempSecondaryNameArray = cell(0,0);
@@ -295,7 +299,11 @@ classdef ImageImporter < handle
             unwrappedNameArray = reshape(unwrappedNameArray, numel(unwrappedNameArray), 1);
             nameArrayMatchEquivalent = cell(numel(unwrappedNameArray), 1);         
             for nameIndex = 1 : numel(unwrappedNameArray)
-                nameArrayMatchEquivalent{nameIndex} = [ImageImporter.findWellIDOfString(unwrappedNameArray{nameIndex}), '_', num2str(ImageImporter.getImageInWellIndexOfString(unwrappedNameArray{nameIndex}))];
+                if isempty(unwrappedNameArray{nameIndex})
+                    nameArrayMatchEquivalent{nameIndex} = [];
+                else
+                    nameArrayMatchEquivalent{nameIndex} = [ImageImporter.findWellIDOfString(unwrappedNameArray{nameIndex}), '_', num2str(ImageImporter.getImageInWellIndexOfString(unwrappedNameArray{nameIndex}))];
+                end
             end
         end
         

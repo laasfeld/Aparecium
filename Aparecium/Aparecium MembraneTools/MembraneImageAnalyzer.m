@@ -63,36 +63,37 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             for imageIndex = 1: numel(slopeImages)             
                 h5 = hdf5read([tempPath, num2str(imageIndex), randString,'_Probabilities.h5'], '/exported_data');
                 [unneeded, maxProbImg] = max(h5, [], 1);
-                binaryImages{imageIndex} = squeeze(maxProbImg == 3)';%measurementParams(1).imageProcessingParams.membraneLabelIndex);
+                binaryImages{imageIndex} = squeeze(maxProbImg == measurementParams(1).imageProcessingParams.membraneLabelIndex)';%measurementParams(1).imageProcessingParams.membraneLabelIndex);
                 %binaryImages{imageIndex} = (squeeze(h5(3,:,:)) > 127)';
-                
-                % post operation
-                % clean, spur, bridge, thin and thicken
-                %figure
-                %imshow(binaryImages{imageIndex})
-                %clean
-                %figure
-                cleaned = bwareaopen(binaryImages{imageIndex}, 20, 4);
-                %imshow(cleaned)
-                %figure
-                filled = ~bwareaopen(~cleaned, 30, 4);
-                %imshow(filled)
-                %figure
-                bridged = bwmorph(filled, 'bridge');
-                %imshow(bridged)
-                %figure
-                filled_again = ~bwareaopen(~bridged, 30, 4); % morph 1 skips this
-                %imshow(filled_again)
-                %figure
-                thinned = bwmorph(filled_again, 'thin', inf);
-                %imshow(thinned)
-                %figure
-                diagonalized = thinned;
-                %imshow(diagonalized)
-                %figure
-                thickened = imdilate(diagonalized, strel('disk', 1));
-                %imshow(thickened)
-                binaryImages{imageIndex} = thickened;
+                if measurementParams(1).imageProcessingParams.useMorphologicalOperations
+                    % post operation
+                    % clean, spur, bridge, thin and thicken
+                    %figure
+                    %imshow(binaryImages{imageIndex})
+                    %clean
+                    %figure
+                    cleaned = bwareaopen(binaryImages{imageIndex}, 20, 4);
+                    %imshow(cleaned)
+                    %figure
+                    filled = ~bwareaopen(~cleaned, 30, 4);
+                    %imshow(filled)
+                    %figure
+                    bridged = bwmorph(filled, 'bridge');
+                    %imshow(bridged)
+                    %figure
+                    filled_again = ~bwareaopen(~bridged, 30, 4); % morph 1 skips this
+                    %imshow(filled_again)
+                    %figure
+                    thinned = bwmorph(filled_again, 'thin', inf);
+                    %imshow(thinned)
+                    %figure
+                    diagonalized = thinned;
+                    %imshow(diagonalized)
+                    %figure
+                    thickened = imdilate(diagonalized, strel('disk', 1));
+                    %imshow(thickened)
+                    binaryImages{imageIndex} = thickened;
+                end
 
             end
         end
@@ -121,24 +122,28 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             contents(1:2) = [];
             cellContents = struct2cell(contents);
             possibleNames = cellContents(1, :);
-            % prepare Zstack image names
-            ZIndex = regexp(secondaryPicName, '_\d{1,2}Z\d{1,2}');
-            substr = regexp(secondaryPicName, '_\d{1,2}Z\d{1,2}', 'match', 'once');
-            ZIndex = ZIndex + regexp(substr, 'Z') - 1;
-            names = cell(1, numel(possibleNames));
-            index = 0;
-            while 1
-                pathlessName = [secondaryPicName(1:ZIndex), num2str(index), '_RFP_', secondaryPicName(end-6:end)];
-                if isequal(sum(strcmp(possibleNames, pathlessName)), 0)
-                   break; 
+            if strcmp(imageProcessingParameters.focusOrMaxProjection, 'max projection')
+                % prepare Zstack image names
+                ZIndex = regexp(secondaryPicName, '_\d{1,2}Z\d{1,2}');
+                substr = regexp(secondaryPicName, '_\d{1,2}Z\d{1,2}', 'match', 'once');
+                ZIndex = ZIndex + regexp(substr, 'Z') - 1;
+                names = cell(1, numel(possibleNames));
+                index = 0;
+                while 1
+                    pathlessName = [secondaryPicName(1:ZIndex), num2str(index), '_RFP_', secondaryPicName(end-6:end)];
+                    if isequal(sum(strcmp(possibleNames, pathlessName)), 0)
+                       break; 
+                    end
+
+                    names{index + 1} = [filePath, secondaryPicName(1:ZIndex), num2str(index), '_RFP_', secondaryPicName(end-6:end)];
+                    index = index + 1;
                 end
-                
-                names{index + 1} = [filePath, secondaryPicName(1:ZIndex), num2str(index), '_RFP_', secondaryPicName(end-6:end)];
-                index = index + 1;
+
+                names = names(~cellfun(@isempty, names));
+                focusedImage = focusFromZstack(names);
+            elseif strcmp(imageProcessingParameters.focusOrMaxProjection, 'focus')
+                focusedImage = focusFromZstack({[secondaryFilePath, secondaryPicName]});
             end
-            
-            names = names(~cellfun(@isempty, names));
-            focusedImage = focusFromZstack(names);
             originalBinaryImage = resultStructure.image;
             if strcmp(calculationMethod, 'Binary')
                 
@@ -194,7 +199,7 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
 
                 
             elseif strcmp(calculationMethod, 'Probability')
-                 resultStructure.averageMembraneIntensity = sum(sum(double(image).*resultStructure.probabilityImage))/(sum(sum(resultStructure.probabilityImage)));
+                 resultStructure.averageMembraneIntensity = sum(sum(double(focusedImage).*resultStructure.probabilityImage))/(sum(sum(resultStructure.probabilityImage)));
             end
         end
         

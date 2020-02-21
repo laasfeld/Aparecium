@@ -23,6 +23,7 @@ classdef ApareciumExperimentInput < handle
         fastKinetics = 0;
         hasChanged = 1;
         stopwatchTimes = [];
+        stopwatchLabels = [];
     end
     
     methods
@@ -386,6 +387,14 @@ classdef ApareciumExperimentInput < handle
         
         function stopwatchTimes = getStopwatchTimes(this)
            stopwatchTimes = this.stopwatchTimes; 
+        end
+        
+        function setStopwatchLabels(this, stopwatchLabels)
+            this.stopwatchLabels = stopwatchLabels;
+        end
+        
+        function stopwatchLabels = getStopwatchLabels(this)
+            stopwatchLabels = this.stopwatchLabels;
         end
         
         function clonedApareciumExperimentInput = getSimplificationInvariantClone(this)

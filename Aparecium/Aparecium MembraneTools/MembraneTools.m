@@ -39,7 +39,7 @@ function varargout = MembraneTools(varargin)
 
 % Edit the above text to modify the response to help MembraneTools
 
-% Last Modified by GUIDE v2.5 07-Jan-2020 14:37:50
+% Last Modified by GUIDE v2.5 19-Feb-2020 17:23:53
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -113,7 +113,7 @@ handles.imageAnalyzer.thresholdFunctionHandle = eval(['@',thresholdFunctionNames
 %%
 
 % InitializeCustomCallbacks
-set(handles.loadStopwatchTime, 'Callback', createCallback('LoadConfigurationFile_Callback'));
+set(handles.loadStopwatchTime, 'Callback', createCallback('loadStopwatchTime_Callback'));
 
 % Update handles structure
 guidata(hObject, handles);
@@ -1216,8 +1216,83 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on button press in loadStopwatchTime.
-function loadStopwatchTime_Callback(hObject, eventdata, handles)
-% hObject    handle to loadStopwatchTime (see GCBO)
+% --- Executes on button press in useMorphologicalCleaning.
+function useMorphologicalCleaning_Callback(hObject, eventdata, handles)
+% hObject    handle to useMorphologicalCleaning (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of useMorphologicalCleaning
+handles.imageProcessingParameters.useMorphologicalOperations = get(hObject,'Value');
+guidata(hObject, handles);
+
+
+% --- Executes on button press in ignoreMorphologicalCleaning.
+function ignoreMorphologicalCleaning_Callback(hObject, eventdata, handles)
+% hObject    handle to ignoreMorphologicalCleaning (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of ignoreMorphologicalCleaning
+handles.imageProcessingParameters.useMorphologicalOperations = get(hObject,'Value');
+guidata(hObject, handles);
+
+
+% --- Executes on button press in maxZProjection.
+function maxZProjection_Callback(hObject, eventdata, handles)
+% hObject    handle to maxZProjection (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of maxZProjection
+handles.imageProcessingParameters.focusOrMaxProjection = 'max projection';
+guidata(hObject, handles);
+
+
+% --- Executes on button press in focus.
+function focus_Callback(hObject, eventdata, handles)
+% hObject    handle to focus (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of focus
+handles.imageProcessingParameters.focusOrMaxProjection = 'focus';
+guidata(hObject, handles);
+
+
+% --------------------------------------------------------------------
+function characteristicsMenu_Callback(hObject, eventdata, handles)
+% hObject    handle to characteristicsMenu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function characteristicDescription_Callback(hObject, eventdata, handles)
+% hObject    handle to characteristicDescription (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+characteristics = get(handles.listbox2, 'String');
+selectedParameter = characteristics{get(handles.listbox2, 'Value')};
+switch selectedParameter
+    case 'averageMembraneIntensity'
+        helpdlg('The average pixel intensity of the region of interest, usually the cell membrane.', [selectedParameter, ' description']);
+    case 'averageSecondaryImageIntensity'
+        helpdlg('The average intensity of the secondary image which was not used for detection.', [selectedParameter, ' description']);
+    case 'averageNonMembraneIntensity'
+        helpdlg('The average intensity of all other pixels not in the ROI, usually corresponding to image background.', [selectedParameter, ' description']);        
+    case 'firstNonMembraneQuadrileIntensity'
+        helpdlg('The average intensity of the lowest quadrile of all other pixels not in the ROI, usually corresponding to image background.', [selectedParameter, ' description']);               
+    case 'averageUnmaskedMembraneIntensity'
+        helpdlg('The average pixel intensity of the region of interest, usually the cell membrane. This value is calculated without using the quality mask.', [selectedParameter, ' description']);        
+    case 'averageUnmaskedNonMembraneIntensity'
+        helpdlg('The average intensity of all other pixels not in the ROI, usually corresponding to image background. This value is calculated without using the quality mask.', [selectedParameter, ' description']);             
+    case 'firstUnmaskedNonMembraneQuadrileIntensity'
+        helpdlg('The average intensity of the lowest quadrile of all other pixels not in the ROI, usually corresponding to image background. This value is calculated without using the quality mask.', [selectedParameter, ' description']);                      
+    case 'averageUnmaskedSecondaryImageIntensity'
+        helpdlg('The average intensity of the secondary image which was not used for detection. This value is calculated without using the quality mask.', [selectedParameter, ' description']);  
+    case 'pixelCount'
+        helpdlg('Pixel count in the ROI, usually the membrane.', [selectedParameter, ' description']);        
+    case 'intensitySTD'
+        helpdlg('Standard deviation of the pixel intensities in the ROI, usually the membrane.', [selectedParameter, ' description']);
+end

@@ -41,7 +41,7 @@ classdef ImageProcessingParameters < handle
         SobelModel = 'SobelModel';
         
         detectionModel = 'SobelModel';
-        membraneLabelIndex = 1;
+        membraneLabelIndex = 3;
         ilastikModelPath = [];
         
         automaticallySaveMidasFile = 'on';
@@ -49,6 +49,9 @@ classdef ImageProcessingParameters < handle
         
         autoSaveBinaryFiles = 'on';
         autoSaveMasks = 'off';
+        
+        useMorphologicalOperations = true;
+        focusOrMaxProjection = 'max projection' % alternative 'focus'
     end
     
     methods
@@ -244,6 +247,22 @@ classdef ImageProcessingParameters < handle
            autoSaveMasks = this.autoSaveMasks; 
         end
         
+        function setUseMorphologicalOperations(this, useOperations)
+            this.useMorphologicalOperations = useOperations; % true or false
+        end
+        
+        function useMorphologicalOperations = getUseMorphologicalOperations(this)
+            useMorphologicalOperations = this.useMorphologicalOperations;
+        end
+        
+        function setFocusOrMaxProjection(this, focusOrMaxProjection)
+            this.focusOrMaxProjection = focusOrMaxProjection;
+        end
+        
+        function focusOrMaxProjection = getFocusOrMaxProjection(this)
+            focusOrMaxProjection = this.focusOrMaxProjection;
+        end
+             
     end   
 end
 
