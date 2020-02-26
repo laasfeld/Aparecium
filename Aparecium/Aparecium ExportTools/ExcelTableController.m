@@ -888,6 +888,8 @@ classdef ExcelTableController < ExportPanelController
                     Table(1).XColumn.Subcolumn.d = timeMoments(cyclesInUse);
                     xValues = [];
                     wellsInGroup = this.findAllWellsInGroup(groups{group}, this.subgroupStartValue);
+                    concentrationsOfGroup = this.experiment.getTreatmentsConcentrationsOfGroup(groups{group}, 1);
+                    treatmentUniquenessTable = this.createTreatmentUniquenessTable(size(data, 2), groups, data); 
                     largestDimTreatmentIndex = findLargestDimention(concentrationsOfGroup, treatmentUniquenessTable{group}{2});
                     for subgroup = this.subgroupStartValue : numel(data{group})
                         for subgroupElement = 1 : size(groups{group}{subgroup}, 1)
