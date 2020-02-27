@@ -70,6 +70,11 @@ handles.simPlateHandle = [];
 handles.fileName = [];
 handles = ExperimentConfigurationPanelFunc(handles);
 handles = MIDASOptionsPanelFunc(handles);
+
+mainHandle = str2func('loadStopwatchTime_Callback');
+callback = @ (hObject, eventdata) mainHandle(hObject, eventdata, guidata(hObject)); 
+set(handles.loadStopwatchTime, 'Callback', callback);
+
 guidata(hObject, handles)
 initializeChannelsTable(handles);
 handles.stopwatchLoaded = false;
@@ -136,6 +141,8 @@ if allow
     handles = resetToOriginalState(handles);
     fileChooser = FileChooser();
     [fullFilePath, fileName] = fileChooser.userChooseNeoASCIIFile();
+    handles.neoAsciiReader.setStopwatchLabels(handles.stopwatchLabels);
+    handles.neoAsciiReader.setStopwatchTimes(handles.stopwatchTimes);
     handles.neoAsciiReader.readFile(fullFilePath);
     handles.fileName = regexprep(fileName, '.txt', '');
     handles.MIDAS_table.setVisible('on');
@@ -150,7 +157,8 @@ if allow
 
     setChannels(handles);
     handles.midasTableController.setData(rawData);
-    handles.stopwatchTimes = handles.neoAsciiReader.getEventTimes();
+    handles.stopwatchTimes = handles.neoAsciiReader.getStopwatchTimes();
+    handles.stopwatchLabels = handles.neoAsciiReader.getStopwatchLabels();
     handles.apareciumExperimentInput.setStopwatchTimes(handles.stopwatchTimes);
     handles.apareciumExperimentInput.setStopwatchLabels(handles.stopwatchLabels);
     successBox('Gen5 ASCII file successfully loaded', 'Success');
@@ -674,7 +682,7 @@ function loadStopwatchTime_Callback(hObject, eventdata, handles)
 fileChooser = FileChooser();
 stopwatchFilePath = fileChooser.getStopwatchPath();
 [handles.stopwatchTimes, handles.stopwatchLabels] = readStopwatch(stopwatchFilePath);
-handles.neoAsciiReader.setEventTimes(handles.stopwatchTimes);
+handles.neoAsciiReader.setStopwatchTimes(handles.stopwatchTimes);
 handles.apareciumExperimentInput.setStopwatchTimes(handles.stopwatchTimes);
 handles.apareciumExperimentInput.setStopwatchLabels(handles.stopwatchLabels);
 try
@@ -730,7 +738,15 @@ if allow
         neoAsciiReaderArray{fileIndex} = NeoASCIIReader();
         neoAsciiReaderArray{fileIndex}.readFileWithoutDatastruct(fullFilePathArray{fileIndex});
     end
-    [handles.experimentDataStructure, handles.stopwatchTimes] = NeoASCIIReader.generateExperimentDataStructureFromArray(neoAsciiReaderArray);
+    
+    % add existing stopwatch times and labels only to the first reader to
+    % avoid duplication
+    neoAsciiReaderArray{1}.setStopwatchTimes(handles.stopwatchTimes);
+    neoAsciiReaderArray{1}.setStopwatchLabels(handles.stopwatchLabels);
+    
+    
+    
+    [handles.experimentDataStructure, handles.stopwatchTimes, handles.stopwatchLabels] = NeoASCIIReader.generateExperimentDataStructureFromArray(neoAsciiReaderArray);
     
     
     handles.fileName = 'Multi file combination';
@@ -746,8 +762,8 @@ if allow
 
     setChannels(handles);
     handles.midasTableController.setData(rawData);
-    handles.stopwatchTimes = handles.neoAsciiReader.getEventTimes();
     handles.apareciumExperimentInput.setStopwatchTimes(handles.stopwatchTimes);
+    handles.apareciumExperimentInput.setStopwatchLabels(handles.stopwatchLabels);
     successBox('Gen5 ASCII file successfully loaded', 'Success');
 else
     

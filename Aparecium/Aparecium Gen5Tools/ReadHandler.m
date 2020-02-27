@@ -60,12 +60,13 @@ handles.listOfKinetics = varargin{3};
 handles.listOfNonKineticReads = varargin{4};
 handles = generateTable(hObject, handles);
 handles = mergeReadsInSameKinetics(handles);
-if ~isempty(varargin{5})
+if ~isempty(varargin{5}) && ~isempty(varargin{6})
    handles.stopwatchLoaded = true;
-   handles = setStopwatchTimes(handles, varargin{5});
+   handles = setStopwatchTimes(handles, varargin{5}, varargin{6});
 else
    handles.stopwatchLoaded = false;
    handles.stopwatchTimes = [];
+   handles.labels = [];
 end
 handles.experimentDataStructure = [];
 
@@ -89,6 +90,7 @@ function varargout = ReadHandler_OutputFcn(hObject, eventdata, handles)
 % Get default command line output from handles structure
 varargout{1} = handles.experimentDataStructure;
 varargout{2} = handles.stopwatchTimes;
+varargout{3} = handles.labels;
 delete(handles.figure1);
 
 function handles = mergeReadsInSameKinetics(handles)

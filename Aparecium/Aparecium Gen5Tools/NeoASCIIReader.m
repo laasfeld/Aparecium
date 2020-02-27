@@ -19,7 +19,8 @@ classdef NeoASCIIReader < handle
         lineShiftFromVersion = 0;
         nextLine = 1; % indicates what line number will be read when getNextLine() is called
         lineToByteArray = zeros(1);
-        eventTimes = [];
+        stopwatchTimes = [];
+        stopwatchLabels = [];
     end
     
     methods
@@ -925,7 +926,7 @@ classdef NeoASCIIReader < handle
                    end
                end 
                sortedListOfReads(deleteReads) = [];
-               [this.experimentDataStructure, this.eventTimes] = ReadHandler(experimentDataStructureArray, sortedListOfReads, this.kinetics, this.reads, this.eventTimes);
+               [this.experimentDataStructure, this.stopwatchTimes, this.stopwatchLabels] = ReadHandler(experimentDataStructureArray, sortedListOfReads, this.kinetics, this.reads, this.stopwatchTimes, this.stopwatchLabels);
                if ~isequal(overflowStruct, [])
                     ShowOverflow(overflowStruct);
                end
@@ -937,22 +938,31 @@ classdef NeoASCIIReader < handle
             dataStructure = this.experimentDataStructure;
         end
         
-        function setEventTimes(this, eventTimes)
-           this.eventTimes = eventTimes; 
+        function setStopwatchTimes(this, stopwatchTimes)
+           this.stopwatchTimes = stopwatchTimes; 
         end
         
-        function eventTimes = getEventTimes(this)
-           eventTimes = this.eventTimes; 
+        function stopwatchTimes = getStopwatchTimes(this)
+           stopwatchTimes = this.stopwatchTimes; 
+        end
+        
+        function setStopwatchLabels(this, stopwatchLabels)
+           this.stopwatchLabels = stopwatchLabels;
+        end
+        
+        function stopwatchLabels = getStopwatchLabels(this)
+           stopwatchLabels = this.stopwatchLabels;
         end
     end
     
     methods(Static)
-        function [experimentDataStructure, eventTimes] = generateExperimentDataStructureFromArray(NeoASCIIReaders)
+        function [experimentDataStructure, stopwatchTimes, stopwatchLabels] = generateExperimentDataStructureFromArray(NeoASCIIReaders)
             experimentDataStructureArrayArray = cell(numel(NeoASCIIReaders), 1);
             sortedListOfReadsArray = cell(numel(NeoASCIIReaders), 1);
             kineticsArray = cell(numel(NeoASCIIReaders), 1);
             readsArray = cell(numel(NeoASCIIReaders), 1);
-            eventTimesArray = cell(numel(NeoASCIIReaders), 1);
+            stopwatchTimesArray = cell(numel(NeoASCIIReaders), 1);
+            stopwatchLabelsArray = cell(numel(NeoASCIIReaders), 1);
             
             for readerIndex = 1 : numel(NeoASCIIReaders)
                 this = NeoASCIIReaders{readerIndex};
@@ -996,7 +1006,8 @@ classdef NeoASCIIReader < handle
                    sortedListOfReadsArray{readerIndex} = sortedListOfReads;
                    kineticsArray{readerIndex} = this.kinetics;
                    readsArray{readerIndex} = this.reads;
-                   eventTimesArray{readerIndex} = this.eventTimes;
+                   stopwatchTimesArray{readerIndex} = this.stopwatchTimes;
+                   stopwatchLabelsArray{readerIndex} = this.stopwatchLabels;
                
                 else
                    sortedListOfReads = this.generateSortedListOfReads();
@@ -1054,7 +1065,8 @@ classdef NeoASCIIReader < handle
                    sortedListOfReadsArray{readerIndex} = sortedListOfReads';
                    kineticsArray{readerIndex} = this.kinetics'; 
                    readsArray{readerIndex} = this.reads';
-                   eventTimesArray{readerIndex} = this.eventTimes;
+                   stopwatchTimesArray{readerIndex} = this.stopwatchTimes;
+                   stopwatchLabelsArray{readerIndex} = this.stopwatchLabels;
                    
                    
                    if ~isequal(overflowStruct, [])
@@ -1063,7 +1075,7 @@ classdef NeoASCIIReader < handle
                 end
                 
             end
-            [experimentDataStructure, eventTimes] = ReadHandler(vertcat(experimentDataStructureArrayArray{:}), vertcat(sortedListOfReadsArray{:}), vertcat(kineticsArray{:}), vertcat(readsArray{:}), vertcat(eventTimesArray{:}));
+            [experimentDataStructure, stopwatchTimes, stopwatchLabels] = ReadHandler(vertcat(experimentDataStructureArrayArray{:}), vertcat(sortedListOfReadsArray{:}), vertcat(kineticsArray{:}), vertcat(readsArray{:}), vertcat(stopwatchTimesArray{:}), vertcat(stopwatchLabelsArray{:}));
 
         end
     end
