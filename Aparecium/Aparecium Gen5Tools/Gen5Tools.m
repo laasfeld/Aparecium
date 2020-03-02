@@ -161,6 +161,13 @@ if allow
     handles.stopwatchLabels = handles.neoAsciiReader.getStopwatchLabels();
     handles.apareciumExperimentInput.setStopwatchTimes(handles.stopwatchTimes);
     handles.apareciumExperimentInput.setStopwatchLabels(handles.stopwatchLabels);
+    if ~isempty(handles.stopwatchTimes)
+        try
+            set(handles.measurementStartStopwatch, 'enable', 'on');
+        catch
+
+        end 
+    end
     successBox('Gen5 ASCII file successfully loaded', 'Success');
 else
 end

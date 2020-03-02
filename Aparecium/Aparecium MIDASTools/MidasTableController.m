@@ -305,9 +305,9 @@ classdef MidasTableController < handle
         end
         
         function addData(this)
-            if isequal(this.activeUpdate, 'on')
+            if isequal(this.activeUpdate, 'on')               
+                this.midasTableHandle.setData(this.tableData);
                 set(this.midasTableHandle, 'columnName', this.columnHeaders);
-                this.midasTableHandle.setData(this.tableData); 
             end
         end
         
