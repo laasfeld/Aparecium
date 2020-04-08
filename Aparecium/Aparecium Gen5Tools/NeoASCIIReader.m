@@ -530,10 +530,23 @@ classdef NeoASCIIReader < handle
                    time = leadingRead.getAndDeleteTimepoints(sortedListOfReads{activeReadIndex}.getNumberOfCycles());
                    %time = time - leadingRead.measurementTimepoints(end) - leadingRead.interval; % this subtraction will make the read such that it would be equivalent to the case when no append was used. The time between reads is still recorded in the measurement time data of the first read.
                    time = time - leadingRead.getCorrespondingTimepointForAppendSubtraction() - leadingRead.interval;              
-                   sortedListOfReads{activeReadIndex}.setMeasurements(measurements);
-                   sortedListOfReads{activeReadIndex}.setWellIDs(leadingRead.getWellIDs());
-                   sortedListOfReads{activeReadIndex}.setTimepoints(time);
-                   sortedListOfReads{activeReadIndex}.setTemperature(temperature);
+                   if isequal(numel(measurements), 0) 
+                       warndlg('One of the reads in appended kinetics has no associated measurements and has been removed.');
+                       for kinetic = numel(this.kinetics):-1:1
+                            index = find([this.kinetics{kinetic}.listOfReads{:}] == sortedListOfReads{activeReadIndex});
+                            if ~isempty(index)
+                                this.kinetics{kinetic}.listOfReads(index) = [];
+                                if isequal(numel(this.kinetics{kinetic}.listOfReads), 0)
+                                    this.kinetics(kinetic) = [];
+                                end
+                            end
+                       end
+                   else
+                       sortedListOfReads{activeReadIndex}.setMeasurements(measurements);
+                       sortedListOfReads{activeReadIndex}.setWellIDs(leadingRead.getWellIDs());
+                       sortedListOfReads{activeReadIndex}.setTimepoints(time);
+                       sortedListOfReads{activeReadIndex}.setTemperature(temperature);
+                   end
                 end
             end
         end
