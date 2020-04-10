@@ -1234,7 +1234,7 @@ function ignoreMorphologicalCleaning_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of ignoreMorphologicalCleaning
-handles.imageProcessingParameters.useMorphologicalOperations = get(hObject,'Value');
+handles.imageProcessingParameters.useMorphologicalOperations = ~get(hObject,'Value');
 guidata(hObject, handles);
 
 

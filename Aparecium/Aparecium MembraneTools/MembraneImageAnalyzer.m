@@ -143,6 +143,7 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                 focusedImage = focusFromZstack(names);
             elseif strcmp(imageProcessingParameters.focusOrMaxProjection, 'focus')
                 focusedImage = focusFromZstack({[secondaryFilePath, secondaryPicName]});
+                secondaryPicName
             end
             originalBinaryImage = resultStructure.image;
             if strcmp(calculationMethod, 'Binary')
