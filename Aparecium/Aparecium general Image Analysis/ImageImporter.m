@@ -15,6 +15,7 @@ classdef ImageImporter < handle
         nameArray = [];
         secondaryNameArray = []
         masks = [];
+        maskNameArray = [];
     end
     
     methods
@@ -85,7 +86,7 @@ classdef ImageImporter < handle
                     end
 
                     [BFnameArray, standardFocus, this.masks{folder}] = focusAndQualityAnalyzer([mainDir,'\',chosenDirectories{folder}], 'Bright Field', [2 5]);
-                    
+                    this.maskNameArray{folder} = BFnameArray;
                     %create a more sophisticated pattern
                     pat = '^(';
                     %if numel(BFnameArray) > 1 || numel(BFnameArray{1}) > 1

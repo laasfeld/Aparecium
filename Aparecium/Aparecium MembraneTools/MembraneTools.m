@@ -39,7 +39,7 @@ function varargout = MembraneTools(varargin)
 
 % Edit the above text to modify the response to help MembraneTools
 
-% Last Modified by GUIDE v2.5 19-Feb-2020 17:23:53
+% Last Modified by GUIDE v2.5 16-Apr-2020 13:34:28
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -146,6 +146,11 @@ handles.imageImporter.userChooseImageFolders(startingPath); % Ask the user to ch
 handles.experimentDataStructure = handles.imageImporter.experimentDataStructure; % Get information about which wells were used
 handles = generateApareciumExperimentInput(handles, handles.experimentDataStructure); % Generate the ApareciumExperimentInput object based the information from images 
 handles.imageProcessingParameters.setFullImageMode();
+% enable the options to save masks and focal plane names after quality
+% control
+set(handles.saveQualityMaskNow, 'enable', 'on');
+set(handles.saveBrightFieldFocusNow, 'enable', 'on');
+set(handles.saveFluorescenceFocusNow, 'enable', 'on');
 guidata(hObject, handles);
 
 
@@ -1296,3 +1301,39 @@ switch selectedParameter
     case 'intensitySTD'
         helpdlg('Standard deviation of the pixel intensities in the ROI, usually the membrane.', [selectedParameter, ' description']);
 end
+
+
+% --- Executes on button press in saveQualityMaskNow.
+function saveQualityMaskNow_Callback(hObject, eventdata, handles)
+% hObject    handle to saveQualityMaskNow (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+maskdir = uigetdir([handles.imageImporter.mainDirectory, '\','Mask'], 'Select directory for saving the masks');
+for folder = 1 : handles.imageImporter.getNumberOfUsedDirectories()
+    mkdir([maskdir,'\' , handles.imageImporter.getUsedDirectoryWithIndex(folder), '\']);
+    for well = 1 : numel(handles.imageImporter.masks{folder}) 
+        for imageInWell = 1 : numel(handles.imageImporter.masks{folder}{well})
+            imwrite(handles.imageImporter.masks{folder}{well}{imageInWell}, [maskdir, '\', handles.imageImporter.getUsedDirectoryWithIndex(folder), '\', handles.imageImporter.maskNameArray{folder}{well}{imageInWell}])
+        end
+    end
+end
+
+% --- Executes on button press in saveBrightFieldFocusNow.
+function saveBrightFieldFocusNow_Callback(hObject, eventdata, handles)
+% hObject    handle to saveBrightFieldFocusNow (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[fileName, filePath] = uiputfile('*.mat', 'Save .mat file with bright-field focus image names');
+fileNames = handles.imageImporter.nameArray{1, 1};
+save([filePath, fileName], 'fileNames');
+
+
+
+% --- Executes on button press in saveFluorescenceFocusNow.
+function saveFluorescenceFocusNow_Callback(hObject, eventdata, handles)
+% hObject    handle to saveFluorescenceFocusNow (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[fileName, filePath] = uiputfile('*.mat', 'Save .mat file with fluorescence focus image names');
+fileNames = handles.imageImporter.secondaryNameArray{1, 1};
+save([filePath, fileName], 'fileNames');

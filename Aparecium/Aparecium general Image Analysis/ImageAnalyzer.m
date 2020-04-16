@@ -854,7 +854,7 @@ classdef ImageAnalyzer < handle
                     maindir = this.imageImporter.mainDirectory;
                     subdir = this.imageImporter.getUsedDirectoryWithIndex(folder);
                     mkdir([this.imageImporter.mainDirectory,'\','Mask', this.imageImporter.getUsedDirectoryWithIndex(folder), '\']);
-                    for well = 1 : length(imageData) % this will not work when there are several images from the same well
+                    for well = 1 : length(imageData)
                         for imageInWell = 1 : length(imageData{well})
                             imwrite(this.imageImporter.masks{folder}{well}{imageInWell}, [this.imageImporter.mainDirectory, '\', 'Mask', this.imageImporter.getUsedDirectoryWithIndex(folder), '\', imageData{well}{imageInWell}.imageName])
                         end
