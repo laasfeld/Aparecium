@@ -39,7 +39,7 @@ function varargout = MembraneTools(varargin)
 
 % Edit the above text to modify the response to help MembraneTools
 
-% Last Modified by GUIDE v2.5 16-Apr-2020 13:34:28
+% Last Modified by GUIDE v2.5 19-Apr-2020 14:18:27
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1324,7 +1324,7 @@ function saveBrightFieldFocusNow_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [fileName, filePath] = uiputfile('*.mat', 'Save .mat file with bright-field focus image names');
-fileNames = handles.imageImporter.nameArray{1, 1};
+fileNames = handles.imageImporter.nameArray;
 save([filePath, fileName], 'fileNames');
 
 
@@ -1335,5 +1335,5 @@ function saveFluorescenceFocusNow_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [fileName, filePath] = uiputfile('*.mat', 'Save .mat file with fluorescence focus image names');
-fileNames = handles.imageImporter.secondaryNameArray{1, 1};
+fileNames = handles.imageImporter.secondaryNameArray;
 save([filePath, fileName], 'fileNames');
