@@ -1257,7 +1257,7 @@ activeFormula = handles.activeFormula;
 channelNames = handles.apareciumExperimentInput.getChannelNames();
 fileChooser = FileChooser;
 startingPath = fileChooser.chooseFCFFileSave();
-[filePath, fileName] = uiputfile('*.mat', 'Save formula configurationFile, should start with FCF-', [startingPath, '/FCF-.mat']);
+[fileName, filePath] = uiputfile('*.mat', 'Save formula configurationFile, should start with FCF-', [startingPath, '/FCF-.mat']);
 fullPath = [filePath, fileName];
 if ~isequal(fullPath, 0)
     save(fullPath, 'activeFormula', 'channelNames');
