@@ -521,12 +521,18 @@ end
 guidata(hObject, handles);
 
 % --- Executes on button press in loadFormulaFile.
-function loadFormulaFile_Callback(hObject, eventdata, handles)
+function loadFormulaFile_Callback(hObject, eventdata, handles, varargin)
 % hObject    handle to loadFormulaFile (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-fileChooser = FileChooser;
-[fileName, filePath] = fileChooser.chooseFCFFile();
+if numel(varargin) < 2
+    fileChooser = FileChooser;
+    [fileName, filePath] = fileChooser.chooseFCFFile();
+else
+    filePath = varargin{1};
+    fileName = varargin{2};
+end
+
 load([filePath, fileName], 'activeFormula', 'channelNames');
 if exist('activeFormula', 'var') && exist('channelNames', 'var')
     try
@@ -1178,13 +1184,18 @@ if ~isequal(fullPath, 0)
 end
 
 % --- Executes on button press in loadGroups.
-function loadGroups_Callback(hObject, eventdata, handles)
+function loadGroups_Callback(hObject, eventdata, handles, varargin)
 % hObject    handle to loadGroups (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 %[fileName, filePath] = uigetfile('*.mat', 'Choose group configuration file');
-fileChooser = FileChooser;
-[fileName, filePath] = fileChooser.chooseGCFFile();
+if numel(varargin) < 2
+    fileChooser = FileChooser;
+    [fileName, filePath] = fileChooser.chooseGCFFile();
+else
+    filePath = varargin{1};
+    fileName = varargin{2};
+end
 load([filePath, fileName], 'groupStructure', 'groupNames', 'sharedBlankStructure', 'timewiseBlankStructure', 'timewiseBlankAlignment', 'subgroupNames');
 if exist('groupStructure', 'var') && exist('groupNames', 'var');
     plateSizeFromFile = size(groupStructure);
@@ -1261,7 +1272,7 @@ startingPath = fileChooser.chooseFCFFileSave();
 fullPath = [filePath, fileName];
 if ~isequal(fullPath, 0)
     save(fullPath, 'activeFormula', 'channelNames');
-    fileChooser.registerFCFFilePath(this, path);
+    fileChooser.registerFCFFilePath(path);
 end
 
 

@@ -16,6 +16,10 @@ classdef ImageImporter < handle
         secondaryNameArray = []
         masks = [];
         maskNameArray = [];
+        detectionChannelRegex = 'Bright Field';
+        quantificationChannelRegex = 'RFP';
+        lowerBound = 2; % 2 is default value for Quantitative analysis of fluorescent ligand binding to dopamine D3 receptors using live cell microscopy.
+        higherBound = 5; % 5 is default value for Quantitative analysis of fluorescent ligand binding to dopamine D3 receptors using live cell microscopy.
     end
     
     methods
@@ -24,11 +28,11 @@ classdef ImageImporter < handle
         end
         
         function userChooseImageFolders(this, varargin)
-
-            if isequal(nargin, 2)
-                mainDir = varargin{1};
-            elseif isequal(nargin, 1)
+            
+            if isequal(nargin, 1)
                 mainDir = uigetdir('Choose the folder which contains folders with all the image files for all the timepoints');
+            elseif isequal(nargin, 2)
+                mainDir = varargin{1};
             end
 
             this.mainDirectory = mainDir;
@@ -85,35 +89,26 @@ classdef ImageImporter < handle
                         end
                     end
 
-                    [BFnameArray, standardFocus, this.masks{folder}] = focusAndQualityAnalyzer([mainDir,'\',chosenDirectories{folder}], 'Bright Field', [2 5]);
+                    [BFnameArray, standardFocus, this.masks{folder}] = focusAndQualityAnalyzer([mainDir,'\',chosenDirectories{folder}], this.detectionChannelRegex, [this.lowerBound this.higherBound]);
                     this.maskNameArray{folder} = BFnameArray;
                     %create a more sophisticated pattern
-                    pat = '^(';
-                    %if numel(BFnameArray) > 1 || numel(BFnameArray{1}) > 1
-                    %    for nameIndex = 1 : numel(BFnameArray)-1
-                            
-                    %        if(BFnameArray{nameIndex}(4) == '_')
-                    %            pat = [pat, BFnameArray{nameIndex}(1)(1:3),'|'];
-                    %        else
-                    %            pat = [pat, BFnameArray{nameIndex}(1)(1:4),'|'];
-                    %        end
-                    %    end
-                    %end                
+                    pat = '^(';             
 
                     for nameIndex = 1 : numel(BFnameArray)
                         for imageInWellIndes = 1 : numel(BFnameArray{nameIndex})
                             if ~isempty(BFnameArray{nameIndex}{imageInWellIndes})
                                 wellID = ImageImporter.findWellIDOfString(BFnameArray{nameIndex}{imageInWellIndes});
                                 imageInWellIndex = num2str(ImageImporter.getImageInWellIndexOfString(BFnameArray{nameIndex}{imageInWellIndes}));
-                                pat = [pat, wellID, '_\d{1,2}_\d{1}_', imageInWellIndex, 'Z|'];
+                                pat = [pat, wellID, '_\d{1,2}_\d{1}_', imageInWellIndex, '(Z|_)|'];
                             end                           
                         end
                     end                
-
-                    pat = [pat,')(\w*)RFP'];
+                    % remove last | character to correct the pattern
+                    pat(end) = [];
+                    pat = [pat,')(\w*)', this.quantificationChannelRegex];
                     
                     try
-                        secondaryNameArray = focusAndQualityAnalyzer([mainDir,'\',chosenDirectories{folder}], pat,[0 0], standardFocus);
+                        secondaryNameArray = focusAndQualityAnalyzer([mainDir,'\',chosenDirectories{folder}], pat, [0 0], standardFocus);
                     catch MException
                         save('imageImporterMaskAutosave.mat', 'this', 'BFnameArray', 'standardFocus', 'pat')
                     end
@@ -135,6 +130,40 @@ classdef ImageImporter < handle
                 this.generateExperimentDataStructure(folder);
             end
         end
+        
+        function setDetectionChannelRegex(this, detectionChannelRegex)
+            this.detectionChannelRegex = detectionChannelRegex;
+        end
+        
+        function detectionChannelRegex = getDetectionChannelRegex(this)
+            detectionChannelRegex = this.detectionChannelRegex;
+        end
+        
+        function setQuantificationChannelRegex(this, quantificationChannelRegex)
+            this.quantificationChannelRegex = quantificationChannelRegex;
+        end
+        
+        function quantificationChannelRegex = getQuantificationChannelRegex(this)
+            quantificationChannelRegex = this.quantificationChannelRegex;
+        end
+        
+        function setExpectZstack(this, expectZstack)
+            this.expectZstack = expectZstack;
+        end
+        
+        function expectZstack = getExpectZstack(this)
+            expectZstack = this.expectZstack;
+        end
+        
+        function setLowerBound(this, lowerBound)
+            this.lowerBound = lowerBound;
+        end
+        
+        function setHigherBound(this, higherBound)
+            this.higherBound = higherBound;
+        end
+        
+        
         
         function nameArray = removeIncompatibleImages(this, nameArray, secondaryNameArray, folder)
 
@@ -218,7 +247,7 @@ classdef ImageImporter < handle
         end
         
         function dataStructure = getDataStructureOfFolder(this, folder)
-           dataStructure = this.experimentDataStructure{folder}; 
+            dataStructure = this.experimentDataStructure{folder}; 
         end
         
         function numberOfUsedDirectories = getNumberOfUsedDirectories(this)
@@ -329,11 +358,16 @@ classdef ImageImporter < handle
         end
         
         function imageInWellIndex = getImageInWellIndexOfString(name)
-            imageInWellIndex = str2double(regexp(regexp(name,'(_\d{1,2}Z)', 'match', 'once'), '(\d{1,3})', 'match', 'once'));
+            underscoreIndices = strfind(name,'_');
+            imageInWellIndex = str2double(regexp(name(underscoreIndices(3) + 1:end),'(\d{1,3})', 'match', 'once'));
+            %imageInWellIndex = str2double(regexp(regexp(name,'(_\d{1,2}Z)', 'match', 'once'), '(\d{1,3})', 'match', 'once'));
         end
         
         function imagePlaneIndex = getImagePlaneIndexOfString(name)
            imagePlaneIndex = str2double(regexp(regexp(regexp(name,'(_\d{1,2}Z\d{1,2})', 'match', 'once'), '(Z\d{1,3})', 'match', 'once'), '(\d{1,3})', 'match', 'once'));
+           if isnan(imagePlaneIndex) % in case plane is not present, treat it as if it was Z0
+               imagePlaneIndex = 0; 
+           end
         end
         
         function wellID = sortWellID(wellID)% sorts the cell array according to cell naming logic instead of standard string and number logic. 

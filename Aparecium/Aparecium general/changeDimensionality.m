@@ -18,8 +18,6 @@ if isnan(dimensionality) || dimensionality < 1
 end
 handles.dimensionality = dimensionality;
 
-set(handles.ChooseDimensionality,'String',num2str(dimensionality));
-
 emptyRow = {'', '', '', 'false', 'false'};
 
 handles.treatments_TableData = get(handles.treatments_Table, 'data');

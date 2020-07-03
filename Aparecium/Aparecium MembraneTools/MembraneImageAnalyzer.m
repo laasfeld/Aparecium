@@ -20,9 +20,21 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             ilastikPath = fileChooser.getIlastikExecutablePath();
             
             parfor i = 1 : numel(measurementParams) % parfor should be here
-                slopeImages{i} = MembraneImageAnalyzer.createSlopeImage(measurementParams(i));
+                if strcmp(measurementParams(1).imageProcessingParams.detectionFocusOrSlopes, 'Slopes')
+                    imagesForBinaryGeneration{i} = MembraneImageAnalyzer.createSlopeImage(measurementParams(i));
+                elseif strcmp(measurementParams(1).imageProcessingParams.detectionFocusOrSlopes, 'Focus')
+                    imagesForBinaryGeneration{i} = MembraneImageAnalyzer.createFocusImage(measurementParams(i));
+                end
             end
-            binaryImages = MembraneImageAnalyzer.createBinaryImages(slopeImages, measurementParams, ilastikPath);
+            
+            % intoduce the pixel shifts to images
+            for i = 1 : numel(measurementParams)
+                pixelShiftVertical = measurementParams(i).imageProcessingParams.getPixelShiftVertical();
+                pixelShiftHorizontal = measurementParams(i).imageProcessingParams.getPixelShiftHorizontal();
+                imagesForBinaryGeneration{i} = imagesForBinaryGeneration{i}(pixelShiftVertical+1:end, pixelShiftHorizontal+1:end);
+            end
+            
+            binaryImages = MembraneImageAnalyzer.createBinaryImages(imagesForBinaryGeneration, measurementParams, ilastikPath);
             for imageIndex = 1 : numel(measurementParams)
                 measurementParams(imageIndex).results = MembraneImageAnalyzer.analyzeMembranesStatic(...
             measurementParams(imageIndex).wellName, measurementParams(imageIndex).secondaryPicOfWell, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).imageProcessingParams,...
@@ -50,14 +62,24 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                mkdir(tempPath);
             end
             
+            IlastikCallStringArray = cell(0,1);
             IlastikCallString = ['!ilastik.exe --headless --project=', measurementParams(1).imageProcessingParams.ilastikModelPath, ' '];
             for imageIndex = 1 : numel(slopeImages)
-                IlastikCallString = [IlastikCallString, tempPath,'\', num2str(imageIndex), randString,'.tif '];
+                if numel([IlastikCallString, tempPath,'\', num2str(imageIndex), randString,'.tif ']) < 8190 % windows command line max length
+                    IlastikCallString = [IlastikCallString, tempPath,'\', num2str(imageIndex), randString,'.tif '];
+                else
+                    IlastikCallStringArray{end + 1} = IlastikCallString;
+                    IlastikCallString = ['!ilastik.exe --headless --project=', measurementParams(1).imageProcessingParams.ilastikModelPath, ' '];
+                    IlastikCallString = [IlastikCallString, tempPath,'\', num2str(imageIndex), randString,'.tif '];                  
+                end
                 imwrite(uint8(slopeImages{imageIndex}*255), [tempPath, num2str(imageIndex), randString,'.tif'], 'tif');
             end
+            IlastikCallStringArray{end + 1} = IlastikCallString;
             oldPath = pwd;
             cd(ilastikPath);
-            eval(IlastikCallString);
+            for ilastkCall = 1 : numel(IlastikCallStringArray)
+                eval(IlastikCallStringArray{ilastkCall});
+            end
             cd(oldPath);
             binaryImages = cell(size(slopeImages));
             for imageIndex = 1: numel(slopeImages)             
@@ -98,6 +120,21 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             end
         end
         
+        function image = createFocusImage(measurementParams)
+            path = measurementParams.directoryPath;
+            firstImageName = measurementParams.wellName;
+            image = imread([path,'/',firstImageName]);
+            %slopes = stackLinearReg(path, firstImageName, 'stdev');
+            if strcmp(class(image), 'uint8')
+               image = double(image)/256; 
+            end
+            if strcmp(class(image), 'uint16')
+               image = double(image)/2^16; 
+            end
+            %slopes = imgaussfilt(slopes);% experimental extra step
+            image = (image-min(min(image)))/max(max(image-min(min(image))));
+        end
+        
         function slopeImage = createSlopeImage(measurementParams)
             path = measurementParams.directoryPath;
             firstImageName = measurementParams.wellName;
@@ -117,12 +154,19 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             disp('MembraneImageAnalyzer');
             resultStructure = MembraneImageAnalyzer.analyseOneImageStatic(picName, filePath, imageProcessingParameters, timeParameters, functionHandle, parametersToCalculate, providedBinary);
 
-            image = imread([secondaryFilePath, secondaryPicName]);
+            pixelShiftVertical = imageProcessingParameters.getPixelShiftVertical();
+            pixelShiftHorizontal = imageProcessingParameters.getPixelShiftHorizontal();
+           
+            qualityMask = qualityMask(pixelShiftVertical + 1 : end, pixelShiftHorizontal + 1 : end);
             contents = dir(filePath);
             contents(1:2) = [];
             cellContents = struct2cell(contents);
             possibleNames = cellContents(1, :);
-            if strcmp(imageProcessingParameters.focusOrMaxProjection, 'max projection')
+            
+            % Check if Z-stack at all is present
+            imagePlaneIndex = str2double(regexp(regexp(regexp(secondaryPicName,'(_\d{1,2}Z\d{1,2})', 'match', 'once'), '(Z\d{1,3})', 'match', 'once'), '(\d{1,3})', 'match', 'once'));
+            
+            if strcmp(imageProcessingParameters.focusOrMaxProjection, 'max projection') && ~isnan(imagePlaneIndex)
                 % prepare Zstack image names
                 ZIndex = regexp(secondaryPicName, '_\d{1,2}Z\d{1,2}');
                 substr = regexp(secondaryPicName, '_\d{1,2}Z\d{1,2}', 'match', 'once');
@@ -130,19 +174,20 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                 names = cell(1, numel(possibleNames));
                 index = 0;
                 while 1
-                    pathlessName = [secondaryPicName(1:ZIndex), num2str(index), '_RFP_', secondaryPicName(end-6:end)];
+                    pathlessName = [secondaryPicName(1:ZIndex), num2str(index), '_',imageProcessingParameters.quantificationChannelRegex,'_', secondaryPicName(end-6:end)];
                     if isequal(sum(strcmp(possibleNames, pathlessName)), 0)
                        break; 
                     end
 
-                    names{index + 1} = [filePath, secondaryPicName(1:ZIndex), num2str(index), '_RFP_', secondaryPicName(end-6:end)];
+                    names{index + 1} = [filePath, secondaryPicName(1:ZIndex), num2str(index),'_',imageProcessingParameters.quantificationChannelRegex,'_', secondaryPicName(end-6:end)];
                     index = index + 1;
                 end
 
                 names = names(~cellfun(@isempty, names));
                 focusedImage = focusFromZstack(names);
-            elseif strcmp(imageProcessingParameters.focusOrMaxProjection, 'focus')
+            elseif strcmp(imageProcessingParameters.focusOrMaxProjection, 'focus') || isnan(imagePlaneIndex)
                 focusedImage = focusFromZstack({[secondaryFilePath, secondaryPicName]});
+                focusedImage = focusedImage(1 : end - pixelShiftVertical, 1 : end - pixelShiftHorizontal);
                 secondaryPicName
             end
             originalBinaryImage = resultStructure.image;

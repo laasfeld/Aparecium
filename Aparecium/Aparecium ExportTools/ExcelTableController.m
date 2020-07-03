@@ -110,9 +110,17 @@ classdef ExcelTableController < ExportPanelController
            end 
         end
         
-        function convertDataToConcentrationTable(this, data, groups)
+        
+        
+        function convertDataToConcentrationTable(this, varargin)%data, groups, varargin)
             % count the number of subgroups present
-            tableType = get(this.dropdownHandle, 'Value');
+            data = varargin{1};
+            groups = varargin{2};
+            if numel(varargin) < 3
+                tableType = get(this.dropdownHandle, 'Value');
+            else
+                tableType = varargin{3};
+            end
                
             groupNames = this.experiment.getGroups();
             noOfSubgroups = 0;

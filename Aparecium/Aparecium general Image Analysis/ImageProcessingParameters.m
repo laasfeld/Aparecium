@@ -52,12 +52,40 @@ classdef ImageProcessingParameters < handle
         
         useMorphologicalOperations = true;
         focusOrMaxProjection = 'max projection' % alternative 'focus'
+        
+        pixelShiftHorizontal = 0;
+        pixelShiftVertical = 0;
+        
+        % Parameters related to image name filtering
+        detectionChannelRegex = 'Bright Field';
+        quantificationChannelRegex = 'RFP';
+        expectZstack = true;
+        
+        % For MembraneTools - 'Slopes' detects from linear regression
+        % slopes while 'Focus' detects from focus image only.
+        detectionFocusOrSlopes = 'Slopes';
     end
     
     methods
         
         function this = ImageProcessingParameters()
             
+        end
+        
+        function setPixelShiftHorizontal(this, pixelShift)
+            this.pixelShiftHorizontal = pixelShift;
+        end
+        
+        function setPixelShiftVertical(this, pixelShift)
+            this.pixelShiftVertical = pixelShift;
+        end
+        
+        function pixelShift = getPixelShiftHorizontal(this)
+            pixelShift = this.pixelShiftHorizontal;
+        end
+        
+        function pixelShift = getPixelShiftVertical(this)
+            pixelShift = this.pixelShiftVertical;
         end
         
         function setParallelComputing(this, onOrOff)
@@ -261,6 +289,38 @@ classdef ImageProcessingParameters < handle
         
         function focusOrMaxProjection = getFocusOrMaxProjection(this)
             focusOrMaxProjection = this.focusOrMaxProjection;
+        end
+        
+        function setDetectionChannelRegex(this, detectionChannelRegex)
+            this.detectionChannelRegex = detectionChannelRegex;
+        end
+        
+        function detectionChannelRegex = getDetectionChannelRegex(this)
+            detectionChannelRegex = this.detectionChannelRegex;
+        end
+        
+        function setQuantificationChannelRegex(this, quantificationChannelRegex)
+            this.quantificationChannelRegex = quantificationChannelRegex;
+        end
+        
+        function quantificationChannelRegex = getQuantificationChannelRegex(this)
+            quantificationChannelRegex = this.quantificationChannelRegex;
+        end
+        
+        function setExpectZstack(this, expectZstack)
+            this.expectZstack = expectZstack;
+        end
+        
+        function expectZstack = getExpectZstack(this)
+            expectZstack = this.expectZstack;
+        end
+        
+        function setDetectionFocusOrSlopes(this, detectionFocusOrSlopes)
+            this.detectionFocusOrSlopes = detectionFocusOrSlopes;
+        end
+        
+        function detectionFocusOrSlopes = getDetectionFocusOrSlopes(this)
+            detectionFocusOrSlopes = this.detectionFocusOrSlopes;
         end
              
     end   

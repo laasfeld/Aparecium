@@ -39,7 +39,7 @@ function varargout = MembraneTools(varargin)
 
 % Edit the above text to modify the response to help MembraneTools
 
-% Last Modified by GUIDE v2.5 19-Apr-2020 14:18:27
+% Last Modified by GUIDE v2.5 02-Jul-2020 18:40:18
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -115,6 +115,7 @@ handles.imageAnalyzer.thresholdFunctionHandle = eval(['@',thresholdFunctionNames
 % InitializeCustomCallbacks
 set(handles.loadStopwatchTime, 'Callback', createCallback('loadStopwatchTime_Callback'));
 
+
 % Update handles structure
 guidata(hObject, handles);
 
@@ -139,6 +140,19 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles.imageImporter = ImageImporter(); % Create a new object that can import the images correctly
+
+% set the image name filter options
+regexString = get(handles.quantificationChannelRegex,'String');
+handles.imageImporter.setQuantificationChannelRegex(regexString);
+regexString = get(handles.detectionChannelRegex,'String');
+handles.imageImporter.setDetectionChannelRegex(regexString);
+lowerStackBound = str2num(get(handles.lowerStackBound,'String'));
+handles.imageImporter.setLowerBound(lowerStackBound);
+higherStackBound = str2num(get(handles.higherStackBound,'String'));
+handles.imageImporter.setHigherBound(higherStackBound);
+
+
+
 handles.imageImporter.analyzeQuality = 1;
 fileChooser = FileChooser();
 startingPath = fileChooser.chooseMembraneToolsFolder(); % get the preferred starting folder
@@ -171,6 +185,7 @@ set(handles.importImages, 'visible', 'off');
 set(handles.analysisOptions, 'visible', 'off');
 set(handles.analysisStatusPanel, 'visible', 'off');
 set(handles.ExperimentConfigurationPanel, 'visible', 'off');
+set(handles.uipanel35, 'visible', 'off');
 %set(handles.simPlateDone, 'visible', 'on'); % Make the done button visible so the user could finish using PlateSimulator
 set(handles.figure1, 'Color', 'white'); % Change the background color
 doneCallbackHandle = @simPlateDone_Callback;
@@ -503,6 +518,7 @@ set(handles.importImages, 'visible', 'on');
 set(handles.analysisOptions, 'visible', 'on');
 set(handles.analysisStatusPanel, 'visible', 'on');
 set(handles.ExperimentConfigurationPanel, 'visible', 'on');
+set(handles.uipanel35, 'visible', 'on');
 %set(handles.simPlateDone, 'visible', 'off');
 set(handles.figure1, 'Color', [225/255, 226/255, 251/255]);
 treatmentStructure = handles.plateSimulatorInterface.getTreatmentStructure();
@@ -1337,3 +1353,216 @@ function saveFluorescenceFocusNow_Callback(hObject, eventdata, handles)
 [fileName, filePath] = uiputfile('*.mat', 'Save .mat file with fluorescence focus image names');
 fileNames = handles.imageImporter.secondaryNameArray;
 save([filePath, fileName], 'fileNames');
+
+
+
+function horizontalShift_Callback(hObject, eventdata, handles)
+% hObject    handle to horizontalShift (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of horizontalShift as text
+%        str2double(get(hObject,'String')) returns contents of horizontalShift as a double
+handles.imageProcessingParameters.setPixelShiftHorizontal(str2double(get(hObject,'String')));
+guidata(hObject, handles);
+
+% --- Executes during object creation, after setting all properties.
+function horizontalShift_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to horizontalShift (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function verticalShift_Callback(hObject, eventdata, handles)
+% hObject    handle to verticalShift (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of verticalShift as text
+%        str2double(get(hObject,'String')) returns contents of verticalShift as a double
+handles.imageProcessingParameters.setPixelShiftVertical(str2double(get(hObject,'String')));
+guidata(hObject, handles);
+
+% --- Executes during object creation, after setting all properties.
+function verticalShift_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to verticalShift (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in imageAlignment.
+function imageAlignment_Callback(hObject, eventdata, handles)
+% hObject    handle to imageAlignment (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+output = ImageAligner(handles.imageImporter);
+set(handles.horizontalShift, 'String', num2str(output(1)));
+set(handles.verticalShift, 'String', num2str(output(2)));
+handles.imageProcessingParameters.setPixelShiftHorizontal(output(1));
+handles.imageProcessingParameters.setPixelShiftHorizontal(output(2));
+
+
+
+
+function detectionChannelRegex_Callback(hObject, eventdata, handles)
+% hObject    handle to detectionChannelRegex (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of detectionChannelRegex as text
+%        str2double(get(hObject,'String')) returns contents of detectionChannelRegex as a double
+regexString = get(hObject,'String');
+handles.imageProcessingParameters.setDetectionChannelRegex(regexString);
+guidata(hObject, handles);
+
+
+% --- Executes during object creation, after setting all properties.
+function detectionChannelRegex_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to detectionChannelRegex (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function quantificationChannelRegex_Callback(hObject, eventdata, handles)
+% hObject    handle to quantificationChannelRegex (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of quantificationChannelRegex as text
+%        str2double(get(hObject,'String')) returns contents of quantificationChannelRegex as a double
+regexString = get(hObject,'String');
+handles.imageProcessingParameters.setQuantificationChannelRegex(regexString);
+guidata(hObject, handles);
+
+% --- Executes during object creation, after setting all properties.
+function quantificationChannelRegex_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to quantificationChannelRegex (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in pushbutton30.
+function pushbutton30_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton30 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in pushbutton31.
+function pushbutton31_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton31 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in pushbutton32.
+function pushbutton32_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton32 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in expectZStack.
+function expectZStack_Callback(hObject, eventdata, handles)
+% hObject    handle to expectZStack (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of expectZStack
+expectStack = get(hObject,'Value');
+handles.imageProcessingParameters.setExpectZstack(expectStack);
+guidata(hObject, handles);
+
+
+
+function lowerStackBound_Callback(hObject, eventdata, handles)
+% hObject    handle to lowerStackBound (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of lowerStackBound as text
+%        str2double(get(hObject,'String')) returns contents of lowerStackBound as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function lowerStackBound_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to lowerStackBound (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function higherStackBound_Callback(hObject, eventdata, handles)
+% hObject    handle to higherStackBound (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of higherStackBound as text
+%        str2double(get(hObject,'String')) returns contents of higherStackBound as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function higherStackBound_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to higherStackBound (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in useSlopes.
+function useSlopes_Callback(hObject, eventdata, handles)
+% hObject    handle to useSlopes (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of useSlopes
+handles.imageProcessingParameters.setDetectionFocusOrSlopes('Slopes');
+guidata(hObject, handles);
+
+
+% --- Executes on button press in useFocusImage.
+function useFocusImage_Callback(hObject, eventdata, handles)
+% hObject    handle to useFocusImage (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of useFocusImage
+handles.imageProcessingParameters.setDetectionFocusOrSlopes('Focus');
+guidata(hObject, handles);

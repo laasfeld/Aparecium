@@ -122,7 +122,9 @@ classdef PlateSimulatorInterface < handle
                     
             end
             this.PlateSimulator.setVisible(true);
-            [a, simPlateHandle] = javacomponent(this.PlateSimulator, [0, 0 , 1277, 620], handles.figure1);
+            width = handles.figure1.Position(3);
+            height = handles.figure1.Position(4);
+            [a, simPlateHandle] = javacomponent(this.PlateSimulator, [0, 0 , width, height], handles.figure1);
 
             this.isPlateSimulatorInitialized = 1;
         end

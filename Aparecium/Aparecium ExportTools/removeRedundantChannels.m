@@ -5,9 +5,9 @@ function nonredundantChannels = removeRedundantChannels(originalChannels, formul
 splitters = [{'+'},{'*'},{'\.'},{'-'},{'/'},{'\('},{'\)'},{'\^'}];
 
 for a = 1 : numel(splitters)
-    formula = regexprep(formula, splitters{a}, ' ');
+    formula = regexprep(formula, splitters{a}, 'uniqueApareciumSplitString');
 end
-possibleChannels = strsplit(formula);
+possibleChannels = strsplit(formula, 'uniqueApareciumSplitString');
 nonredundantChannels = cell(0, 0);
 for possibleChannelIndex = 1 : numel(possibleChannels)
     for originalChannelIndex = 1 : numel(originalChannels)

@@ -309,7 +309,8 @@ classdef ApareciumExperimentInput < handle
         end
         
         function setChannelNames(this, channelNames)
-           this.channelNames = channelNames; 
+           this.channelNames = channelNames;
+           this.numberOfChannels = numel(channelNames);
            this.hasChanged = 1;
         end
         

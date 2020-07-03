@@ -4,6 +4,7 @@ function updateMidasChannels(handles)
     numberOfChannels = handles.apareciumExperimentInput.getNumberOfChannels;
     handles.midasTableController.measurementColumns = numberOfChannels;
     channelName = handles.apareciumExperimentInput.getChannelNames();
+    handles.midasTableController.measurementColumns = numel(channelName);
     for channel = 1 : numberOfChannels     
         handles.midasTableController.changeChannelHeader(channelName{channel}, channel);
     end

@@ -166,7 +166,7 @@ function handles = displayImages(handles)
 try
     if handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) <= handles.lowerBound % impossible image index in this context
         if isequal(handles.wellIndex, 1) && isequal(handles.imageInWellIndex, 1) % handle the case where no previous image focus is available
-            handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) = handles.lowerBound + 1;
+            handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) = handles.lowerBound;
         elseif isequal(handles.imageInWellIndex, 1); % handle the case where previous image focus is available but in previous well
             handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) = handles.imageIndex{handles.wellIndex - 1}(end);
         else
@@ -267,10 +267,14 @@ handles = setFocusButtonStates(handles);
 
 function handles = setFocusButtonStates(handles)
 
-if handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) >= numel(handles.imagesOfWell{handles.wellIndex}{handles.imageInWellIndex}) - handles.upperBound
-    set(handles.focusUp, 'Enable', 'off'); 
-else
-    set(handles.focusUp, 'Enable', 'on'); 
+try
+    if handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) >= numel(handles.imagesOfWell{handles.wellIndex}{handles.imageInWellIndex}) - handles.upperBound
+        set(handles.focusUp, 'Enable', 'off'); 
+    else
+        set(handles.focusUp, 'Enable', 'on'); 
+    end
+catch
+    ''
 end
 
 if handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) <= handles.lowerBound + 1
@@ -517,6 +521,7 @@ end
 handles.wellID = handles.wellID(indices);
 handles.imagesOfWell = handles.imagesOfWell(indices);
 handles.imageIndex = handles.imageIndex(indices);
+handles.masks = handles.masks(indices);
 for wellIndex = 1 : numel(handles.wellID)
     for imagingLocation = 1 : numel(handles.imagesOfWell{wellIndex})
         for imIndex = 1 : numel(handles.imagesOfWell{wellIndex}{imagingLocation})

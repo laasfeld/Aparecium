@@ -687,7 +687,7 @@ classdef ImageAnalyzer < handle
             underscoreLocations = strfind(nameArray, '_');
             
             for pic = 1 : numel(nameArray)
-                 if strfind(nameArray{pic}(1:underscoreLocations{pic}(1)-1), wellID{well})
+                 if strcmp(ImageImporter.getWellIDOfStringArray(nameArray(pic), '[A-Z]'), wellID{well})
                      imagesOfWell(end + 1) = pic;
                  end
             end
@@ -733,7 +733,11 @@ classdef ImageAnalyzer < handle
                      resultStructure(picOfWell).imageName = nameArrayOfWell{picOfWell};
                      resultStructure(picOfWell).parametersToCalculate = this.parametersToCalculate;
                      resultStructure(picOfWell).calculationMethod = 'Binary';
-                     resultStructure(picOfWell).qualityMask = qualityMasks{well}{picOfWell}; 
+                     try
+                        resultStructure(picOfWell).qualityMask = qualityMasks{well}{picOfWell};
+                     catch MException
+                        '' 
+                     end
 
                      %resultStructure = analyzeMembranesStatic(nameArrayOfWell{picOfWell}, secondaryNameArrayOfWell{picOfWell}, directoryPath, imageProcessingParams, timeParameters, thresholdFunctionHandle, 'Binary', qualityMasks{well});
                      %wellMeasurementInfo{picOfWell}.averageMembraneIntensity = resultStructure.averageMembraneIntensity;
