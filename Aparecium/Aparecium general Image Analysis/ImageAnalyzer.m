@@ -46,7 +46,7 @@ classdef ImageAnalyzer < handle
         timeShift = 0; % hold the value of timeShift
         isAnalysisComplete = 0; % 0 is analysis is not yet completed, 1 if the analysis is completed
         figureHandles; % handles to the two figures present in ICSETools
-        clearBinaryImages = 1; % 0 is binary images are cleared in the middle of image analysis, it helps to save time
+        clearBinaryImages = 0; % 0 is binary images are cleared in the middle of image analysis, it helps to save time
         cameraAndLensParameters; % Holds information about magnification of the lens and pixel size of the CCD camera
         observationImageData; % Hold image data when analysis is performed in the observation mode
         useHandles = 1; % 1 if imageAnalyzer can use handles for graphical output, 0 if it can´t
@@ -848,7 +848,7 @@ classdef ImageAnalyzer < handle
                 case 'off'
                 for well = 1 : length(imageData)
                    for image = 1 : length(imageData{well})
-                       imageData{well}{image}.image = [];                                   
+                       %imageData{well}{image}.image = [];                                   
                    end
                 end   
             end

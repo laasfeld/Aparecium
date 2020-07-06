@@ -242,7 +242,7 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                 catch
                     resultStructure.firstUnmaskedNonMembraneQuadrileIntensity = mean(sortedPixels(1:floor(numel(sortedPixels)/4)));
                 end
-
+                resultStructure.secondaryImageName = secondaryPicName;
                 
             elseif strcmp(calculationMethod, 'Probability')
                  resultStructure.averageMembraneIntensity = sum(sum(double(focusedImage).*resultStructure.probabilityImage))/(sum(sum(resultStructure.probabilityImage)));

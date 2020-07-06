@@ -53,7 +53,7 @@ classdef BinaryImageCalculator < handle
         
         function setImage(this, image)
             if isequal(this.binaryImage, image)
-                
+                this.binaryImage = image;
             else
                 this.ccCalculated = 0;
                 this.boundariesCalculated = 0;

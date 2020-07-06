@@ -39,7 +39,7 @@ function varargout = MembraneTools(varargin)
 
 % Edit the above text to modify the response to help MembraneTools
 
-% Last Modified by GUIDE v2.5 02-Jul-2020 18:40:18
+% Last Modified by GUIDE v2.5 03-Jul-2020 13:47:54
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1566,3 +1566,14 @@ function useFocusImage_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of useFocusImage
 handles.imageProcessingParameters.setDetectionFocusOrSlopes('Focus');
 guidata(hObject, handles);
+
+
+% --- Executes on button press in pushbutton34.
+function pushbutton34_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton34 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+results = handles.imageAnalyzer.results;
+path = [handles.imageImporter.mainDirectory, handles.imageImporter.usedDirectories{1},'\'];
+generateObjectWiseExcel(results, path);
+''
