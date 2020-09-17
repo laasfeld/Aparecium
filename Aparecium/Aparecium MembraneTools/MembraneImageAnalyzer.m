@@ -19,7 +19,7 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             fileChooser = FileChooser();
             ilastikPath = fileChooser.getIlastikExecutablePath();
             
-            parfor i = 1 : numel(measurementParams) % parfor should be here
+            for i = 1 : numel(measurementParams) % parfor should be here
                 if strcmp(measurementParams(1).imageProcessingParams.detectionFocusOrSlopes, 'Slopes')
                     imagesForBinaryGeneration{i} = MembraneImageAnalyzer.createSlopeImage(measurementParams(i));
                 elseif strcmp(measurementParams(1).imageProcessingParams.detectionFocusOrSlopes, 'Focus')
@@ -31,7 +31,8 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             for i = 1 : numel(measurementParams)
                 pixelShiftVertical = measurementParams(i).imageProcessingParams.getPixelShiftVertical();
                 pixelShiftHorizontal = measurementParams(i).imageProcessingParams.getPixelShiftHorizontal();
-                imagesForBinaryGeneration{i} = imagesForBinaryGeneration{i}(pixelShiftVertical+1:end, pixelShiftHorizontal+1:end);
+                imagesForBinaryGeneration{i} = imcrop(imagesForBinaryGeneration{i}, [-pixelShiftHorizontal+1, -pixelShiftVertical+1,  size(imagesForBinaryGeneration{i}, 2), size(imagesForBinaryGeneration{i}, 1)]);
+                %imagesForBinaryGeneration{i} = imagesForBinaryGeneration{i}(pixelShiftVertical+1:end, pixelShiftHorizontal+1:end);
             end
             
             binaryImages = MembraneImageAnalyzer.createBinaryImages(imagesForBinaryGeneration, measurementParams, ilastikPath);
@@ -63,22 +64,54 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             end
             
             IlastikCallStringArray = cell(0,1);
-            IlastikCallString = ['!ilastik.exe --headless --project=', measurementParams(1).imageProcessingParams.ilastikModelPath, ' '];
+            IlastikCallString = ['start /min ilastik.exe --headless --project=', measurementParams(1).imageProcessingParams.ilastikModelPath, ' '];
+            IlastikExpectedFileCount = 0;
             for imageIndex = 1 : numel(slopeImages)
-                if numel([IlastikCallString, tempPath,'\', num2str(imageIndex), randString,'.tif ']) < 8190 % windows command line max length
+                if numel([IlastikCallString, tempPath,'\', num2str(imageIndex), randString,'.tif ']) < 8180 % windows command line max length taking end commands into account
                     IlastikCallString = [IlastikCallString, tempPath,'\', num2str(imageIndex), randString,'.tif '];
+                    IlastikExpectedFileCount(end) = IlastikExpectedFileCount(end) + 1;
                 else
-                    IlastikCallStringArray{end + 1} = IlastikCallString;
+                    IlastikCallStringArray{end + 1} = [IlastikCallString, ' && exit &'];
                     IlastikCallString = ['!ilastik.exe --headless --project=', measurementParams(1).imageProcessingParams.ilastikModelPath, ' '];
-                    IlastikCallString = [IlastikCallString, tempPath,'\', num2str(imageIndex), randString,'.tif '];                  
+                    IlastikCallString = [IlastikCallString, tempPath,'\', num2str(imageIndex), randString,'.tif '];
+                    IlastikExpectedFileCount(end + 1) = 1;
                 end
                 imwrite(uint8(slopeImages{imageIndex}*255), [tempPath, num2str(imageIndex), randString,'.tif'], 'tif');
             end
-            IlastikCallStringArray{end + 1} = IlastikCallString;
+            IlastikCallStringArray{end + 1} = [IlastikCallString, ' && exit &'];
             oldPath = pwd;
             cd(ilastikPath);
-            for ilastkCall = 1 : numel(IlastikCallStringArray)
-                eval(IlastikCallStringArray{ilastkCall});
+            timeoutForSingleImage = 60;
+            for ilastikCall = 1 : numel(IlastikCallStringArray)
+                dirBefore = dir(tempPath);
+                dirPrevious = dirBefore;
+                system(IlastikCallStringArray{ilastikCall});
+                %eval(IlastikCallStringArray{ilastkCall});
+                tic
+                while true
+                    pause(10);
+                    dirAfter = dir(tempPath);
+                    timePassed = toc;
+                    if isequal(dirBefore, dirAfter) && timePassed > timeoutForSingleImage
+                        
+                        % find the ilastik process and kill it
+                        [~, tasks] = system('tasklist');
+                        index = strfind(tasks, 'ilastik.exe');
+                        processID = regexp(tasks(index:end), '[0-9]{1,6}', 'once', 'match');
+                        
+                        system(['taskkill /pid ', processID]);
+                        pause(5)
+                        system(IlastikCallStringArray{ilastikCall});
+                        tic
+                    elseif ~isequal(dirPrevious, dirAfter)
+                        if isequal(numel(dirAfter) - numel(dirBefore), IlastikExpectedFileCount(ilastikCall))
+                            pause(5) % give some time to finish writing the file
+                            break; 
+                        end
+                        dirPrevious = dir(tempPath);
+                        tic
+                    end
+                end
             end
             cd(oldPath);
             binaryImages = cell(size(slopeImages));
@@ -157,7 +190,9 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             pixelShiftVertical = imageProcessingParameters.getPixelShiftVertical();
             pixelShiftHorizontal = imageProcessingParameters.getPixelShiftHorizontal();
            
-            qualityMask = qualityMask(pixelShiftVertical + 1 : end, pixelShiftHorizontal + 1 : end);
+            %qualityMask = qualityMask(pixelShiftVertical + 1 : end, pixelShiftHorizontal + 1 : end);
+            qualityMask = imcrop(qualityMask, [pixelShiftHorizontal, pixelShiftVertical, fliplr(size(qualityMask))]);
+
             contents = dir(filePath);
             contents(1:2) = [];
             cellContents = struct2cell(contents);
@@ -187,9 +222,11 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                 focusedImage = focusFromZstack(names);
             elseif strcmp(imageProcessingParameters.focusOrMaxProjection, 'focus') || isnan(imagePlaneIndex)
                 focusedImage = focusFromZstack({[secondaryFilePath, secondaryPicName]});
-                focusedImage = focusedImage(1 : end - pixelShiftVertical, 1 : end - pixelShiftHorizontal);
                 secondaryPicName
             end
+            qualityMaskFirstCrop = imcrop(focusedImage, [-pixelShiftHorizontal+1, -pixelShiftVertical+1, fliplr(size(focusedImage))]);
+
+            %focusedImage = focusedImage(1 : end - pixelShiftVertical, 1 : end - pixelShiftHorizontal);
             originalBinaryImage = resultStructure.image;
             if strcmp(calculationMethod, 'Binary')
                 

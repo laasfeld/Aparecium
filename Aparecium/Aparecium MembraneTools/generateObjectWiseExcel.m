@@ -1,6 +1,7 @@
 function [ output_args ] = generateObjectWiseExcel(results, path)
 %UNTITLED11 Summary of this function goes here
 %   Detailed explanation goes here
+[name, xlspath] = uiputfile({'*.xls'},'Save object wise results to file');
 
 finalTableArray = cell(numel(results{1}.imageData), 1);
 tableRows = [];
@@ -39,6 +40,6 @@ for well = 1 : numel(results{1}.imageData)
     exportableCell{1, (well - 1)*4+1} = results{1}.ID{well};
     
 end
-
+xlswrite([xlspath, name], exportableCell);
 end
 
