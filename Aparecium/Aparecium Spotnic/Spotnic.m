@@ -22,7 +22,7 @@ function varargout = Spotnic(varargin)
  
 % Edit the above text to modify the response to help Spotnic
  
-% Last Modified by GUIDE v2.5 17-Sep-2020 10:01:49
+% Last Modified by GUIDE v2.5 24-Sep-2020 17:59:56
  
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -204,7 +204,11 @@ try
             parameterIndex = 4;
             header1 = 'spot total intensity';
             header2 = 'average total intensity';
-        case 'handles.metricToDisplay'
+        case 'Spot total intensity over image background'
+            parameterIndex = 5;
+            header1 = 'spot total intensity over image background';
+            header2 = 'average spot total intensity over image background';
+            
     end
     for imageIndex = 1 : numel(values)
        for subDir = 1 : numel(handles.imageIndecesOfFolder)
@@ -233,8 +237,68 @@ try
         dataTable{row+2, 2} = parameterValue(row);
     end
     set(handles.uitable1, 'Data', dataTable);
+    
+
+    
 catch
     
+end
+
+% If single image is selected, visualize it
+
+if strcmp(handles.analysisMode, 'images') && isequal(numel(imageNames), 1);
+    for imageIndex = 1 : numel(values)
+       for subDir = 1 : numel(handles.imageIndecesOfFolder)
+          for imageIndexInFolder = 1 : numel(handles.imageIndecesOfFolder{subDir})
+             if isequal(values(imageIndex), handles.imageIndecesOfFolder{subDir}(imageIndexInFolder))
+                imageDir = subDir;
+                imageIndexInFolder_final = imageIndexInFolder;
+                break;
+             end
+          end
+       end
+    end
+    
+    % construct the full path
+    fileEndIndex = strfind(handles.imageNamesOfFolder{imageDir}{imageIndexInFolder_final}, '.tif');
+    fileName = handles.imageNamesOfFolder{imageDir}{imageIndexInFolder_final}(1 : fileEndIndex(end)+3);
+    subfolderNames = get(handles.wellNames, 'String');
+    fullPath = fullfile(handles.mainImageFolder, subfolderNames{imageDir}, fileName);
+    info = imfinfo(fullPath);
+    baseFrame = zeros(info(1).Height, info(1).Width, numel(handles.spotAnalysisLayerToRead{imageDir}{imageIndexInFolder_final}));
+    if get(handles.showImage, 'Value')
+        for k = 1 : numel(handles.spotAnalysisLayerToRead{imageDir}{imageIndexInFolder_final})
+            baseFrame(:,:,k) = imread(fullPath, handles.spotAnalysisLayerToRead{imageDir}{imageIndexInFolder_final}(k));
+        end
+    end
+    baseFrame = mean(baseFrame, 3);
+    baseFrame = baseFrame/max(max(baseFrame)); % normalize
+    baseFrame = repmat(baseFrame, [1 1 3]); % make RGB compatible
+    finalFrame = baseFrame;
+    
+    if get(handles.showMask, 'Value') 
+        if get(handles.showSimpleMask, 'Value')
+            finalFrame(:,:,1) = max(cat(3, finalFrame(:,:,1), double(handles.spotAnalysisBinaryMasks{imageDir}{imageIndexInFolder_final})), [], 3);
+        elseif get(handles.showThresholdedMask, 'Value')
+            baseMask = 0;
+        end
+        
+        if get(handles.showStencilMask, 'Value')
+            
+        end
+    end
+    hold off
+    imshow(finalFrame, 'Parent', handles.axes9);
+    hold on
+    if get(handles.showSpotCentroids, 'Value')
+        spotXLoc = handles.spotAnalysisSpotLocations{imageDir}{imageIndexInFolder_final}.x;
+        spotYLoc = handles.spotAnalysisSpotLocations{imageDir}{imageIndexInFolder_final}.y;
+        plot(spotXLoc, spotYLoc, 'rO', 'Parent', handles.axes9)
+    end
+    if get(handles.showSurroundingPolygon, 'Value')
+        [vx, vy] = voronoi(handles.spotAnalysisSpotLocations{imageDir}{imageIndexInFolder_final}.x, handles.spotAnalysisSpotLocations{imageDir}{imageIndexInFolder_final}.y);
+        plot(vx,vy,'r-', 'Parent', handles.axes9);
+    end
 end
 guidata(hObject, handles);
  
@@ -297,13 +361,20 @@ function startAnalysis_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles.spotAnalysisResults = cell(numel(handles.subDirNames),1);
+handles.spotAnalysisBinaryMasks = cell(numel(handles.subDirNames),1);
+handles.spotAnalysisSpotLocations = cell(numel(handles.subDirNames),1);
+handles.spotAnalysisLayerToRead = cell(numel(handles.subDirNames),1);
 threshold = str2double(get(handles.threshold, 'String'));
-f = waitbar(0,'Detecting spots');
+f = waitbar(0, 'Detecting spots');
 for dirIndex = 1 : numel(handles.subDirNames)
     if strcmp(handles.analysisMode, 'images');
-        result = spotDetection(threshold, [handles.mainImageFolder,'/', handles.subDirNames{dirIndex}], false, 'max');
+        sigma = str2double(get(handles.spotSigma, 'String')); % get the expected spot size for the spot detector.
+        [result, binaryMask, spotLocations, layersToRead] = spotDetection(threshold, [handles.mainImageFolder,'/', handles.subDirNames{dirIndex}], false, 'max', 0, [], sigma);
         waitbar(dirIndex/numel(handles.subDirNames));
         handles.spotAnalysisResults{dirIndex} = cell2mat(result(:,2:end));
+        handles.spotAnalysisBinaryMasks{dirIndex} = binaryMask;
+        handles.spotAnalysisSpotLocations{dirIndex} = spotLocations;
+        handles.spotAnalysisLayerToRead{dirIndex} = layersToRead;
     elseif strcmp(handles.analysisMode, 'histograms')
         result = spotHistogramStatistics(threshold, handles.histogramsOfFolder{dirIndex});
         waitbar(dirIndex/numel(handles.subDirNames));
@@ -311,6 +382,7 @@ for dirIndex = 1 : numel(handles.subDirNames)
     end
 end
 close(f);
+handles.result = result;
 imageNames_Callback(handles.imageNames, eventdata, handles);
 handles = generateExperimentDataStructureFromResults(handles);
 guidata(hObject, handles);
@@ -759,7 +831,7 @@ for subDirIndex = 1 : numel(handles.subDirNames)
                if isequal(numel(imageLocationIndices), 1)
                    imageNames{end+1} = dirContents(itemIndex).name;
                else
-                   imageNames{end+1} = [dirContents(itemIndex).name, '_', num2str(imageLayer), '_1-',num2str(numel(imageLocationIndices == imageLayer)) ];
+                   imageNames{end+1} = [dirContents(itemIndex).name, '_', num2str(imageLayer), '_1-',num2str(sum(imageLocationIndices == imageLayer)) ];
                end
                folderImageNames{end+1} = imageNames{end};
                handles.imageIndecesOfFolder{subDirIndex} = [handles.imageIndecesOfFolder{subDirIndex}, numel(imageNames)];
@@ -777,6 +849,19 @@ for dirIndex = 1 : numel(handles.subDirNames)
     handles.imageStatisticsResults{dirIndex} = cell2mat(result(:,2:end));
 end
 handles = folderNamesToExperimentDataStructure(handles);
+
+% Find the layers to read for each image
+
+handles.spotAnalysisLayerToRead = cell(numel(handles.subDirNames),1);
+threshold = str2double(get(handles.threshold, 'String'));
+f = waitbar(0, 'Detecting spots');
+for dirIndex = 1 : numel(handles.subDirNames)
+    if strcmp(handles.analysisMode, 'images');
+        layersToRead = getLayersToRead([handles.mainImageFolder,'/', handles.subDirNames{dirIndex}], 'max');
+        handles.spotAnalysisLayerToRead{dirIndex} = layersToRead;
+    end
+end
+
 guidata(hObject, handles);
 
 function handles = folderNamesToExperimentDataStructure(handles)
@@ -821,6 +906,7 @@ for param = includedParameters
 end
 handles.apareciumExperimentInput.setChannelNames(channelNames);
 updateMidasChannels(handles);
+
 
 function edit5_Callback(hObject, eventdata, handles)
 % hObject    handle to edit5 (see GCBO)
@@ -1075,58 +1161,58 @@ set(hObject,'Data', {'', '', '', 'false', 'false'});
 guidata(hObject, handles);
 
 
-% --- Executes on button press in checkbox8.
-function checkbox8_Callback(hObject, eventdata, handles)
-% hObject    handle to checkbox8 (see GCBO)
+% --- Executes on button press in showImage.
+function showImage_Callback(hObject, eventdata, handles)
+% hObject    handle to showImage (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of checkbox8
+% Hint: get(hObject,'Value') returns toggle state of showImage
+imageNames_Callback(handles.imageNames, eventdata, handles)
 
-
-% --- Executes on button press in checkbox9.
-function checkbox9_Callback(hObject, eventdata, handles)
-% hObject    handle to checkbox9 (see GCBO)
+% --- Executes on button press in showMask.
+function showMask_Callback(hObject, eventdata, handles)
+% hObject    handle to showMask (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of checkbox9
+% Hint: get(hObject,'Value') returns toggle state of showMask
+imageNames_Callback(handles.imageNames, eventdata, handles)
 
-
-% --- Executes on button press in checkbox10.
-function checkbox10_Callback(hObject, eventdata, handles)
-% hObject    handle to checkbox10 (see GCBO)
+% --- Executes on button press in showSpotCentroids.
+function showSpotCentroids_Callback(hObject, eventdata, handles)
+% hObject    handle to showSpotCentroids (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of checkbox10
+% Hint: get(hObject,'Value') returns toggle state of showSpotCentroids
+imageNames_Callback(handles.imageNames, eventdata, handles)
 
-
-% --- Executes on button press in checkbox11.
-function checkbox11_Callback(hObject, eventdata, handles)
-% hObject    handle to checkbox11 (see GCBO)
+% --- Executes on button press in showSurroundingPolygon.
+function showSurroundingPolygon_Callback(hObject, eventdata, handles)
+% hObject    handle to showSurroundingPolygon (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of checkbox11
+% Hint: get(hObject,'Value') returns toggle state of showSurroundingPolygon
+imageNames_Callback(handles.imageNames, eventdata, handles)
 
-
-% --- Executes on button press in checkbox12.
-function checkbox12_Callback(hObject, eventdata, handles)
-% hObject    handle to checkbox12 (see GCBO)
+% --- Executes on button press in showStencilMask.
+function showStencilMask_Callback(hObject, eventdata, handles)
+% hObject    handle to showStencilMask (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of checkbox12
+% Hint: get(hObject,'Value') returns toggle state of showStencilMask
 
 
-% --- Executes on button press in checkbox13.
-function checkbox13_Callback(hObject, eventdata, handles)
-% hObject    handle to checkbox13 (see GCBO)
+% --- Executes on button press in showThresholdedMask.
+function showThresholdedMask_Callback(hObject, eventdata, handles)
+% hObject    handle to showThresholdedMask (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of checkbox13
+% Hint: get(hObject,'Value') returns toggle state of showThresholdedMask
 
 
 % --- Executes on button press in displaySpotTotalIntensity.
@@ -1377,3 +1463,36 @@ function edit9_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+
+function spotSigma_Callback(hObject, eventdata, handles)
+% hObject    handle to spotSigma (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of spotSigma as text
+%        str2double(get(hObject,'String')) returns contents of spotSigma as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function spotSigma_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to spotSigma (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in showSimpleMask.
+function showSimpleMask_Callback(hObject, eventdata, handles)
+% hObject    handle to showSimpleMask (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of showSimpleMask
+imageNames_Callback(handles.imageNames, eventdata, handles)

@@ -56,7 +56,7 @@ for i=1:size(dirInfo, 1)
         height{counter, 1} = info(1).Height;
         counter = counter + 1;
     elseif stackSizeThreshold < numel(info)
-        [imageLocationIndices, timeIndexVector] = imageLocExtractor(info);
+        [imageLocationIndices, timeIndexVector] = imageLocExtractor(fullfile(folderName, dirInfo(i).name));
         uniqueLocations = unique(imageLocationIndices);
         for locationIndex = 1 : numel(uniqueLocations)
             tifFilesNames{counter, 1} = fullfile(folderName, dirInfo(i).name);
@@ -219,12 +219,13 @@ for i = 1 : size(tifFilesNames,1)
         %subplot(1,2,1); imagesc(frame); colormap(gray(256)); axis image; title('Input');
         %subplot(1,2,2); imagesc(mask); axis image; title('Detection');
         %viscircles(centers,radii);
-        tifFilesNames{i,3}=mean(mean(frame, 2));
-        homogeneity=graycoprops(graycomatrix(frame, 'NumLevels',256,'G',[0,64000]), 'Homogeneity');
+        tifFilesNames{i,3} = mean(mean(frame, 2));
+        homogeneity = graycoprops(graycomatrix(frame, 'NumLevels',256,'G',[0,64000]), 'Homogeneity');
         
         tifFilesNames{i, 4} = mean(frame(mask));
         tifFilesNames{i, 5} = sum(frame(mask));
-        tifFilesNames{i,6}=homogeneity.Homogeneity(1);
+        tifFilesNames{i, 6} = tifFilesNames{i, 5} / mean(frame(~mask));
+        tifFilesNames{i, 7} = homogeneity.Homogeneity(1);
     else
         tifFilesNames{i,2}=0;
         tifFilesNames{i,3}=mean(mean(frame),2);
@@ -234,7 +235,8 @@ for i = 1 : size(tifFilesNames,1)
         homogeneity=graycoprops(graycomatrix(frame, 'NumLevels',256,'G',[0,64000]), 'Homogeneity');     
         tifFilesNames{i, 4} = mean(frame(mask));
         tifFilesNames{i, 5} = sum(frame(mask));
-        tifFilesNames{i,6}=homogeneity.Homogeneity(1);
+        tifFilesNames{i, 6} = tifFilesNames{i, 5} / mean(frame(~mask));
+        tifFilesNames{i, 7} = homogeneity.Homogeneity(1);
     end
 end
 
