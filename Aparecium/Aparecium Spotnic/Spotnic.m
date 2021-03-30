@@ -22,7 +22,7 @@ function varargout = Spotnic(varargin)
  
 % Edit the above text to modify the response to help Spotnic
  
-% Last Modified by GUIDE v2.5 24-Sep-2020 17:59:56
+% Last Modified by GUIDE v2.5 30-Nov-2020 19:16:10
  
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -384,6 +384,24 @@ end
 close(f);
 handles.result = result;
 imageNames_Callback(handles.imageNames, eventdata, handles);
+
+spotVector = [];
+totalAnalysisVector = [];
+pointerVector = [];
+
+% if(get(handles.useAutomaticOutlierRemoval, 'Value'))
+%     for i = 1 : handles.wellsIndicesForOutlierRemoval
+%         pointerVector = [pointerVector, [ones(1, size(handles.spotAnalysisResults{i}, 1))*i; 1:size(handles.spotAnalysisResults{i}, 1)]];
+%         spotVector = [spotVector; handles.spotAnalysisResults{i}(:, 1)];
+%         totalAnalysisVector = [totalAnalysisVector; handles.spotAnalysisResults{i}(:, 3)];
+%     end
+%     cleanPointerVector = find2DOutliers(spotVector, totalAnalysisVector, pointerVector);
+%     for i = 1 : numel(handles.spotAnalysisResults)
+%         locationIndices = find(cleanPointerVector(1, :) == i);
+%         handles.spotAnalysisResults{i} = handles.spotAnalysisResults{i}(cleanPointerVector(2, locationIndices), :);
+%     end
+% end
+
 handles = generateExperimentDataStructureFromResults(handles);
 guidata(hObject, handles);
  
@@ -396,14 +414,36 @@ experimentDataStructure.cycleTime = 0;
 experimentDataStructure.readingDirection = -1;
 experimentDataStructure.timeOfMeasurements = 0;
 experimentDataStructure.temperature = 0;
+imageIndicesOfFolderOutliersRemoved = handles.imageIndecesOfFolder;
+if(get(handles.useAutomaticOutlierRemoval, 'Value'))
+    [outliers, goodWellIndices] = findSpotnicOutliers(handles.spotAnalysisResults, handles.imageIndecesOfFolder, handles.wellsIndicesForOutlierRemoval);
+    % remove the outliers
+    counter = 1;
+    
+    for wellIndex = 1 : numel(handles.spotAnalysisResults)
+        removableIndices = [];
+        for imageIndex = 1 : size(handles.spotAnalysisResults{wellIndex}, 1)
+            if sum(outliers == counter) > 0
+                removableIndices(end + 1) = imageIndex;
+            end
+            counter = counter + 1;
+        end      
+        handles.spotAnalysisResults{wellIndex}(removableIndices, :) = [];  
+        imageIndicesOfFolderOutliersRemoved{wellIndex}(removableIndices) = [];
+    end
+else
+    
+end
+
+
 
 for wellIndex = (1 : numel(experimentDataStructure.wellID))
-    imageIndices = handles.imageIndecesOfFolder{wellIndex};
+    imageIndices = imageIndicesOfFolderOutliersRemoved{wellIndex};
     parameterValue = cell(numel(get(handles.parameterList, 'Value')), 1);
     for imageIndex = 1 : numel(imageIndices)
-        for subDir = 1 : numel(handles.imageIndecesOfFolder)
-            for imageIndexInFolder = 1 : numel(handles.imageIndecesOfFolder{subDir})
-                if isequal(imageIndices(imageIndex), handles.imageIndecesOfFolder{subDir}(imageIndexInFolder))
+        for subDir = 1 : numel(imageIndicesOfFolderOutliersRemoved)
+            for imageIndexInFolder = 1 : numel(imageIndicesOfFolderOutliersRemoved{subDir})
+                if isequal(imageIndices(imageIndex), imageIndicesOfFolderOutliersRemoved{subDir}(imageIndexInFolder))
                     for parameterIndex = get(handles.parameterList, 'Value')
                         parameterValue{parameterIndex}(imageIndex) = handles.spotAnalysisResults{subDir}(imageIndexInFolder, parameterIndex);
                     end
@@ -1433,28 +1473,28 @@ imageNames_Callback(handles.imageNames, eventdata, handles)
 guidata(hObject, handles);
 
 
-% --- Executes on button press in checkbox18.
-function checkbox18_Callback(hObject, eventdata, handles)
-% hObject    handle to checkbox18 (see GCBO)
+% --- Executes on button press in useAutomaticOutlierRemoval.
+function useAutomaticOutlierRemoval_Callback(hObject, eventdata, handles)
+% hObject    handle to useAutomaticOutlierRemoval (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of checkbox18
+% Hint: get(hObject,'Value') returns toggle state of useAutomaticOutlierRemoval
 
 
 
-function edit9_Callback(hObject, eventdata, handles)
-% hObject    handle to edit9 (see GCBO)
+function outlierRemovalFunctionName_Callback(hObject, eventdata, handles)
+% hObject    handle to outlierRemovalFunctionName (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit9 as text
-%        str2double(get(hObject,'String')) returns contents of edit9 as a double
+% Hints: get(hObject,'String') returns contents of outlierRemovalFunctionName as text
+%        str2double(get(hObject,'String')) returns contents of outlierRemovalFunctionName as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function edit9_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit9 (see GCBO)
+function outlierRemovalFunctionName_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to outlierRemovalFunctionName (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -1496,3 +1536,12 @@ function showSimpleMask_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of showSimpleMask
 imageNames_Callback(handles.imageNames, eventdata, handles)
+
+
+% --- Executes on button press in chooseWellsForOutlierAnalysis.
+function chooseWellsForOutlierAnalysis_Callback(hObject, eventdata, handles)
+% hObject    handle to chooseWellsForOutlierAnalysis (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.wellsIndicesForOutlierRemoval = ChooseOutlierFolders(get(handles.wellNames, 'String'));
+guidata(hObject, handles);

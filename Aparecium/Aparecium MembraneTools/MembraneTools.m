@@ -1,4 +1,4 @@
-%% Copyright (C) 2016 Tõnis Laasfeld
+%% Copyright (C) 2016 TÃµnis Laasfeld
 %   
 % This program is free software; you can redistribute it and/or
 % modify it under the terms of the GNU General Public License
@@ -39,7 +39,7 @@ function varargout = MembraneTools(varargin)
 
 % Edit the above text to modify the response to help MembraneTools
 
-% Last Modified by GUIDE v2.5 03-Aug-2020 14:51:50
+% Last Modified by GUIDE v2.5 02-Mar-2021 21:08:37
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -81,7 +81,7 @@ handles.output = hObject;
 handles.dimensionality = 1; % Start off with only one treatment
 handles.fastKinetics = [];
 handles.outputChannelNames = [];
-handles.midasTableController = MidasTableController('empty'); % Create a new MIDAS table controller but don´t assign an actual table for it to control
+handles.midasTableController = MidasTableController('empty'); % Create a new MIDAS table controller but donÂ´t assign an actual table for it to control
 handles.midasTableController.addTreatmentColumn(' ', '', ''); % Set up the standard parameters for the MIDAS table 
 handles.apareciumExperimentInput = ApareciumExperimentInput(); % Create a new object that holds information about treatments and wells
 handles.plateSimulatorInterface = PlateSimulatorInterface(); % Create a new object that can commonicate with PlateSimulator which is written in Java
@@ -249,7 +249,7 @@ switch value
         if isequal(license('test', 'Distrib_Computing_Toolbox'), 1)           
             handles.imageProcessingParameters.setParallelComputing('on'); % use parallel computing
         else
-            warndlg('Parallel Computing Toolbox not found, can´t use parallel computing option.');
+            warndlg('Parallel Computing Toolbox not found, canÂ´t use parallel computing option.');
             set(hObject, 'Value', 0);
             handles.imageProcessingParameters.setParallelComputing('off');
         end
@@ -896,7 +896,7 @@ startingPath = fileChooser.chooseMembraneToolsFolder(); % get the preferred star
 handles.imageImporter.userChooseImageFolders(startingPath); % note that user must still choose the regular images, timing is still read from there but binary image is taken from elsewhere
 handles.experimentDataStructure = handles.imageImporter.experimentDataStructure; 
 handles.imageProcessingParameters.setFromBinaryMode(); % set the image analysis parameters to accordance with processing binary files
-set(handles.autoSaveBinaryImage, 'value', 0); % Don´t save binary files, they must already be there
+set(handles.autoSaveBinaryImage, 'value', 0); % DonÂ´t save binary files, they must already be there
 
 %% disable most of the panels that change parameters which change the way
 %% the bright-field images are analyzer but not how the binary images are
@@ -1157,11 +1157,18 @@ contents = cellstr(get(hObject,'String'));
 if strcmp(contents{get(hObject,'Value')}, 'Sobel')
     set(handles.ilastikParametersPanel, 'Visible', 'off')
     set(handles.analysisParameters, 'Visible', 'on')
+    set(handles.kerasParametersPanel, 'Visible', 'off')
     handles.imageProcessingParameters.detectionModel = handles.imageProcessingParameters.SobelModel;
 elseif strcmp(contents{get(hObject,'Value')}, 'Ilastik')
     set(handles.ilastikParametersPanel, 'Visible', 'on')
     set(handles.analysisParameters, 'Visible', 'off')
+    set(handles.kerasParametersPanel, 'Visible', 'off')
     handles.imageProcessingParameters.detectionModel = handles.imageProcessingParameters.IlastikModel;
+elseif strcmp(contents{get(hObject,'Value')}, 'Keras')
+    set(handles.ilastikParametersPanel, 'Visible', 'off')
+    set(handles.analysisParameters, 'Visible', 'off')
+    set(handles.kerasParametersPanel, 'Visible', 'on')
+    handles.imageProcessingParameters.detectionModel = handles.imageProcessingParameters.KerasModel;
 end
 guidata(hObject, handles)
 
@@ -1577,3 +1584,61 @@ results = handles.imageAnalyzer.results;
 path = [handles.imageImporter.mainDirectory, handles.imageImporter.usedDirectories{1},'\'];
 generateObjectWiseExcel(results, path);
 ''
+
+
+
+function kerasModelPath_Callback(hObject, eventdata, handles)
+% hObject    handle to kerasModelPath (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of kerasModelPath as text
+%        str2double(get(hObject,'String')) returns contents of kerasModelPath as a double
+handles.imageProcessingParameters.kerasModelPath = get(hObject,'String');
+guidata(hObject, handles)
+
+% --- Executes during object creation, after setting all properties.
+function kerasModelPath_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to kerasModelPath (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in pushbutton35.
+function pushbutton35_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton35 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+fileChooser = FileChooser();
+fullPath = fileChooser.chooseKerasModelFile();
+handles.imageProcessingParameters.kerasModelPath = fullPath;
+set(handles.kerasModelPath, 'String', fullPath);
+guidata(hObject, handles)
+
+
+function edit31_Callback(hObject, eventdata, handles)
+% hObject    handle to edit31 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit31 as text
+%        str2double(get(hObject,'String')) returns contents of edit31 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit31_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit31 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

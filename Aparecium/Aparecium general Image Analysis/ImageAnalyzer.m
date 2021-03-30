@@ -601,6 +601,9 @@ classdef ImageAnalyzer < handle
                             if strcmp(this.imageProcessingParameters.detectionModel, this.imageProcessingParameters.IlastikModel)
                                 IlastikAnalysis = str2func([class(this), '.performIlastikAnalysis']);
                                 measurementParams = IlastikAnalysis(measurementParams); 
+                            elseif strcmp(this.imageProcessingParameters.detectionModel, this.imageProcessingParameters.KerasModel)
+                                KerasAnalysis = str2func([class(this), '.performKerasAnalysis']);
+                                measurementParams = KerasAnalysis(measurementParams);                                 
                             else
                                 for imageIndex = 1 : numel(measurementParams)% parfor should be here                            
                                     measurementParams(imageIndex).results = functionName(...

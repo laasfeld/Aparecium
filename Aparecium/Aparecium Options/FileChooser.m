@@ -553,10 +553,40 @@ classdef FileChooser < handle
             this.registerIlastikModelPath(filePath);
         end
         
+        function fullFilePath = chooseKerasModelFile(this)
+            if isfield(this.settings, 'defaultKerasModelPath')
+                startingPath = this.settings.defaultKerasModelPath;
+            else
+                startingPath = '';
+            end
+            
+            [fileName, filePath] = uigetfile('*.h5', 'Choose Keras model', startingPath);
+            fullFilePath = [filePath, fileName];
+
+            if isequal(fullFilePath(1,1),0)
+               error('User selected Cancel')
+            end
+            this.registerKerasModelPath(filePath);
+        end
+        
         function registerIlastikModelPath(this, path)
            if isfield(this.settings, 'defaultIlastikModel_useLast')
                if isequal(this.settings.defaultIlastikModel_useLast, true)
                    this.settings.defaultIlastikModelPath = path;
+                   settings = this.settings; % ignore warning, it is used in the save
+                   if isdeployed
+                        save([pwd, '\', 'settings.mat'], 'settings');
+                   else
+                        save([this.settingsPath, 'settings.mat'], 'settings');
+                   end
+               end
+           end
+        end
+        
+        function registerKerasModelPath(this, path)
+           if isfield(this.settings, 'defaultKerasModel_useLast')
+               if isequal(this.settings.defaultKerasModel_useLast, true)
+                   this.settings.defaultKerasModelPath = path;
                    settings = this.settings; % ignore warning, it is used in the save
                    if isdeployed
                         save([pwd, '\', 'settings.mat'], 'settings');

@@ -196,6 +196,7 @@ classdef GraphicalPreviewController < ExportPanelController
             yAxisLabel = this.calculationMethod.formulae{end}.acronyme;
             cyclesInUse = this.timeController.getCyclesInUse();
             timeMoments = this.timeController.getCycleTimes();
+            axes(this.axisHandle);
             hold on;
             legends = cell(1, numel(data{group}) - 1);
 
@@ -220,7 +221,7 @@ classdef GraphicalPreviewController < ExportPanelController
                 try
                     plot(xAxis, yAxis, 'Marker', this.markers{mod(group, numel(this.markers))}, 'Line', 'none', 'MarkerEdgeColor',[red green blue]);
                 catch MException
-                    if strcmp(MException.message, 'There is no Line property on the Line class.') 
+                    if strcmp(MException.message, 'There is no Line property on the Line class.') || strcmp(MException.message, 'Unrecognized property Line for class Line.')
                         plot(xAxis, yAxis, this.markers{mod(group, numel(this.markers))}, 'MarkerEdgeColor',[red green blue]);
                     end
                 end

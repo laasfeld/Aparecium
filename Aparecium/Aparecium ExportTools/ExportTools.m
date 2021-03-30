@@ -352,7 +352,7 @@ previewTabGroup.SelectionChangedFcn = @tabChangeListener;
 try
     set(previewTabGroup, 'BackgroundColor', [225/255 226/255 251/255]);
 catch MException
-    if strcmp(MException.message, 'There is no BackgroundColor property on the TabGroup class.')
+    if strcmp(MException.message, 'There is no BackgroundColor property on the TabGroup class.') || strcmp(MException.message, 'Unrecognized property BackgroundColor for class TabGroup.')
         tabs = {tab1, tab2, tab3, tab4, tab5};
         for i = 1 : numel(tabs)
             tabs{i}.BackgroundColor = [225/255 226/255 251/255];
