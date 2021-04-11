@@ -162,7 +162,14 @@ end
 %     end
 % end
 
-function handles = displayImages(handles)
+function handles = displayImages(handles, varargin)
+
+if numel(varargin) > 0
+    doDisplay = varargin{1};
+else
+    doDisplay = true;
+end
+
 try
     if handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) <= handles.lowerBound % impossible image index in this context
         if isequal(handles.wellIndex, 1) && isequal(handles.imageInWellIndex, 1) % handle the case where no previous image focus is available
@@ -173,20 +180,22 @@ try
             handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) = handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex - 1);
         end
     end
-    fileName = handles.nameArray{handles.imagesOfWell{handles.wellIndex}{handles.imageInWellIndex}(handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex))};
-    set(handles.fileName, 'String', ['Current image is ', fileName]);
-    if( isequal(get(handles.normalize,'Value'), 0) )
-        image = imread([handles.directoryName, '\', fileName]);
-    else
-        image = double(imread([handles.directoryName, '\', fileName]));
-        image = (image - min(min(image)));
-        image = image/max(max(image));
+    if doDisplay
+        fileName = handles.nameArray{handles.imagesOfWell{handles.wellIndex}{handles.imageInWellIndex}(handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex))};
+        set(handles.fileName, 'String', ['Current image is ', fileName]);
+        if( isequal(get(handles.normalize,'Value'), 0) )
+            image = imread([handles.directoryName, '\', fileName]);
+        else
+            image = double(imread([handles.directoryName, '\', fileName]));
+            image = (image - min(min(image)));
+            image = image/max(max(image));
+        end
+        mask = handles.masks{handles.wellIndex}{handles.imageInWellIndex};
+        masked = image;
+        masked(mask) = 0;
+        image = cat(3, cat(3, image, masked), masked);
+        imshow(image, 'Parent', handles.axes1);
     end
-    mask = handles.masks{handles.wellIndex}{handles.imageInWellIndex};
-    masked = image;
-    masked(mask) = 0;
-    image = cat(3, cat(3, image, masked), masked);
-    imshow(image, 'Parent', handles.axes1);
 catch
     
 end
@@ -219,12 +228,19 @@ if handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) <= handles.lo
 end
 guidata(hObject, handles);
 
-function handles = nextImageSelection(handles)
+function handles = nextImageSelection(handles, varargin)
+
+if numel(varargin) > 0
+    doDisplay = varargin{1};
+else
+    doDisplay = true;
+end
+
 if handles.imageInWellIndex < numel(handles.wellID_location_indices{handles.wellIndex})  
     handles.imageInWellIndex = handles.imageInWellIndex + 1;
     set(handles.previousImage, 'Enable', 'on'); 
     try
-        handles = displayImages(handles);
+        handles = displayImages(handles, doDisplay);
     catch
 
     end
@@ -233,7 +249,7 @@ elseif handles.wellIndex < numel(handles.wellID)
     handles.imageInWellIndex = 1;
     set(handles.previousImage, 'Enable', 'on'); 
     try
-        handles = displayImages(handles);
+        handles = displayImages(handles, doDisplay);
     catch
 
     end  
@@ -456,11 +472,18 @@ function pushbutton15_Callback(hObject, eventdata, handles)
 handles.wellIndex = 1;
 handles.imageInWellIndex = 1;
 for index = 1 : numel(handles.wellID)
+    index
     for imageInWellIndex = 1 : numel(handles.imageIndex{index})
-        handles.focusImageNames{index}{imageInWellIndex} = handles.nameArray{handles.imagesOfWell{index}{imageInWellIndex}(handles.imageIndex{index}(imageInWellIndex))};
-        handles = nextImageSelection(handles);
+        try
+            handles.focusImageNames{index}{imageInWellIndex} = handles.nameArray{handles.imagesOfWell{index}{imageInWellIndex}...
+                (handles.imageIndex{index}(imageInWellIndex))};
+        catch
+            ''
+        end
+        handles = nextImageSelection(handles, false);
     end
 end
+nextImageSelection(handles);
 guidata(hObject, handles)
 
 

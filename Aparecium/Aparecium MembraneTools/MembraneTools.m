@@ -1581,11 +1581,9 @@ function pushbutton34_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 results = handles.imageAnalyzer.results;
-path = [handles.imageImporter.mainDirectory, handles.imageImporter.usedDirectories{1},'\'];
+path = [handles.imageImporter.mainDirectory,'\', handles.imageImporter.usedDirectories{1},'\'];
 generateObjectWiseExcel(results, path);
 ''
-
-
 
 function kerasModelPath_Callback(hObject, eventdata, handles)
 % hObject    handle to kerasModelPath (see GCBO)
@@ -1642,3 +1640,4 @@ function edit31_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+

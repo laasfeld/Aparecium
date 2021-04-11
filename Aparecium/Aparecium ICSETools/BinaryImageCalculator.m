@@ -270,7 +270,9 @@ classdef BinaryImageCalculator < handle
             this.guaranteeObjectCount()
             maxDiameter = 0;
             for i = 1 : numel(this.criteriaMatchingBoundaries)
-                maxDiameter = maxDiameter + maxObjectDiameter(this.criteriaMatchingBoundaries{i});
+                if size(this.criteriaMatchingBoundaries{i}, 1) < 10000
+                    maxDiameter = maxDiameter + maxObjectDiameter(this.criteriaMatchingBoundaries{i});
+                end
             end
             this.resultStructure.maxDiameter = maxDiameter/this.objectCount;
         end

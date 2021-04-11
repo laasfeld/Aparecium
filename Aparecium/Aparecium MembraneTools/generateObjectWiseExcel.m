@@ -1,25 +1,27 @@
 function [ output_args ] = generateObjectWiseExcel(results, path)
 %UNTITLED11 Summary of this function goes here
 %   Detailed explanation goes here
-[name, xlspath] = uiputfile({'*.xls'},'Save object wise results to file');
+
+[name, xlspath] = uiputfile({'*.xlsx'},'Save object wise results to file');
 
 finalTableArray = cell(numel(results{1}.imageData), 1);
 tableRows = [];
 for well = 1 : numel(results{1}.imageData)
+    well
     finalTable = [];
     counter = 1;
     for imageIdx = 1 : numel(results{1}.imageData{well})
         im = results{1}.imageData{well}{imageIdx}.image;
         cc = bwconncomp(im);
         % read primary image
-        im1 = imread([path, '/', results{1}.imageData{well}{imageIdx}.imageName]);
+        im1 = imread([path, results{1}.imageData{well}{imageIdx}.imageName]);
         res = regionprops('table',cc, im1, 'Area', 'Eccentricity', 'MeanIntensity');
         res.Properties.VariableNames = {'Area', 'Eccentricity', 'DAPI_intensity'};
         im2 = imread([path, '/', results{1}.imageData{well}{imageIdx}.secondaryImageName]);
         res2 = regionprops('table',cc, im2, 'MeanIntensity');
         res2.Properties.VariableNames = {'RFP_intensity'};
         subtable = [res res2];
-        subtable = subtable(subtable{:,1} > 600, :);
+        subtable = subtable(subtable{:,1} > 200, :);
         if isequal(counter, 1)
             finalTable = subtable;            
         else         
@@ -40,6 +42,7 @@ for well = 1 : numel(results{1}.imageData)
     exportableCell{1, (well - 1)*4+1} = results{1}.ID{well};
     
 end
+
 xlswrite([xlspath, name], exportableCell);
 end
 
