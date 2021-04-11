@@ -1574,6 +1574,6 @@ function pushbutton34_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 results = handles.imageAnalyzer.results;
-path = [handles.imageImporter.mainDirectory, handles.imageImporter.usedDirectories{1},'\'];
+path = [handles.imageImporter.mainDirectory,'\', handles.imageImporter.usedDirectories{1},'\'];
 generateObjectWiseExcel(results, path);
 ''
