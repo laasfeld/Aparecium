@@ -14,6 +14,33 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
     
     methods (Static)
     
+        function measurementParams = performKerasAnalysis(measurementParams)
+            
+            parfor i = 1 : numel(measurementParams) % parfor should be here
+                if strcmp(measurementParams(1).imageProcessingParams.detectionFocusOrSlopes, 'Slopes')
+                    imagesForBinaryGeneration{i} = MembraneImageAnalyzer.createSlopeImage(measurementParams(i));
+                elseif strcmp(measurementParams(1).imageProcessingParams.detectionFocusOrSlopes, 'Focus')
+                    imagesForBinaryGeneration{i} = MembraneImageAnalyzer.createFocusImageNoNorm(measurementParams(i));
+                end
+            end
+            
+            % intoduce the pixel shifts to images
+            for i = 1 : numel(measurementParams)
+                pixelShiftVertical = measurementParams(i).imageProcessingParams.getPixelShiftVertical();
+                pixelShiftHorizontal = measurementParams(i).imageProcessingParams.getPixelShiftHorizontal();
+                imagesForBinaryGeneration{i} = imagesForBinaryGeneration{i}(pixelShiftVertical+1:end, pixelShiftHorizontal+1:end);
+            end
+            
+            binaryImages = MembraneImageAnalyzer.createBinaryImagesWithKeras(imagesForBinaryGeneration, measurementParams);
+            for imageIndex = 1 : numel(measurementParams)
+                measurementParams(imageIndex).results = MembraneImageAnalyzer.analyzeMembranesStatic(...
+            measurementParams(imageIndex).wellName, measurementParams(imageIndex).secondaryPicOfWell, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).imageProcessingParams,...
+            measurementParams(imageIndex).timeParameters, measurementParams(imageIndex).thresholdFunctionHandle, measurementParams(imageIndex).calculationMethod, measurementParams(imageIndex).qualityMask, ...
+            measurementParams(imageIndex).parametersToCalculate, binaryImages{imageIndex});
+            end
+        end
+            
+            
         function measurementParams = performIlastikAnalysis(measurementParams)
             
             fileChooser = FileChooser();
@@ -72,6 +99,90 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             %measurementParams(imageIndex).timeParameters, measurementParams(imageIndex).thresholdFunctionHandle, measurementParams(imageIndex).calculationMethod, measurementParams(imageIndex).qualityMask, ...
             %measurementParams(imageIndex).parametersToCalculate)
             %!ilastik.exe --headless --project=C:\Users\Kasutaja\IlastikMembraneDetector.ilp D:\Original_slope_and_stdev_images\*.tif
+        end
+
+        function binaryImages = createBinaryImagesWithKeras(slopeImages, measurementParams, KerasModelPath)
+            
+            binaryImages = cell(size(slopeImages));
+            kerasModelPath = measurementParams(1).imageProcessingParams.kerasModelPath;
+            net = importKerasNetwork(kerasModelPath);
+            for imageIndex = 1 : numel(slopeImages)        
+                binaryImages{imageIndex} = MembraneImageAnalyzer.predictSingleImage(net, slopeImages{imageIndex});
+              
+                if measurementParams(1).imageProcessingParams.useMorphologicalOperations
+                    binaryImages{imageIndex} = MembraneImageAnalyzer.morphologicalOperations(binaryImages{imageIndex});
+                end
+
+            end
+        end
+        
+        function prediction = predictSingleImage(kerasModel, inputImage)
+            prePad = MembraneImageAnalyzer.calculatePrePad(88, 288);
+            postPadY = MembraneImageAnalyzer.calculatePostPad(88, 288, size(inputImage, 1));
+            postPadX = MembraneImageAnalyzer.calculatePostPad(88, 288, size(inputImage, 2));
+            
+            yPad = ceil(size(inputImage, 1)/288) * 288 - size(inputImage, 1);
+            xPad = ceil(size(inputImage, 2)/288) * 288 - size(inputImage, 2);
+            paddedImage = padarray(inputImage, [prePad, prePad], 'symmetric', 'pre');
+            paddedImage = padarray(paddedImage, [postPadY, postPadX], 'symmetric', 'post');
+            resultImage = zeros(size(paddedImage));
+            predictionCounter = zeros(size(paddedImage));
+            for col = 1 : 288 - 88 : size(resultImage, 1) - 200 
+                for row = 1 : 288 - 88 : size(resultImage, 2) - 200
+                    predictionCounter(col : col + 287, row : row + 287) = predictionCounter(col : col + 287, row : row + 287) + 1;
+                    resultImage(col : col + 287, row : row + 287) = resultImage(col : col + 287, row : row + 287).*(predictionCounter(col : col + 287, row : row + 287) - 1) + predict(kerasModel, paddedImage(col : col + 287, row : row + 287));
+                    resultImage(col : col + 287, row : row + 287) = resultImage(col : col + 287, row : row + 287)./predictionCounter(col : col + 287, row : row + 287);
+                end
+            end
+            prediction = resultImage(prePad : prePad +  size(inputImage, 1) - 1, prePad : prePad + size(inputImage, 2) - 1);
+            %figure
+            %imshow(prediction)
+            %figure
+            %imshow(inputImage)
+            prediction = prediction > 0.5;
+        end
+        
+        function prePad = calculatePrePad(overlap, tileLength)
+            if overlap > 0
+                prePad = tileLength - overlap;
+            else
+            	prePad = 0;
+            end
+        end
+        
+        function postPad = calculatePostPad(overlap, tileLength, totalLength)
+            padDelta = tileLength - overlap;
+            postPad = tileLength + floor(totalLength / padDelta) * padDelta - totalLength;
+        end
+        
+        function binaryImage = morphologicalOperations(binaryImage)
+            % post operation
+            % clean, spur, bridge, thin and thicken
+            %figure
+            %imshow(binaryImages{imageIndex})
+            %clean
+            %figure
+            cleaned = bwareaopen(binaryImage, 20, 4);
+            %imshow(cleaned)
+            %figure
+            filled = ~bwareaopen(~cleaned, 30, 4);
+            %imshow(filled)
+            %figure
+            bridged = bwmorph(filled, 'bridge');
+            %imshow(bridged)
+            %figure
+            filled_again = ~bwareaopen(~bridged, 30, 4); % morph 1 skips this
+            %imshow(filled_again)
+            %figure
+            thinned = bwmorph(filled_again, 'thin', inf);
+            %imshow(thinned)
+            %figure
+            diagonalized = thinned;
+            %imshow(diagonalized)
+            %figure
+            thickened = imdilate(diagonalized, strel('disk', 1));
+            %imshow(thickened)
+            binaryImage = thickened;
         end
         
         function binaryImages = createBinaryImages(slopeImages, measurementParams, ilastikPath)
@@ -197,6 +308,19 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             %end
             %slopes = imgaussfilt(slopes);% experimental extra step
             %image = (image-min(min(image)))/max(max(image-min(min(image))));
+        end
+        
+        function image = createFocusImageNoNorm(measurementParams)
+            path = measurementParams.directoryPath;
+            firstImageName = measurementParams.wellName;
+            image = imread([path,'/',firstImageName]);
+            %slopes = stackLinearReg(path, firstImageName, 'stdev');
+            if strcmp(class(image), 'uint8')
+               image = double(image)/256; 
+            end
+            if strcmp(class(image), 'uint16')
+               image = double(image)/2^16; 
+            end
         end
         
         function slopeImage = createSlopeImage(measurementParams)
@@ -350,6 +474,9 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                                 end
                             case imageProcessingParameters.IlastikModel
                                 bw2 = providedBinary;
+                            case imageProcessingParameters.KerasModel
+                                bw2 = providedBinary;
+                                
                         end
                     case imageProcessingParameters.FromBinary
                         I_orgTrue = I_org(:,:,1); 

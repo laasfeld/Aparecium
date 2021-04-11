@@ -23,27 +23,51 @@ function [data, textData] = loadFromMIDAS(fileName)
 
 
 %% end of old version
-try
-    table = readtable(fileName,'ReadVariableNames',false,'Sheet', 1); %MIDAS column headers contain colon and are not compatible with the table class varable names
-catch
-    table = readtable(fileName,'ReadVariableNames',false);
+if ~strcmp(version, '9.9.0.1538559 (R2020b) Update 3')
+    try
+        table = readtable(fileName,'ReadVariableNames',false,'Sheet', 1); %MIDAS column headers contain colon and are not compatible with the table class varable names
+    catch
+        table = readtable(fileName,'ReadVariableNames',false);
+    end
+    textData = cell(size(table));
+    headerLogic = 'old';
+else 
+    table = readtable(fileName,'Sheet', 1, 'ReadVariableNames',true, 'VariableNamingRule', 'preserve');
+    headerLogic = 'new';
+    tableSize = size(table);
+    tableSize(1) = tableSize(1) + 1;
+    textData = cell(tableSize);
 end
-textData = cell(size(table));
+
 
 nonIDVars = 0;
 nonIDIndeces = zeros(size(textData, 2), 1);
-for i = 1 : size(textData, 2);
-    if strcmp(table{1,i}{1}(1:3), 'ID:')
+for i = 1 : size(textData, 2)
+    if strcmp(headerLogic, 'old') && strcmp(table{1,i}{1}(1:3), 'ID:')
         textData(:, i) = table{:, i};
-    else
+    elseif strcmp(headerLogic, 'new') && strcmp(table.Properties.VariableNames{i}(1:3), 'ID:')
+        textData{1, i} = table.Properties.VariableNames{i};
+        textData(2:end, i) = table{:, i};
+    elseif strcmp(headerLogic, 'old')
         nonIDVars = nonIDVars + 1;
         textData(1, i) = table{1, i};
+        nonIDIndeces(nonIDVars) = i;
+    elseif strcmp(headerLogic, 'new')
+        nonIDVars = nonIDVars + 1;
+        textData{1, i} = table.Properties.VariableNames{i};
         nonIDIndeces(nonIDVars) = i;
     end
 end
 nonIDIndeces( all(~nonIDIndeces,2), : ) = [];
-tempTable = table2cell(table(2:end, nonIDIndeces));
+if strcmp(headerLogic, 'old')
+    startRowIndex = 2;
+elseif strcmp(headerLogic, 'new')
+    startRowIndex = 1;
+end
+tempTable = table2cell(table(startRowIndex:end, nonIDIndeces));
 tempTable(cellfun(@isempty, tempTable)) = {'NaN'};
-data = cellfun(@str2num, tempTable);
-
+if strcmp(headerLogic, 'old')
+    data = cellfun(@str2num, tempTable);
+elseif strcmp(headerLogic, 'new')
+    data = cell2mat(tempTable);
 end

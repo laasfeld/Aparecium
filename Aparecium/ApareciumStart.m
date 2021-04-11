@@ -22,7 +22,7 @@ function varargout = ApareciumStart(varargin)
 
 % Edit the above text to modify the response to help ApareciumStart
 
-% Last Modified by GUIDE v2.5 22-Jan-2020 13:29:49
+% Last Modified by GUIDE v2.5 31-Aug-2020 16:20:35
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -275,4 +275,22 @@ else
 end
 apareciumLogo = [folderPath, 'Icons\', 'Aparecium logo.png'];
 imshow(apareciumLogo, 'Parent', hObject);
+guidata(hObject, handles);
+
+
+% --- Executes on button press in Spotnic.
+function Spotnic_Callback(hObject, eventdata, handles)
+% hObject    handle to Spotnic (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+set(handles.figure1, 'visible' ,'off');
+Spotnic();
+
+
+% --- Executes during object creation, after setting all properties.
+function Spotnic_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Spotnic (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+handles.spotnic = hObject;
 guidata(hObject, handles);

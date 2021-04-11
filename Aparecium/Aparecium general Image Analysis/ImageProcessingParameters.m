@@ -37,12 +37,15 @@ classdef ImageProcessingParameters < handle
         
         FromBinaryAndMask = 'From binary and mask image';
         
+        % Enums for choosing the segmentation type
         IlastikModel = 'IlastikModel';
         SobelModel = 'SobelModel';
+        KerasModel = 'KerasModel';
         
         detectionModel = 'SobelModel';
         membraneLabelIndex = 3;
         ilastikModelPath = [];
+        kerasModelPath = [];
         
         automaticallySaveMidasFile = 'on';
         midasFileSaveFormat = 'complete';

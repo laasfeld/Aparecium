@@ -107,6 +107,30 @@ classdef MidasTableController < handle
         
         function deriveDataFromEventData(this)
             nanIndices = isnan(nanmean(cell2mat(this.eventData(:, end - this.measurementColumns + 1 : end)), 2));
+            wellIDColumn = this.eventData(:, 2);
+            for i = 2 : numel(wellIDColumn)
+                if(isequal(strcmp(wellIDColumn(i), wellIDColumn(1)), 1))
+                    noOfWells = i - 1;
+                    break;
+                else
+                    noOfWells = numel(wellIDColumn);
+                end
+            end
+            
+            % filer out nanindices which arise due to some missing wells
+            % from the measurements and not from the fact that these are
+            % events
+            cycleCount = size(this.eventData, 1)/noOfWells;
+            counter = 0;
+            for cycle = 1 : cycleCount
+                if sum(nanIndices( (cycle - 1) * noOfWells + 1 : cycle * noOfWells)) ~= noOfWells
+                    nanIndices( (cycle - 1) * noOfWells + 1 : cycle * noOfWells) = false;
+                else
+                    counter = counter + 1;
+                    datestr(seconds(this.eventData{noOfWells*cycle, 6}),'HH:MM:SS')
+                end
+            end
+            
             this.tableData = this.eventData(~nanIndices, :);
         end
            
@@ -502,7 +526,7 @@ classdef MidasTableController < handle
                 if (this.includeEvents)
                     tempCellData = num2cell(tempData);
                     this.eventData(:, this.informativeColumns + 1 : this.informativeColumns + noOfTreatments) = tempCellData;
-                    this.addData();
+                    this.addEventsData();%this.addData();
                 else
                     tempCellData = num2cell(tempData);
                     this.tableData(:, this.informativeColumns + 1 : this.informativeColumns + noOfTreatments) = tempCellData;
