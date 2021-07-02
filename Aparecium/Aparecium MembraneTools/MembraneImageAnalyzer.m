@@ -16,7 +16,7 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
     
         function measurementParams = performKerasAnalysis(measurementParams)
             
-            parfor i = 1 : numel(measurementParams) % parfor should be here
+            for i = 1 : numel(measurementParams) % parfor should be here
                 if strcmp(measurementParams(1).imageProcessingParams.detectionFocusOrSlopes, 'Slopes')
                     imagesForBinaryGeneration{i} = MembraneImageAnalyzer.createSlopeImage(measurementParams(i));
                 elseif strcmp(measurementParams(1).imageProcessingParams.detectionFocusOrSlopes, 'Focus')
@@ -101,11 +101,39 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             paddedImage = padarray(paddedImage, [postPadY, postPadX], 'symmetric', 'post');
             resultImage = zeros(size(paddedImage));
             predictionCounter = zeros(size(paddedImage));
-            for col = 1 : 288 - 88 : size(resultImage, 1) - 200 
-                for row = 1 : 288 - 88 : size(resultImage, 2) - 200
-                    predictionCounter(col : col + 287, row : row + 287) = predictionCounter(col : col + 287, row : row + 287) + 1;
-                    resultImage(col : col + 287, row : row + 287) = resultImage(col : col + 287, row : row + 287).*(predictionCounter(col : col + 287, row : row + 287) - 1) + predict(kerasModel, paddedImage(col : col + 287, row : row + 287));
-                    resultImage(col : col + 287, row : row + 287) = resultImage(col : col + 287, row : row + 287)./predictionCounter(col : col + 287, row : row + 287);
+            colSequence = 1 : 288 - 88 : size(resultImage, 1) - 200;
+            rowSequence = 1 : 288 - 88 : size(resultImage, 2) - 200;
+            try
+                imagesToPredict = zeros(288, 288, 1, numel(colSequence) * numel(rowSequence));
+                counter = 1;
+                for col = colSequence 
+                    for row = rowSequence
+                        imagesToPredict(:, :, 1, counter) = paddedImage(col : col + 287, row : row + 287);
+                        counter = counter + 1;
+                    end
+                end
+                
+                predictions = predict(kerasModel, imagesToPredict, 'ExecutionEnvironment', 'gpu', 'MiniBatchSize', 16);
+                
+                counter = 1;
+                for col = colSequence 
+                    for row = rowSequence
+                        predictionCounter(col : col + 287, row : row + 287) = predictionCounter(col : col + 287, row : row + 287) + 1;
+                        resultImage(col : col + 287, row : row + 287) = resultImage(col : col + 287, row : row + 287).*(predictionCounter(col : col + 287, row : row + 287) - 1) + predictions(:, :, 1, counter);
+                        resultImage(col : col + 287, row : row + 287) = resultImage(col : col + 287, row : row + 287)./predictionCounter(col : col + 287, row : row + 287);
+                        counter = counter + 1;
+                    end
+                end
+            catch
+                % in case when gpu is not available, matlab is out of
+                % memory or gpu is out of memory
+                disp('no gpu found or out of memory');
+                for col = colSequence 
+                    for row = rowSequence
+                        predictionCounter(col : col + 287, row : row + 287) = predictionCounter(col : col + 287, row : row + 287) + 1;
+                        resultImage(col : col + 287, row : row + 287) = resultImage(col : col + 287, row : row + 287).*(predictionCounter(col : col + 287, row : row + 287) - 1) + predict(kerasModel, paddedImage(col : col + 287, row : row + 287));
+                        resultImage(col : col + 287, row : row + 287) = resultImage(col : col + 287, row : row + 287)./predictionCounter(col : col + 287, row : row + 287);
+                    end
                 end
             end
             prediction = resultImage(prePad : prePad +  size(inputImage, 1) - 1, prePad : prePad + size(inputImage, 2) - 1);
@@ -310,7 +338,11 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                 names = names(~cellfun(@isempty, names));
                 focusedImage = focusFromZstack(names);
             elseif strcmp(imageProcessingParameters.focusOrMaxProjection, 'focus') || isnan(imagePlaneIndex)
-                focusedImage = focusFromZstack({[secondaryFilePath, secondaryPicName]});
+                focusedImage = double(focusFromZstack({fullfile(secondaryFilePath, secondaryPicName)}));
+                if strcmp(imageProcessingParameters.membraneToolsBackgroundCorrection.quantificationChannelBackgroundCorrectionFunctionName, 'polyfit')            
+                    imageBackground = polybg(focusedImage);
+                    focusedImage = (focusedImage./imageBackground)*mean(mean(imageBackground))-mean(mean(imageBackground));
+                end                
                 focusedImage = focusedImage(1 : end - pixelShiftVertical, 1 : end - pixelShiftHorizontal);
                 secondaryPicName
             end
@@ -377,7 +409,7 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                 tic
 
                 try
-                    image = Cytation5TIFFImage([filePath, picName]);
+                    image = Cytation5TIFFImage(fullfile(filePath, picName));
                     I_org1 = image.getImage();
                     imageTime = image.getImageTime();
                     imageWidthMicrons = image.getImageWidthMicrons();

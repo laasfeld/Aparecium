@@ -27,6 +27,96 @@ classdef ImageImporter < handle
             
         end
         
+        function initializeImageImporter(this, mainFolder, masksPath, detectionFocalMatFile, quantificationFocalMatFile)
+            
+            this.mainDirectory = mainFolder;
+            folderNames = dir([mainFolder,'\*']);
+            folderNames(1 : 2) = [];
+            subFoldersCell = struct2cell(folderNames);
+            chosenDirectories = cell(1, 0);
+            for itemIndex = 1 : numel(folderNames)
+                if(folderNames(itemIndex).isdir && exist(fullfile(this.mainDirectory, folderNames(itemIndex).name),'dir') && ~contains(folderNames(itemIndex).name, 'Binary') && ~contains(folderNames(itemIndex).name, 'Mask'))
+                    if exist(fullfile(masksPath, folderNames(itemIndex).name), 'dir')
+                        chosenDirectories{end + 1} = folderNames(itemIndex).name;
+                    end
+                end
+            end          
+            
+            if isempty(chosenDirectories) % no subfolders
+                    [mainDir, finalDir, unneeded] = fileparts(mainFolder);
+                    this.mainDirectory = mainDir;
+                    chosenDirectories = {finalDir};
+            end
+            
+            this.usedDirectories = chosenDirectories;
+            this.nameArray = cell(length(chosenDirectories), 1);
+            this.experimentDataStructure = cell(length(chosenDirectories), 1);
+            this.masks = cell(length(chosenDirectories), 1);
+            
+            % check if masks exist
+            
+            
+            for folderIndex = 1 : length(chosenDirectories)
+                Bfnames = load(detectionFocalMatFile);
+                if length(chosenDirectories) > 1
+                    [this.masks{folderIndex}, wellID, focusNames] = ImageImporter.loadMasks(Bfnames.Bfnames{1}, [masksPath, this.usedDirectories{folderIndex}], 'Bright Field');
+                else
+                    try
+                        if strcmp(class(Bfnames.bfNames{1}), 'char')
+                            [this.masks{folderIndex}, wellID, focusNames] = ImageImporter.loadMasks(Bfnames.bfNames, masksPath, 'Bright Field');
+                        else
+                            [this.masks{folderIndex}, wellID, focusNames] = ImageImporter.loadMasks(Bfnames.Bfnames{1}, masksPath, 'Bright Field');
+                        end
+                    catch
+                        try
+                            if strcmp(class(Bfnames.bfNames{1}), 'char')
+                                [this.masks{folderIndex}, wellID, focusNames] = ImageImporter.loadMasks(Bfnames.bfNames, masksPath, 'Bright Field');
+                            else
+                                [this.masks{folderIndex}, wellID, focusNames] = ImageImporter.loadMasks(Bfnames.bfNames{1}, masksPath, 'Bright Field');                                
+                            end
+                        catch
+                            if strcmp(class(Bfnames.Bfnames{1}), 'char')
+                                [this.masks{folderIndex}, wellID, focusNames] = ImageImporter.loadMasks(Bfnames.Bfnames, masksPath, 'Bright Field');
+                            else
+                                [this.masks{folderIndex}, wellID, focusNames] = ImageImporter.loadMasks(Bfnames.Bfnames{1}, masksPath, 'Bright Field');
+
+                            end                        
+                        end
+                    end
+                end
+                
+                % clean up - remove empty values
+                
+                for wellIndex = 1 : numel(focusNames)
+                    for imageIndex = numel(focusNames{wellIndex}) : - 1 : 1
+                        if isempty(focusNames{wellIndex}{imageIndex})
+                           focusNames{wellIndex}(imageIndex) = [];
+                           this.masks{folderIndex}{wellIndex}(imageIndex) = [];
+                        end
+                    end
+                end
+                
+                this.maskNameArray{folderIndex} = focusNames';
+                RFPnames = load(quantificationFocalMatFile);
+                if isfield(RFPnames, 'RFPnames')
+                    if strcmp(class(RFPnames.RFPnames{1}), 'char')
+                        secondaryNameArray = ImageImporter.organizeImageNameArrayByWells(RFPnames.RFPnames, 'RFP');               
+                    else
+                        secondaryNameArray = ImageImporter.organizeImageNameArrayByWells(RFPnames.RFPnames{folderIndex}, 'RFP');
+                    end
+                else
+                        secondaryNameArray = ImageImporter.organizeImageNameArrayByWells(RFPnames.names, 'RFP');                    
+                end
+                nameArray = this.removeIncompatibleImages(focusNames', secondaryNameArray', folderIndex);
+                
+                this.wellID{folderIndex} = cell(0,0);
+                this.wellID{folderIndex} = ImageImporter.getWellIDOfStringArray(nameArray, '.tif');
+                this.time{folderIndex, 1} = 0;
+                this.numberOfChannels{folderIndex} = 6;%% a standard parameter for now
+                this.generateExperimentDataStructure(folderIndex);
+            end                 
+        end
+        
         function userChooseImageFolders(this, varargin)
             
             if isequal(nargin, 1)
@@ -162,11 +252,10 @@ classdef ImageImporter < handle
         function setHigherBound(this, higherBound)
             this.higherBound = higherBound;
         end
-        
-        
-        
+                
         function nameArray = removeIncompatibleImages(this, nameArray, secondaryNameArray, folder)
 
+            %unwrappedNameArray = vertcat(nameArray{:});
             unwrappedNameArray = vertcat(nameArray{:});
             unwrappedSecondaryNameArray = vertcat(secondaryNameArray{:});
             unwrappedNameArray = reshape(unwrappedNameArray, numel(unwrappedNameArray), 1);
@@ -263,7 +352,8 @@ classdef ImageImporter < handle
         end
         
         function filePath = getFilePathOfDirectoryWithIndex(this, folderIndex)
-            filePath = [this.mainDirectory,'\',this.usedDirectories{folderIndex},'\'];
+            %filePath = [this.mainDirectory,'\',this.usedDirectories{folderIndex},'\'];
+            filePath = [this.mainDirectory,'\',this.usedDirectories{folderIndex}];
         end
         
         function wellID = getWellID(this)
@@ -413,7 +503,31 @@ classdef ImageImporter < handle
             wellID = wellID(indices);
         end
         
-
+        function [wellIDs, wellID_ImageLocations] = getWellIDOfArray(nameArray, pattern)
+            wellIDs = cell(0,0);
+            for pic = 1 : numel(nameArray)
+                try
+                    wellIDs{end+1} = regexp(nameArray{pic},'([A-Z]{1,2}\d{1,2})', 'match', 'once');
+                catch
+                    ''
+                end
+            end
+            
+            wellIDs = ImageImporter.sortWellID(wellIDs)';
+            wellID_ImageLocations = cell(numel(wellIDs), 1);
+            
+            for pic = 1 : numel(nameArray)
+               wellID = regexp(nameArray{pic},'([A-Z]{1,2}\d{1,2})', 'match', 'once');
+               wellID = ImageImporter.sortWellID({wellID});
+               imageLocationIndex = ImageImporter.getImageInWellIndexOfString(nameArray{pic});
+               index = find(strcmp(wellIDs, wellID{1}));
+               wellID_ImageLocations{index} = [wellID_ImageLocations{index}, imageLocationIndex];
+            end
+            
+            for index = 1 : numel(wellID_ImageLocations)
+                wellID_ImageLocations{index} = unique(wellID_ImageLocations{index});
+            end
+        end
         
         function [wellIDs, wellID_ImageLocations] = getWellIDOfFolder(folder, pattern)
             fileListArray = dir([folder, '\*.tif']);
@@ -453,6 +567,59 @@ classdef ImageImporter < handle
                 wellID_ImageLocations{index} = unique(wellID_ImageLocations{index});
             end
             
+        end
+        
+        function focusNames = organizeImageNameArrayByWells(nameArray, pattern)
+            wellID = ImageImporter.getWellIDOfStringArray(nameArray, '.tif');
+            [handles.wellID, wellID_location_indices] = ImageImporter.getWellIDOfArray(nameArray, pattern);
+            %handles.focusImageNames = nameArray;
+            for pic = 1 : numel(nameArray)
+                wellIDName = ImageImporter.findWellIDOfString(nameArray{pic});
+                wellIDIndex = strcmp(wellID, wellIDName);
+                imagingLocation = ImageImporter.getImageInWellIndexOfString(nameArray{pic});
+                imagingLocationIndex = wellID_location_indices{wellIDIndex} == imagingLocation;    
+                focusNames{wellIDIndex}{imagingLocationIndex, 1} = nameArray{pic};
+            end
+        end
+        
+        function [masks, wellIDOut, focusNames] = loadMasks(nameArray, imageDir, pattern)
+            [handles.wellID, wellID_location_indices] = ImageImporter.getWellIDOfArray(nameArray, pattern);
+            files = dir(imageDir);
+            files(1:2) = [];
+            nameArray = cell(0, 0);
+            for index = 1 : numel(files)
+                if ~isempty(strfind(files(index).name, '.tif'))
+                    nameArray{end+1} = files(index).name;
+                end
+            end
+            %nameArray = ImageImporter.sortWellID(nameArray);
+            masks = cell(numel(nameArray), 1);
+            for index = 1 : numel(nameArray)
+                masks{index} = imread([imageDir, '\', nameArray{index}]);
+            end
+
+            %answer = questdlg('Do you want to remove images, that do not have a mask?');
+            %if strcmp(answer, 'Yes')
+            wellID = ImageImporter.getWellIDOfStringArray(nameArray, '.tif');
+            %handles.focusImageNames = nameArray;
+            for pic = 1 : numel(masks)
+                wellIDName = ImageImporter.findWellIDOfString(nameArray{pic});
+                wellIDIndex = strcmp(wellID, wellIDName);
+                imagingLocation = ImageImporter.getImageInWellIndexOfString(nameArray{pic});
+                imagingLocationIndex = wellID_location_indices{wellIDIndex} == imagingLocation;    
+                handles.masks{wellIDIndex}{imagingLocationIndex} = masks{pic};
+                focusNames{wellIDIndex}{imagingLocationIndex, 1} = nameArray{pic};
+            end
+
+
+            indices = zeros(numel(wellID), 1);
+            for index = 1 : numel(wellID)
+                indices(index) = find(strcmp(handles.wellID, wellID{index}) == 1);
+            end
+            wellIDOut = handles.wellID(indices);
+            handles.masks = handles.masks(indices);
+
+            masks = handles.masks;
         end
     end  
 end

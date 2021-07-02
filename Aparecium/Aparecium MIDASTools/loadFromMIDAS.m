@@ -23,7 +23,7 @@ function [data, textData] = loadFromMIDAS(fileName)
 
 
 %% end of old version
-if ~strcmp(version, '9.9.0.1538559 (R2020b) Update 3')
+if verLessThan('matlab', '9.9')
     try
         table = readtable(fileName,'ReadVariableNames',false,'Sheet', 1); %MIDAS column headers contain colon and are not compatible with the table class varable names
     catch
@@ -31,8 +31,12 @@ if ~strcmp(version, '9.9.0.1538559 (R2020b) Update 3')
     end
     textData = cell(size(table));
     headerLogic = 'old';
-else 
-    table = readtable(fileName,'Sheet', 1, 'ReadVariableNames',true, 'VariableNamingRule', 'preserve');
+else
+    try
+        table = readtable(fileName,'Sheet', 1, 'ReadVariableNames',true, 'VariableNamingRule', 'preserve');
+    catch
+        table = readtable(fileName,'ReadVariableNames',true, 'VariableNamingRule', 'preserve');        
+    end
     headerLogic = 'new';
     tableSize = size(table);
     tableSize(1) = tableSize(1) + 1;

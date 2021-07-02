@@ -39,7 +39,7 @@ function varargout = MembraneTools(varargin)
 
 % Edit the above text to modify the response to help MembraneTools
 
-% Last Modified by GUIDE v2.5 02-Mar-2021 21:08:37
+% Last Modified by GUIDE v2.5 13-May-2021 00:52:14
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -73,6 +73,7 @@ function MembraneTools_OpeningFcn(hObject, eventdata, handles, varargin)
 addApareciumToPath();  % Add all required folders to the MATLAB path
 handles.imageImporter = ImageImporter(); % Create a new object that can import the images correctly
 handles.imageProcessingParameters = ImageProcessingParameters(); % Create a new object that holds parameters of image analysis
+handles.imageProcessingParameters.membraneToolsBackgroundCorrection = MembraneToolsBackgroundCorrection();
 handles.imageProcessingParameters.imageSegmentationMode = handles.imageProcessingParameters.Slopes;
 handles.imageProcessingParameters.setAutoSaveMasks('on');
 handles.imageAnalyzer = MembraneImageAnalyzer(); % Create a new object that analyzes the images
@@ -196,11 +197,23 @@ function loadConfigurationFile_Callback(hObject, eventdata, handles)
 % hObject    handle to loadConfigurationFile (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-fileChooser = FileChooser(); % Create a new fileChooser object
-[fullFilePath, fileName] = fileChooser.chooseConfigurationFile(); % Let the user choose a configuration file
-handles = changeConfiguration(fullFilePath, handles);% Change the configuration to the one defined in the file
+fileChooser = FileChooser();
+[fullFilePath, fileName] = fileChooser.chooseConfigurationFile();
+handles = changeConfiguration(fullFilePath, handles);
 guidata(hObject, handles);
-treatments_Table_CellEditCallback(handles.treatments_Table, eventdata, handles);% Call the cellEditCallback to make the changes visible
+ApareciumCommonImporterFunctions.treatments_Table_CellEditCallback(handles.treatments_Table, eventdata, handles);
+handles = guidata(hObject);
+if strcmp(handles.fromTreatmentStructure, 'Yes')
+    handles.midasTableController.updateTreatments(handles.treatmentStructure);
+    handles.plateSimulatorInterface.addExperiment(handles.apareciumExperimentInput);
+    handles.simPlateHandle = handles.plateSimulatorInterface.generatePlateSimulator(handles); %% does not show the PlateSimulator
+    handles.plateSimulatorInterface.regeneratePlateSimulatorFromTreatmentStructure(handles.treatmentStructure);
+    set(handles.simPlateHandle, 'visible', 'off');
+    drawnow();
+else
+
+end
+successBox('Configuration file successfully loaded', 'Success');
 guidata(hObject, handles);
 
 % --- Executes on button press in SaveConfigurationFile.
@@ -1336,7 +1349,10 @@ for folder = 1 : handles.imageImporter.getNumberOfUsedDirectories()
     mkdir([maskdir,'\' , handles.imageImporter.getUsedDirectoryWithIndex(folder), '\']);
     for well = 1 : numel(handles.imageImporter.masks{folder}) 
         for imageInWell = 1 : numel(handles.imageImporter.masks{folder}{well})
-            imwrite(handles.imageImporter.masks{folder}{well}{imageInWell}, [maskdir, '\', handles.imageImporter.getUsedDirectoryWithIndex(folder), '\', handles.imageImporter.maskNameArray{folder}{well}{imageInWell}])
+            if ~isempty(handles.imageImporter.maskNameArray{folder}{well}{imageInWell})
+                imwrite(handles.imageImporter.masks{folder}{well}{imageInWell}, [maskdir, '\', handles.imageImporter.getUsedDirectoryWithIndex(folder), '\', handles.imageImporter.maskNameArray{folder}{well}{imageInWell}], 'tif')
+        
+            end
         end
     end
 end
@@ -1642,3 +1658,36 @@ function edit31_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in detectionChannelBGOptions.
+function detectionChannelBGOptions_Callback(hObject, eventdata, handles)
+% hObject    handle to detectionChannelBGOptions (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.imageProcessingParameters.membraneToolsBackgroundCorrection = DetectionChannelBackgroundOptionsGUI(handles.imageProcessingParameters.membraneToolsBackgroundCorrection);
+guidata(hObject, handles);
+
+% --- Executes on button press in quantificationChannelBGOptions.
+function quantificationChannelBGOptions_Callback(hObject, eventdata, handles)
+% hObject    handle to quantificationChannelBGOptions (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.imageProcessingParameters.membraneToolsBackgroundCorrection = DetectionChannelBackgroundOptionsGUI(handles.imageProcessingParameters.membraneToolsBackgroundCorrection);
+guidata(hObject, handles);
+
+
+% --- Executes on button press in chooseTime.
+function chooseTime_Callback(hObject, eventdata, handles)
+% hObject    handle to chooseTime (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of chooseTime
+
+
+% --- Executes during object creation, after setting all properties.
+function uibuttongroup3_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to uibuttongroup3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called

@@ -24,14 +24,22 @@ for i = 1 : numel(fileNames)
    [readName, cycleName] = getReadAndCycle(nameSource, fileNames{i}, inputFolder); 
    if isequal(reorganizationLogic, 1) % by timepoint
        mkdir(outputFolder, cycleName);
-       moveFunction([inputFolder, '\', fileNames{i}], [outputFolder, '\', cycleName, '\', fileNames{i}]); 
+       try
+            moveFunction([inputFolder, '\', fileNames{i}], [outputFolder, '\', cycleName, '\', fileNames{i}]);
+       catch
+           
+       end
    elseif isequal(reorganizationLogic, 2) % by read
        mkdir(outputFolder, readName);
        moveFunction([inputFolder, '\', fileNames{i}], [outputFolder, '\', readName, '\', fileNames{i}]); 
    elseif isequal(reorganizationLogic, 3) % by read and subfolders by timepoint
        mkdir(outputFolder, readName);
        mkdir([outputFolder, '\', readName], cycleName);
-       moveFunction([inputFolder, '\', fileNames{i}], [outputFolder, '\' ,readName, '\', cycleName, '\', fileNames{i}]); 
+       try
+            moveFunction([inputFolder, '\', fileNames{i}], [outputFolder, '\' ,readName, '\', cycleName, '\', fileNames{i}]); 
+       catch
+           
+       end
    end
 end
 

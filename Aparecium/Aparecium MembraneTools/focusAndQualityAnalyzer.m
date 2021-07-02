@@ -22,7 +22,7 @@ function varargout = focusAndQualityAnalyzer(varargin)
 
 % Edit the above text to modify the response to help focusAndQualityAnalyzer
 
-% Last Modified by GUIDE v2.5 01-Jan-2010 12:03:54
+% Last Modified by GUIDE v2.5 02-Jul-2021 12:10:48
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -62,6 +62,7 @@ handles.spaceAllowed = 1;
 handles.wellIndex = 1;
 handles.imageInWellIndex = 1;
 handles.selectingBadAreas = 0;
+
 if numel(varargin) > 3
     handles.imageIndex = varargin{4};
     handles.standardIndex = varargin{4};
@@ -357,6 +358,7 @@ set(handles.declineImage, 'enable', 'off');
 set(handles.acceptImage, 'enable', 'off');
 set(handles.previousImage, 'enable', 'off');
 set(handles.undefinedFocus, 'enable', 'off');
+set(handles.pushbutton17, 'enable', 'off');
 set(handles.done, 'enable', 'off');
 set(handles.badQualitySelection, 'enable', 'off');
 handles.spaceAllowed = 0;
@@ -414,6 +416,7 @@ set(handles.acceptImage, 'enable', 'on');
 set(handles.previousImage, 'enable', 'on');
 set(handles.undefinedFocus, 'enable', 'on');
 set(handles.badQualitySelection, 'enable', 'on');
+set(handles.pushbutton17, 'enable', 'on');
 handles.spaceAllowed = 1;
 set(handles.resumeToNormal, 'enable', 'on');
 guidata(hObject, handles);
@@ -539,4 +542,126 @@ end
     
 %end
 displayImages(handles);
+guidata(hObject, handles);
+
+
+% --- Executes on button press in pushbutton16.
+function pushbutton16_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton16 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+try
+    
+    fileName = handles.nameArray{handles.imagesOfWell{handles.wellIndex}{handles.imageInWellIndex}(handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex))};
+
+    handles.masks{handles.wellIndex}{handles.imageInWellIndex} = zeros(size(double(imread([handles.directoryName, '\', fileName]))/(2^16)));
+
+    image = double(imread([handles.directoryName, '\', fileName]))/(2^16);
+    mask = handles.masks{handles.wellIndex}{handles.imageInWellIndex};
+    % bg = bgest(image, 40);
+    % image(mask) = bg(mask);
+    % bounds = bwboundaries(mask);
+    % for boundIndex = 1 : numel(bounds)
+    %     for index = 1 : size(bounds{boundIndex}, 1)
+    %         try
+    %             y = bounds{boundIndex}(index, 1);
+    %             x = bounds{boundIndex}(index, 2);
+    %             for yt = y-5 : y + 5
+    %                 for xt = x - 5 : x + 5
+    %                     image(yt, xt) = mean(mean(image(yt - 3 : yt + 3 , xt - 3 : xt + 3)));
+    %                 end
+    %             end
+    %         catch
+    %             %'err'
+    %         end
+    %     end
+    % end
+    % image(mask) = image(mask) + 0.3*(image(round(rand(sum(sum(mask)), 1)*numel(image)))-mean(mean(image)));
+    masked = image;
+    masked(mask) = 0;
+    image = cat(3, cat(3, image, masked), masked);
+    %image(mask) = 0;
+    imshow(image, 'Parent', handles.axes1);
+catch
+    'stop'
+end
+guidata(hObject, handles);
+
+
+% --- Executes on button press in pushbutton17.
+function pushbutton17_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton17 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+handles.selectingBadAreas = 1;
+set(handles.focusUp, 'enable', 'off');
+set(handles.focusDown, 'enable', 'off');
+set(handles.declineImage, 'enable', 'off');
+set(handles.acceptImage, 'enable', 'off');
+set(handles.previousImage, 'enable', 'off');
+set(handles.undefinedFocus, 'enable', 'off');
+set(handles.pushbutton17, 'enable', 'off');
+set(handles.done, 'enable', 'off');
+set(handles.badQualitySelection, 'enable', 'off');
+handles.spaceAllowed = 0;
+set(handles.resumeToNormal, 'enable', 'off');
+try
+    k = imfreehand(handles.axes1);
+    fcn = makeConstrainToRectFcn('imfreehand', [0, 1224], [0 904]);
+    k.setPositionConstraintFcn(fcn);
+    handles.freehandHandle = k;
+    set(handles.resumeToNormal, 'enable', 'on');
+    guidata(hObject, handles);
+    wait(k);
+    mask = k.createMask();
+    set(handles.figure1, 'waitstatus', 'waiting');% do not let wait meant for imfreehand interfere with the main figure
+    if isempty(handles.masks{handles.wellIndex}{handles.imageInWellIndex})
+        handles.masks{handles.wellIndex}{handles.imageInWellIndex} = zeros(size(mask));
+    else
+        handles.masks{handles.wellIndex}{handles.imageInWellIndex} = and(handles.masks{handles.wellIndex}{handles.imageInWellIndex}, ~mask);
+    end
+    
+    fileName = handles.nameArray{handles.imagesOfWell{handles.wellIndex}{handles.imageInWellIndex}(handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex))};
+
+    image = double(imread([handles.directoryName, '\', fileName]))/(2^16);
+    mask = handles.masks{handles.wellIndex}{handles.imageInWellIndex};
+    % bg = bgest(image, 40);
+    % image(mask) = bg(mask);
+    % bounds = bwboundaries(mask);
+    % for boundIndex = 1 : numel(bounds)
+    %     for index = 1 : size(bounds{boundIndex}, 1)
+    %         try
+    %             y = bounds{boundIndex}(index, 1);
+    %             x = bounds{boundIndex}(index, 2);
+    %             for yt = y-5 : y + 5
+    %                 for xt = x - 5 : x + 5
+    %                     image(yt, xt) = mean(mean(image(yt - 3 : yt + 3 , xt - 3 : xt + 3)));
+    %                 end
+    %             end
+    %         catch
+    %             %'err'
+    %         end
+    %     end
+    % end
+    % image(mask) = image(mask) + 0.3*(image(round(rand(sum(sum(mask)), 1)*numel(image)))-mean(mean(image)));
+    masked = image;
+    masked(mask) = 0;
+    image = cat(3, cat(3, image, masked), masked);
+    %image(mask) = 0;
+    imshow(image, 'Parent', handles.axes1);
+catch
+    'stop'
+end
+
+handles = setFocusButtonStates(handles);
+set(handles.declineImage, 'enable', 'on');
+set(handles.acceptImage, 'enable', 'on');
+set(handles.previousImage, 'enable', 'on');
+set(handles.undefinedFocus, 'enable', 'on');
+set(handles.badQualitySelection, 'enable', 'on');
+set(handles.pushbutton17, 'enable', 'on');
+handles.spaceAllowed = 1;
+set(handles.resumeToNormal, 'enable', 'on');
 guidata(hObject, handles);

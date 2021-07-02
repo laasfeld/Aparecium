@@ -67,6 +67,8 @@ classdef ImageProcessingParameters < handle
         % For MembraneTools - 'Slopes' detects from linear regression
         % slopes while 'Focus' detects from focus image only.
         detectionFocusOrSlopes = 'Slopes';
+        
+        membraneToolsBackgroundCorrection = [];
     end
     
     methods
@@ -325,7 +327,10 @@ classdef ImageProcessingParameters < handle
         function detectionFocusOrSlopes = getDetectionFocusOrSlopes(this)
             detectionFocusOrSlopes = this.detectionFocusOrSlopes;
         end
-             
+        
+        function setMembraneToolsBackgroundCorrection(this, BGHandle)
+           this.membraneToolsBackgroundCorrection = BGHandle; 
+        end             
     end   
 end
 
