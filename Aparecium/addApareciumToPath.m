@@ -15,9 +15,10 @@ try
 catch
     warndlg('Error loading java packages, some features might not work');
 end
-cd('Aparecium Options');
+
 
 try
+    cd('Aparecium Options');
     settings = load('settings.mat');
     IQMToolsPath = settings.settings.IQMToolsPath;
     cd(IQMToolsPath);

@@ -620,13 +620,16 @@ classdef ImageAnalyzer < handle
                             end
                         end
                         
-                        
-                        if(exist('matlabpool'))
-                            this.imagesLeftToAnalyse = this.imagesLeftToAnalyse*matlabpool('size') - numel(wellID)*4;
-                        else
-                            poolObject = gcp('nocreate');
-                            poolSize = poolObject.NumWorkers;
-                            this.imagesLeftToAnalyse = this.imagesLeftToAnalyse*poolSize - numel(wellID)*4;
+                        try
+                            if(exist('matlabpool'))
+                                this.imagesLeftToAnalyse = this.imagesLeftToAnalyse*matlabpool('size') - numel(wellID)*4;
+                            else
+                                poolObject = gcp('nocreate');
+                                poolSize = poolObject.NumWorkers;
+                                this.imagesLeftToAnalyse = this.imagesLeftToAnalyse*poolSize - numel(wellID)*4;
+                            end
+                        catch
+                            
                         end
                         
                         java.lang.Runtime.getRuntime().gc;

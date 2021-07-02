@@ -189,7 +189,8 @@ classdef ImageImporter < handle
                             if ~isempty(BFnameArray{nameIndex}{imageInWellIndes})
                                 wellID = ImageImporter.findWellIDOfString(BFnameArray{nameIndex}{imageInWellIndes});
                                 imageInWellIndex = num2str(ImageImporter.getImageInWellIndexOfString(BFnameArray{nameIndex}{imageInWellIndes}));
-                                pat = [pat, wellID, '_\d{1,2}_\d{1}_', imageInWellIndex, '(Z|_)|'];
+                                %pat = [pat, wellID, '_\d{1,2}_\d{1}_', imageInWellIndex, '(Z|_)|'];
+                                pat = [pat, wellID, '_\d{1,2}_\d{1}_', imageInWellIndex, '_|'];
                             end                           
                         end
                     end                
@@ -430,6 +431,7 @@ classdef ImageImporter < handle
         function wellID = getWellIDOfStringArray(nameArray, pattern)
             wellID = cell(0,0);
             for pic = numel(nameArray) : -1 : 1
+                 pic
                  if ~isempty(regexp(nameArray{pic}, pattern, 'once'))
 
                  else
@@ -541,6 +543,7 @@ classdef ImageImporter < handle
             wellIDs = cell(0,0);
 
             for pic = numel(nameArray) : -1 : 1
+                 pic
                  if ~isempty(regexp(nameArray{pic}, pattern, 'once'))
 
                  else
