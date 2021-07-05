@@ -539,15 +539,15 @@ for pic = 1 : numel(masks)
     handles.masks{wellIDIndex}{imagingLocationIndex} = masks{pic};
 end
 
-
 indices = zeros(numel(wellID), 1);
 for index = 1 : numel(wellID)
     indices(index) = find(strcmp(handles.wellID, wellID{index}) == 1);
 end
-handles.wellID = handles.wellID(indices);
-handles.imagesOfWell = handles.imagesOfWell(indices);
-handles.imageIndex = handles.imageIndex(indices);
-handles.masks = handles.masks(indices);
+%handles.wellID = handles.wellID(indices);
+%handles.imagesOfWell = handles.imagesOfWell(indices);
+%handles.imageIndex = handles.imageIndex(indices);
+%handles.masks = handles.masks(indices);
+%handles.focusImageNames = handles.focusImageNames(indices);
 for wellIndex = 1 : numel(handles.wellID)
     for imagingLocation = 1 : numel(handles.imagesOfWell{wellIndex})
         for imIndex = 1 : numel(handles.imagesOfWell{wellIndex}{imagingLocation})
@@ -555,15 +555,20 @@ for wellIndex = 1 : numel(handles.wellID)
             if ~isempty(find(strcmp(nameArray, imageName)))
                 handles.imageIndex{wellIndex}(imagingLocation) = imIndex;
                 handles.focusImageNames{wellIndex}{imagingLocation} = imageName;
+                break;
             end
+            handles.focusImageNames{wellIndex}{imagingLocation} = [];
         end
     end
+    handles.wellIndex = wellIndex;
+    handles.imageInWellIndex = imagingLocation;
 end
 %elseif strcmp(answer, 'No')
     
 %else
     
 %end
+
 displayImages(handles);
 guidata(hObject, handles);
 

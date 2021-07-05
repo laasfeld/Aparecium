@@ -242,6 +242,7 @@ classdef ImageImporter < handle
                 this.time{folder, 1} = 0;
                 this.numberOfChannels{folder} = 6;%% a standard parameter for now
                 this.generateExperimentDataStructure(folder);
+                
             end
         end
         
@@ -281,7 +282,11 @@ classdef ImageImporter < handle
 
             %unwrappedNameArray = vertcat(nameArray{:});
             unwrappedNameArray = vertcat(nameArray{:});
-            unwrappedSecondaryNameArray = vertcat(secondaryNameArray{:});
+            try
+                unwrappedSecondaryNameArray = vertcat(secondaryNameArray{:});
+            catch
+                unwrappedSecondaryNameArray = horzcat(secondaryNameArray{:});
+            end
             unwrappedNameArray = reshape(unwrappedNameArray, numel(unwrappedNameArray), 1);
             unwrappedSecondaryNameArray = reshape(unwrappedSecondaryNameArray, numel(unwrappedSecondaryNameArray), 1);
             
@@ -439,7 +444,11 @@ classdef ImageImporter < handle
     methods(Static)
         
         function nameArrayMatchEquivalent = generateNameArrayMatchEquivalent(nameArray)
-            unwrappedNameArray = vertcat(nameArray{:});            
+            try
+                unwrappedNameArray = vertcat(nameArray{:});
+            catch
+                unwrappedNameArray = horzcat(nameArray{:});
+            end
             unwrappedNameArray = reshape(unwrappedNameArray, numel(unwrappedNameArray), 1);
             nameArrayMatchEquivalent = cell(numel(unwrappedNameArray), 1);         
             for nameIndex = 1 : numel(unwrappedNameArray)
