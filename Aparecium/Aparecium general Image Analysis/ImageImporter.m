@@ -58,6 +58,11 @@ classdef ImageImporter < handle
             
             for folderIndex = 1 : length(chosenDirectories)
                 Bfnames = load(detectionFocalMatFile);
+                try
+                    Bfnames.('Bfnames') = Bfnames.('fileNames');
+                catch
+                    
+                end
                 if length(chosenDirectories) > 1
                     [this.masks{folderIndex}, wellID, focusNames] = ImageImporter.loadMasks(Bfnames.Bfnames{1}, [masksPath, this.usedDirectories{folderIndex}], 'Bright Field');
                 else
@@ -67,6 +72,12 @@ classdef ImageImporter < handle
                         else
                             [this.masks{folderIndex}, wellID, focusNames] = ImageImporter.loadMasks(Bfnames.Bfnames{1}, masksPath, 'Bright Field');
                         end
+                        
+                        if strcmp(class(Bfnames.fileNames{1}), 'char')
+                            [this.masks{folderIndex}, wellID, focusNames] = ImageImporter.loadMasks(Bfnames.fileNames, masksPath, 'Bright Field');
+                        else
+                            [this.masks{folderIndex}, wellID, focusNames] = ImageImporter.loadMasks(Bfnames.fileNames{1}, masksPath, 'Bright Field');
+                        end
                     catch
                         try
                             if strcmp(class(Bfnames.bfNames{1}), 'char')
@@ -74,6 +85,13 @@ classdef ImageImporter < handle
                             else
                                 [this.masks{folderIndex}, wellID, focusNames] = ImageImporter.loadMasks(Bfnames.bfNames{1}, masksPath, 'Bright Field');                                
                             end
+                            
+                            if strcmp(class(Bfnames.fileNames{1}), 'char')
+                                [this.masks{folderIndex}, wellID, focusNames] = ImageImporter.loadMasks(Bfnames.fileNames, masksPath, 'Bright Field');
+                            else
+                                [this.masks{folderIndex}, wellID, focusNames] = ImageImporter.loadMasks(Bfnames.fileNames{1}, masksPath, 'Bright Field');                                
+                            end
+                            
                         catch
                             if strcmp(class(Bfnames.Bfnames{1}), 'char')
                                 [this.masks{folderIndex}, wellID, focusNames] = ImageImporter.loadMasks(Bfnames.Bfnames, masksPath, 'Bright Field');
@@ -98,6 +116,11 @@ classdef ImageImporter < handle
                 
                 this.maskNameArray{folderIndex} = focusNames';
                 RFPnames = load(quantificationFocalMatFile);
+                try
+                    RFPnames.('RFPnames') = RFPnames.('fileNames');
+                catch
+                    
+                end
                 if isfield(RFPnames, 'RFPnames')
                     if strcmp(class(RFPnames.RFPnames{1}), 'char')
                         secondaryNameArray = ImageImporter.organizeImageNameArrayByWells(RFPnames.RFPnames, 'RFP');               
@@ -190,7 +213,7 @@ classdef ImageImporter < handle
                                 wellID = ImageImporter.findWellIDOfString(BFnameArray{nameIndex}{imageInWellIndes});
                                 imageInWellIndex = num2str(ImageImporter.getImageInWellIndexOfString(BFnameArray{nameIndex}{imageInWellIndes}));
                                 %pat = [pat, wellID, '_\d{1,2}_\d{1}_', imageInWellIndex, '(Z|_)|'];
-                                pat = [pat, wellID, '_\d{1,2}_\d{1}_', imageInWellIndex, '_|'];
+                                pat = [pat, wellID, '_\d{1,2}_\d{1}_', imageInWellIndex, '|'];
                             end                           
                         end
                     end                
