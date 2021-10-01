@@ -36,7 +36,7 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                 measurementParams(imageIndex).results = MembraneImageAnalyzer.analyzeMembranesStatic(...
             measurementParams(imageIndex).wellName, measurementParams(imageIndex).secondaryPicOfWell, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).imageProcessingParams,...
             measurementParams(imageIndex).timeParameters, measurementParams(imageIndex).thresholdFunctionHandle, measurementParams(imageIndex).calculationMethod, measurementParams(imageIndex).qualityMask, ...
-            measurementParams(imageIndex).parametersToCalculate, binaryImages{imageIndex});
+            measurementParams(imageIndex).parametersToCalculate, binaryImages{imageIndex}, measurementParams(imageIndex).mainDirectory, measurementParams(imageIndex).usedDirectory);
             end
         end
             
@@ -49,15 +49,22 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             sectionSize = 100;
             nrOfSections = ceil(numel(measurementParams)/sectionSize);
             
-            fromBinary = 0; % the from binary system is just a hotfix, not something permanent. Remove it if better solution is developed.
-            binaryFolder = 'F:\DL SIME\200926_133048_DL20200926_Experiment1\Binary200926_133048_Plate 1\';
-            
+            fromBinary = strcmp(measurementParams(1).imageProcessingParams.imageSegmentationMode, measurementParams(1).imageProcessingParams.FromBinary);
+            packedBinaryImages = cell(numel(measurementParams), 1);
+            imageSizes = cell(numel(measurementParams), 1);
             if fromBinary
-                for index = 1 : numel(measurementParams)
-                    binaryImages{index} = imread([binaryFolder, measurementParams(index).wellName]);
+                for imageIndex = 1 : numel(measurementParams)
+                    %%% NB! generalize this (Binary_unmasked is not regular binary folder name)!!!
+                    bw = getBinaryOfImage(fullfile(measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).wellName), 'Binary');
+                    
+                    measurementParams(imageIndex).results = MembraneImageAnalyzer.analyzeMembranesStatic(...
+            measurementParams(imageIndex).wellName, measurementParams(imageIndex).secondaryPicOfWell, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).imageProcessingParams,...
+            measurementParams(imageIndex).timeParameters, measurementParams(imageIndex).thresholdFunctionHandle, measurementParams(imageIndex).calculationMethod, measurementParams(imageIndex).qualityMask, ...
+            measurementParams(imageIndex).parametersToCalculate, bw, measurementParams(imageIndex).mainDirectory, measurementParams(imageIndex).usedDirectory);
                 end
             else           
                 for startIndex = 1 : sectionSize : nrOfSections * sectionSize
+                    imagesForBinaryGeneration = [];
                     endIndex = startIndex + sectionSize - 1;
                     if endIndex > numel(measurementParams)
                         endIndex = numel(measurementParams);
@@ -77,23 +84,38 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
 
                     % intoduce the pixel shifts to images
                     counter = 1;
-                    for i = 1 : startIndex : endIndex
+                    for i = startIndex : endIndex
                         pixelShiftVertical = measurementParams(i).imageProcessingParams.getPixelShiftVertical();
                         pixelShiftHorizontal = measurementParams(i).imageProcessingParams.getPixelShiftHorizontal();
                         imagesForBinaryGeneration{counter} = imagesForBinaryGeneration{counter}(pixelShiftVertical+1:end, pixelShiftHorizontal+1:end);
+                        imageSizes{i} = size(imagesForBinaryGeneration{counter});
                         counter = counter + 1;
                     end
-
-                    binaryImages(startIndex : endIndex) = MembraneImageAnalyzer.createBinaryImages(imagesForBinaryGeneration, measurementParams(startIndex : endIndex), ilastikPath);
-                end
-            end
-            for imageIndex =  numel(measurementParams) : -1 : 1
-                measurementParams(imageIndex).results = MembraneImageAnalyzer.analyzeMembranesStatic(...
+                    try
+                        packedBinaryImagesLocal = MembraneImageAnalyzer.createBinaryImages(imagesForBinaryGeneration, measurementParams(startIndex : endIndex), ilastikPath);
+                    catch MException
+                        rethrow(MException)
+                    end
+                    
+                    counter = 1;
+                    for imageIndex = endIndex :-1: startIndex
+                        measurementParams(imageIndex).results = MembraneImageAnalyzer.analyzeMembranesStatic(...
             measurementParams(imageIndex).wellName, measurementParams(imageIndex).secondaryPicOfWell, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).imageProcessingParams,...
             measurementParams(imageIndex).timeParameters, measurementParams(imageIndex).thresholdFunctionHandle, measurementParams(imageIndex).calculationMethod, measurementParams(imageIndex).qualityMask, ...
-            measurementParams(imageIndex).parametersToCalculate, binaryImages{imageIndex});
-            binaryImages(imageIndex) = [];
+            measurementParams(imageIndex).parametersToCalculate, bwunpack(packedBinaryImagesLocal{numel(imagesForBinaryGeneration) - counter + 1}, imageSizes{imageIndex}(1)), measurementParams(imageIndex).mainDirectory, measurementParams(imageIndex).usedDirectory);
+            packedBinaryImagesLocal(numel(imagesForBinaryGeneration) - counter + 1) = [];
+                        counter = counter + 1;
+                    end
+                    
+                end
             end
+            %for imageIndex =  numel(measurementParams) : -1 : 1
+            %    measurementParams(imageIndex).results = MembraneImageAnalyzer.analyzeMembranesStatic(...
+            %measurementParams(imageIndex).wellName, measurementParams(imageIndex).secondaryPicOfWell, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).imageProcessingParams,...
+            %measurementParams(imageIndex).timeParameters, measurementParams(imageIndex).thresholdFunctionHandle, measurementParams(imageIndex).calculationMethod, measurementParams(imageIndex).qualityMask, ...
+            %measurementParams(imageIndex).parametersToCalculate, bwunpack(packedBinaryImages{imageIndex}, imageSizes{imageIndex}(1)), measurementParams(imageIndex).mainDirectory, measurementParams(imageIndex).usedDirectory);
+            %packedBinaryImages(imageIndex) = [];
+            %end
             %(...
             %measurementParams(imageIndex).wellName, measurementParams(imageIndex).secondaryPicOfWell, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).imageProcessingParams,...
             %measurementParams(imageIndex).timeParameters, measurementParams(imageIndex).thresholdFunctionHandle, measurementParams(imageIndex).calculationMethod, measurementParams(imageIndex).qualityMask, ...
@@ -163,10 +185,6 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                 end
             end
             prediction = resultImage(prePad : prePad +  size(inputImage, 1) - 1, prePad : prePad + size(inputImage, 2) - 1);
-            %figure
-            %imshow(prediction)
-            %figure
-            %imshow(inputImage)
             prediction = prediction > 0.5;
         end
         
@@ -222,7 +240,8 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             sLength = 5;
             %generate random string
             randString = s( ceil(rand(1,sLength)*numRands) );
-            tempPath = ['F:\tempdir\', 'Aparecium\MembraneToolsTempDir\'];
+            filePath = mfilename('fullpath');
+            tempPath = [filePath(1), ':\tempdir\', 'Aparecium\MembraneToolsTempDir\'];
             if ~exist(tempPath, 'dir')
                mkdir(tempPath);
             end
@@ -241,7 +260,11 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                     IlastikExpectedFileCount(end + 1) = 1;               
                 end
                 %imwrite(uint8(slopeImages{imageIndex}*255), [tempPath, num2str(imageIndex), randString,'.tif'], 'tif');
-                imwrite(uint16(slopeImages{imageIndex}), [tempPath, num2str(imageIndex), randString,'.tif'], 'tif');
+                if max(max(slopeImages{imageIndex}))==1
+                    imwrite(uint8(slopeImages{imageIndex}*255), [tempPath, num2str(imageIndex), randString,'.tif'], 'tif'); 
+                else
+                    imwrite(uint16(slopeImages{imageIndex}), [tempPath, num2str(imageIndex), randString,'.tif'], 'tif');
+                end
             end
             IlastikCallStringArray{end + 1} = [IlastikCallString, ' && exit &'];
             oldPath = pwd;
@@ -261,7 +284,7 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                     pause(10);
                     dirAfter = dir(tempPath);
                     timePassed = toc;
-                    if isequal(dirBefore, dirAfter) && timePassed > timeoutForSingleImage
+                    if isequal(dirPrevious, dirAfter) && timePassed > timeoutForSingleImage
                         
                         % find the ilastik process and kill it
                         [~, tasks] = system('tasklist');
@@ -272,8 +295,16 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                         pause(5)
                         system(IlastikCallStringArray{ilastikCall});
                         tic
-                    elseif ~isequal(dirPrevious, dirAfter)
+                        'no change'
+                    elseif ~isequal(dirPrevious, dirAfter) || isequal(numel(dirAfter) - numel(dirBefore), IlastikExpectedFileCount(ilastikCall))
+                        'has changed'
+                        numel(dirAfter) - numel(dirBefore)
+                        IlastikExpectedFileCount(ilastikCall)
+                        if (numel(dirAfter) - numel(dirBefore) == 48)
+                           '' 
+                        end
                         if isequal(numel(dirAfter) - numel(dirBefore), IlastikExpectedFileCount(ilastikCall))
+                            'finished'
                             pause(15) % give some time to finish writing the file
                             break; 
                         end
@@ -287,6 +318,8 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             binaryImages = cell(size(slopeImages));
             for imageIndex = 1: numel(slopeImages)             
                 h5 = hdf5read([tempPath, num2str(imageIndex), randString,'_Probabilities.h5'], '/exported_data');
+                delete([tempPath, num2str(imageIndex), randString,'_Probabilities.h5']);
+                delete([tempPath, num2str(imageIndex), randString,'.tif']);
                 [unneeded, maxProbImg] = max(h5, [], 1);
                 binaryImages{imageIndex} = squeeze(maxProbImg == measurementParams(1).imageProcessingParams.membraneLabelIndex)';%measurementParams(1).imageProcessingParams.membraneLabelIndex);
                 %binaryImages{imageIndex} = (squeeze(h5(3,:,:)) > 127)';
@@ -319,14 +352,17 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                     %imshow(thickened)
                     binaryImages{imageIndex} = thickened;
                 end
-
+            end
+            % pack the images for memory efficiency
+            for imageIndex = 1: numel(slopeImages)
+                binaryImages{imageIndex} = bwpack(binaryImages{imageIndex});
             end
         end
         
         function image = createFocusImage(measurementParams)
             path = measurementParams.directoryPath;
             firstImageName = measurementParams.wellName;
-            image = imread([path,'/',firstImageName]);
+            image = imread(fullfile(path,firstImageName));
             %slopes = stackLinearReg(path, firstImageName, 'stdev');
             %if strcmp(class(image), 'uint8')
             %   image = double(image)/256; 
@@ -341,7 +377,7 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
         function image = createFocusImageNoNorm(measurementParams)
             path = measurementParams.directoryPath;
             firstImageName = measurementParams.wellName;
-            image = imread([path,'/',firstImageName]);
+            image = imread(fullfile(path,firstImageName));
             %slopes = stackLinearReg(path, firstImageName, 'stdev');
             if strcmp(class(image), 'uint8')
                image = double(image)/256; 
@@ -357,7 +393,15 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             ZIndex = strfind(firstImageName, 'Z');
             ZIndex = ZIndex(end); % for avoiding situations where the image name contains several Z-s, for example in the well name
             focusIndex = str2num(firstImageName(ZIndex+1))+1;
-            slopes = stackLinearRegPartial(path, firstImageName, 'stdev',[focusIndex - 2:focusIndex+5]);
+            try
+                slopes = stackLinearRegPartial(path, firstImageName, 'stdev',[focusIndex - 2 : focusIndex + 5]);
+            catch
+                try
+                    slopes = stackLinearRegPartial(path, firstImageName, 'stdev',[focusIndex - 2 : focusIndex + 4]);
+                catch
+                    slopes = stackLinearRegPartial(path, firstImageName, 'stdev',[focusIndex - 1 : focusIndex + 3]);
+                end
+            end
             %slopes = stackLinearReg(path, firstImageName, 'stdev');
             if strcmp(class(slopes), 'uint8')
                slopes = double(slopes)/256; 
@@ -366,7 +410,7 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             slopeImage = (slopes-min(min(slopes)))/max(max(slopes-min(min(slopes))));
         end
         
-        function resultStructure = analyzeMembranesStatic(picName, secondaryPicName, filePath, secondaryFilePath, imageProcessingParameters, timeParameters, functionHandle, calculationMethod, qualityMask, parametersToCalculate, providedBinary)
+        function resultStructure = analyzeMembranesStatic(picName, secondaryPicName, filePath, secondaryFilePath, imageProcessingParameters, timeParameters, functionHandle, calculationMethod, qualityMask, parametersToCalculate, providedBinary, mainDir, usedDir)
             disp('MembraneImageAnalyzer');
             resultStructure = MembraneImageAnalyzer.analyseOneImageStatic(picName, filePath, imageProcessingParameters, timeParameters, functionHandle, parametersToCalculate, providedBinary);
 
@@ -395,7 +439,7 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                        break; 
                     end
 
-                    names{index + 1} = [filePath, secondaryPicName(1:ZIndex), num2str(index),'_',imageProcessingParameters.quantificationChannelRegex,'_', secondaryPicName(end-6:end)];
+                    names{index + 1} = fullfile(filePath, [secondaryPicName(1:ZIndex), num2str(index),'_',imageProcessingParameters.quantificationChannelRegex,'_', secondaryPicName(end-6:end)]);
                     index = index + 1;
                 end
 
@@ -440,8 +484,7 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                 catch
                     resultStructure.firstNonMembraneQuadrileIntensity = mean(sortedPixels(1:floor(numel(sortedPixels)/4)));
                 end
-                
-                
+                               
                 binaryImageCalculator = BinaryImageCalculator();
                 parametersToCalculate = {'confluency', 'image'};
                 binaryImageCalculator.calculateImageParameters(originalBinaryImage, parametersToCalculate, functionHandle);
@@ -466,6 +509,13 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                 
             elseif strcmp(calculationMethod, 'Probability')
                  resultStructure.averageMembraneIntensity = sum(sum(double(focusedImage).*resultStructure.probabilityImage))/(sum(sum(resultStructure.probabilityImage)));
+            end
+            
+            % save binary image on hard drive if saving is activated
+            % instead of keeping it in memory
+            if strcmp(imageProcessingParameters.autoSaveBinaryFiles, 'on');
+                imagePath = ImageAnalyzer.saveBinaryImage(resultStructure.image, picName, mainDir, usedDir);
+                resultStructure.image = imagePath;
             end
         end
         
@@ -512,7 +562,7 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                         end
                     case imageProcessingParameters.FromBinary
                         I_orgTrue = I_org(:,:,1); 
-                        bw2 = getBinaryOfImage([filePath, picName]);
+                        bw2 = providedBinary; % already swapped before
                 end
 
               

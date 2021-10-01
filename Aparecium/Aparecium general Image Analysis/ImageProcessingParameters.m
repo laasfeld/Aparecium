@@ -333,4 +333,3 @@ classdef ImageProcessingParameters < handle
         end             
     end   
 end
-

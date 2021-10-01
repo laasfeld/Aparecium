@@ -58,7 +58,7 @@ handles.requiredPattern = varargin{2};
 handles.lowerBound = varargin{3}(1);
 handles.upperBound = varargin{3}(2);
 handles.spaceAllowed = 1;
-[handles.wellID, handles.wellID_location_indices] = ImageImporter.getWellIDOfFolder(handles.directoryName, handles.requiredPattern);
+[handles.wellID, handles.wellID_location_indices, handles.nameArray] = ImageImporter.getWellIDOfFolder(handles.directoryName, handles.requiredPattern);
 handles.wellIndex = 1;
 handles.imageInWellIndex = 1;
 handles.selectingBadAreas = 0;
@@ -125,12 +125,12 @@ function handles = createImageNameArrays(handles)
 
 fileListArray = dir([handles.directoryName,'\*.tif']);
 %%reorganize the fileListArray to get all the file names
-handles.nameArray = cell(length(fileListArray),1);
-for i = 1 : length(fileListArray)
-    if ~isempty(regexp(fileListArray(i).name, handles.requiredPattern))
-        handles.nameArray{i} = fileListArray(i).name;
-    end
-end
+%handles.nameArray = cell(length(fileListArray),1);
+%for i = 1 : length(fileListArray)
+%    if ~isempty(regexp(fileListArray(i).name, handles.requiredPattern))
+%        handles.nameArray{i} = fileListArray(i).name;
+%    end
+%end
 handles.nameArray(cellfun(@isempty,handles.nameArray)) = [];
 handles.imagesOfWellAtLocation = cell(numel(handles.wellID), 1);
 for pic = 1 : size(handles.nameArray, 1)

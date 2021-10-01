@@ -603,7 +603,8 @@ classdef FileChooser < handle
             if isfield(this.settings, 'IlastikExecutablePath')
                 path = this.settings.IlastikExecutablePath;
             else
-                result = questdlg('Ilastik executable path not found! To attempt automatic search of Ilastik, click "Attempt search". Clicking "Cancel will stop analysis"','Ilastik not configured','Attempt search','Cancel', 'Attempt search');
+                %result = questdlg('Ilastik executable path not found! To attempt automatic search of Ilastik, click "Attempt search". Clicking "Cancel will stop analysis"','Ilastik not configured','Attempt search','Cancel', 'Attempt search');
+                result = 'Attempt search';
                 switch result
                     case 'Attempt search'
                         ilastikPath = findIlastikPath();

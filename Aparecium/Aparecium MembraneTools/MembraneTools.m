@@ -39,7 +39,7 @@ function varargout = MembraneTools(varargin)
 
 % Edit the above text to modify the response to help MembraneTools
 
-% Last Modified by GUIDE v2.5 13-May-2021 00:52:14
+% Last Modified by GUIDE v2.5 12-Sep-2021 22:40:16
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -93,6 +93,7 @@ handles.cameraAndLensParameters.fromImage = get(handles.fromImageTickBox, 'Value
 handles.simPlateHandle = []; % a handle to the PlateSimulator
 handles.analysisMode = 'Completed'; % A standard parameter
 handles.observationStarted = 0; % No observation is started when the program is launched
+handles.TextFieldCellEditor = [];
 
 %% Change the appearance of the GUI 
 %set(handles.figure1, 'Color', [225/255, 226/255, 251/255]); 
@@ -903,6 +904,8 @@ function pushbutton16_Callback(hObject, eventdata, handles)
 % this function deals with importing binary images. Sti
 
 handles.imageImporter = ImageImporter(); % Create a new ImageImporter obejct
+handles.imageImporter.setDetectionChannelRegex(get(handles.detectionChannelRegex, 'String'));
+handles.imageImporter.setQuantificationChannelRegex(get(handles.quantificationChannelRegex, 'String'));
 handles.imageImporter.analyzeQuality = 1;
 fileChooser = FileChooser();
 startingPath = fileChooser.chooseMembraneToolsFolder(); % get the preferred starting folder
@@ -1597,9 +1600,9 @@ function pushbutton34_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 results = handles.imageAnalyzer.results;
-path = [handles.imageImporter.mainDirectory, handles.imageImporter.usedDirectories{1},'\'];
+path = fullfile(handles.imageImporter.mainDirectory, handles.imageImporter.usedDirectories{1});
 generateObjectWiseExcel(results, path);
-''
+
 
 
 
@@ -1691,3 +1694,33 @@ function uibuttongroup3_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to uibuttongroup3 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes when selected cell(s) is changed in treatments_Table.
+function treatments_Table_CellSelectionCallback(hObject, eventdata, handles)
+% hObject    handle to treatments_Table (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.TABLE)
+%	Indices: row and column indices of the cell(s) currently selecteds
+% handles    structure with handles and user data (see GUIDATA)
+if ~isempty(eventdata.Indices)
+    jUIScrollPane = findjobj(hObject);
+    jUITable = jUIScrollPane.getViewport.getView;
+    jUITable.changeSelection(eventdata.Indices(1)-1, eventdata.Indices(2)-1, false, false);
+    %jUITable.getComponent(1).setCaretPosition(1);
+    guidata(hObject, handles);
+    try
+        jUITable = jUIScrollPane.getViewport.getView;
+        jUITable.getComponent(1).setSelectionStart(0);
+        jUITable.getComponent(1).setSelectionEnd(2);
+        handles.TextFieldCellEditor = jUITable.getComponent(1);
+    catch      
+        handles.TextFieldCellEditor.setSelectionStart(0)
+        handles.TextFieldCellEditor.setSelectionEnd(2)
+    end
+    handles.TextFieldCellEditor.setSelectionStart(0)
+    handles.TextFieldCellEditor.setSelectionEnd(2)
+
+end
+
+eventData.twice = 1;
+guidata(hObject, handles);

@@ -55,6 +55,7 @@ classdef BinaryImageCalculator < handle
             if isequal(this.binaryImage, image)
                 this.binaryImage = image;
             else
+                this.binaryImage = image;
                 this.ccCalculated = 0;
                 this.boundariesCalculated = 0;
                 this.eccentritiesCalculated = 0;
@@ -70,6 +71,7 @@ classdef BinaryImageCalculator < handle
                 this.radiusSTDCalculated = 0;
                 this.criteriaMatchingccCalculated = 0;
             end
+            
             
         end
         
@@ -577,7 +579,7 @@ classdef BinaryImageCalculator < handle
             diameter = 0;
             objects = BinaryImageCalculator.averageObjectCount(resultStructures)*numel(resultStructures);
             for imageIndex = 1 : numel(resultStructures)
-                 diameter =  diameter + resultStructures{imageIndex}. diameter * resultStructures{imageIndex}.objects;
+                 diameter =  diameter + resultStructures{imageIndex}.diameter * resultStructures{imageIndex}.objects;
             end
             average =  diameter/objects;
         end
@@ -606,7 +608,7 @@ classdef BinaryImageCalculator < handle
             intensity = 0;
             totalPixels = BinaryImageCalculator.averageConfluency(resultStructures)*numel(resultStructures);
             for imageIndex = 1 : numel(resultStructures)
-                 intensity = intensity + resultStructures{imageIndex}.averageMembraneIntensity * resultStructures{imageIndex}.confluency;
+                 intensity = sum([intensity, resultStructures{imageIndex}.averageMembraneIntensity * resultStructures{imageIndex}.confluency], 'omitnan');
             end
             average =  intensity/totalPixels;
         end
@@ -614,7 +616,7 @@ classdef BinaryImageCalculator < handle
         function average = averageNonMembraneIntensity(resultStructures)
             intensity = 0;
             for imageIndex = 1 : numel(resultStructures)
-                 intensity = intensity + resultStructures{imageIndex}.averageNonMembraneIntensity;
+                 intensity = sum([intensity, resultStructures{imageIndex}.averageNonMembraneIntensity], 'omitnan');
             end
             average =  intensity/numel(resultStructures);
         end
@@ -623,7 +625,7 @@ classdef BinaryImageCalculator < handle
             intensity = 0;
             %totalPixels = 904*1224;% defenetly bind this parameter to the actual image
             for imageIndex = 1 : numel(resultStructures)
-                 intensity = intensity + resultStructures{imageIndex}.averageSecondaryImageIntensity;
+                 intensity = sum([intensity, resultStructures{imageIndex}.averageSecondaryImageIntensity], 'omitnan');
             end
             average =  intensity/numel(resultStructures);
         end

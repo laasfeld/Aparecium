@@ -36,7 +36,7 @@ classdef ImageImporter < handle
             chosenDirectories = cell(1, 0);
             for itemIndex = 1 : numel(folderNames)
                 if(folderNames(itemIndex).isdir && exist(fullfile(this.mainDirectory, folderNames(itemIndex).name),'dir') && ~contains(folderNames(itemIndex).name, 'Binary') && ~contains(folderNames(itemIndex).name, 'Mask'))
-                    if exist(fullfile(masksPath, folderNames(itemIndex).name), 'dir')
+                    if exist([masksPath, '/', folderNames(itemIndex).name], 'dir') || exist(masksPath, 'dir')
                         chosenDirectories{end + 1} = folderNames(itemIndex).name;
                     end
                 end
@@ -85,20 +85,22 @@ classdef ImageImporter < handle
                             else
                                 [this.masks{folderIndex}, wellID, focusNames] = ImageImporter.loadMasks(Bfnames.bfNames{1}, masksPath, 'Bright Field');                                
                             end
-                            
-                            if strcmp(class(Bfnames.fileNames{1}), 'char')
-                                [this.masks{folderIndex}, wellID, focusNames] = ImageImporter.loadMasks(Bfnames.fileNames, masksPath, 'Bright Field');
-                            else
-                                [this.masks{folderIndex}, wellID, focusNames] = ImageImporter.loadMasks(Bfnames.fileNames{1}, masksPath, 'Bright Field');                                
-                            end
-                            
                         catch
-                            if strcmp(class(Bfnames.Bfnames{1}), 'char')
-                                [this.masks{folderIndex}, wellID, focusNames] = ImageImporter.loadMasks(Bfnames.Bfnames, masksPath, 'Bright Field');
-                            else
-                                [this.masks{folderIndex}, wellID, focusNames] = ImageImporter.loadMasks(Bfnames.Bfnames{1}, masksPath, 'Bright Field');
+                            try
+                                if strcmp(class(Bfnames.fileNames{1}), 'char')
+                                    [this.masks{folderIndex}, wellID, focusNames] = ImageImporter.loadMasks(Bfnames.fileNames, masksPath, 'Bright Field');
+                                else
+                                    [this.masks{folderIndex}, wellID, focusNames] = ImageImporter.loadMasks(Bfnames.fileNames{1}, masksPath, 'Bright Field');                                
+                                end
+                            
+                            catch
+                                if strcmp(class(Bfnames.Bfnames{1}), 'char')
+                                    [this.masks{folderIndex}, wellID, focusNames] = ImageImporter.loadMasks(Bfnames.Bfnames, masksPath, 'Bright Field');
+                                else
+                                    [this.masks{folderIndex}, wellID, focusNames] = ImageImporter.loadMasks(Bfnames.Bfnames{1}, masksPath, 'Bright Field');
 
-                            end                        
+                                end                        
+                            end
                         end
                     end
                 end
@@ -206,7 +208,7 @@ classdef ImageImporter < handle
                     this.maskNameArray{folder} = BFnameArray;
                     %create a more sophisticated pattern
                     pat = '^(';             
-
+                    patMatrix = cell(0, 3);
                     for nameIndex = 1 : numel(BFnameArray)
                         for imageInWellIndes = 1 : numel(BFnameArray{nameIndex})
                             if ~isempty(BFnameArray{nameIndex}{imageInWellIndes})
@@ -214,6 +216,9 @@ classdef ImageImporter < handle
                                 imageInWellIndex = num2str(ImageImporter.getImageInWellIndexOfString(BFnameArray{nameIndex}{imageInWellIndes}));
                                 %pat = [pat, wellID, '_\d{1,2}_\d{1}_', imageInWellIndex, '(Z|_)|'];
                                 pat = [pat, wellID, '_\d{1,2}_\d{1}_', imageInWellIndex, '|'];
+                                patMatrix{end+1, 1} = wellID;
+                                patMatrix{end, 2} = imageInWellIndex;
+                                patMatrix{end, 3} = this.quantificationChannelRegex;
                             end                           
                         end
                     end                
@@ -221,11 +226,11 @@ classdef ImageImporter < handle
                     pat(end) = [];
                     pat = [pat,')(\w*)', this.quantificationChannelRegex];
                     
-                    try
-                        secondaryNameArray = focusAndQualityAnalyzer([mainDir,'\',chosenDirectories{folder}], pat, [0 0], standardFocus);
-                    catch MException
-                        save('imageImporterMaskAutosave.mat', 'this', 'BFnameArray', 'standardFocus', 'pat')
-                    end
+                    %try
+                        secondaryNameArray = focusAndQualityAnalyzer([mainDir,'\',chosenDirectories{folder}], patMatrix, [0 0], standardFocus);
+                    %catch MException
+%                        save('imageImporterMaskAutosave.mat', 'this', 'BFnameArray', 'standardFocus', 'pat')
+                    %end
                     nameArray = this.removeIncompatibleImages(BFnameArray, secondaryNameArray, folder);
                 else
                     fileListArray = dir([mainDir,'\',chosenDirectories{folder},'\*.tif']);
@@ -477,8 +482,7 @@ classdef ImageImporter < handle
         end
         
         function wellID = findWellIDOfString(name)
-            wellIDCell = ImageImporter.getWellIDOfStringArray({name}, '[A-Z]{1,100}');
-            wellID = wellIDCell{1};
+            wellID = regexp(name,'[A-Z]*\d{1,3}', 'match', 'once');
         end
         
         function imageInWellIndex = getImageInWellIndexOfString(name)
@@ -492,6 +496,10 @@ classdef ImageImporter < handle
            if isnan(imagePlaneIndex) % in case plane is not present, treat it as if it was Z0
                imagePlaneIndex = 0; 
            end
+        end
+        
+        function imageChannel = getImageChannelNameOfString(name)
+            imageChannel = regexp(regexp(name,'[a-zA-Z0-9, \s]*_\d{0,3}.tif', 'match', 'once'), '[a-zA-Z0-9, \s]*', 'match', 'once');
         end
         
         function wellID = sortWellID(wellID)% sorts the cell array according to cell naming logic instead of standard string and number logic. 
@@ -563,26 +571,36 @@ classdef ImageImporter < handle
             end
         end
         
-        function [wellIDs, wellID_ImageLocations] = getWellIDOfFolder(folder, pattern)
+        function [wellIDs, wellID_ImageLocations, varargout] = getWellIDOfFolder(folder, pattern)
             fileListArray = dir([folder, '\*.tif']);
 
             %% reorganize the fileListArray to get all the file names
 
+            patMatrix = cell(length(fileListArray), 3);
             nameArray = cell(length(fileListArray),1);
             for i = 1 : length(fileListArray)
                 nameArray{i} = fileListArray(i).name;
+                if ~ischar(pattern)
+                    patMatrix{i, 1} = ImageImporter.findWellIDOfString(fileListArray(i).name);
+                    patMatrix{i, 2} = num2str(ImageImporter.getImageInWellIndexOfString(fileListArray(i).name));
+                    patMatrix{i, 3} = ImageImporter.getImageChannelNameOfString(fileListArray(i).name);
+                end
+            end
+            if ~ischar(pattern)
+                ia = ismember(cell2table(patMatrix, 'VariableNames', {'A', 'B', 'C'}), cell2table(pattern, 'VariableNames', {'A', 'B', 'C'}));
+                nameArray = nameArray(ia);
+            else
+           
+                for pic = numel(nameArray) : -1 : 1
+                    pic
+                    if ~isempty(regexp(nameArray{pic}, pattern, 'once'))
+
+                    else
+                        nameArray(pic) = [];
+                    end
+                end
             end
             wellIDs = cell(0,0);
-
-            for pic = numel(nameArray) : -1 : 1
-                 pic
-                 if ~isempty(regexp(nameArray{pic}, pattern, 'once'))
-
-                 else
-                     nameArray(pic) = [];
-                 end
-            end
-
             for pic = 1 : numel(nameArray)
                 wellIDs{end+1} = regexp(nameArray{pic},'([A-Z]{1,2}\d{1,2})', 'match', 'once');
             end
@@ -601,6 +619,7 @@ classdef ImageImporter < handle
             for index = 1 : numel(wellID_ImageLocations)
                 wellID_ImageLocations{index} = unique(wellID_ImageLocations{index});
             end
+            varargout{1} = nameArray;
             
         end
         
@@ -620,7 +639,11 @@ classdef ImageImporter < handle
         function [masks, wellIDOut, focusNames] = loadMasks(nameArray, imageDir, pattern)
             [handles.wellID, wellID_location_indices] = ImageImporter.getWellIDOfArray(nameArray, pattern);
             files = dir(imageDir);
-            files(1:2) = [];
+            try
+                files(1:2) = [];
+            catch MException
+                rethrow(MException)
+            end
             nameArray = cell(0, 0);
             for index = 1 : numel(files)
                 if ~isempty(strfind(files(index).name, '.tif'))

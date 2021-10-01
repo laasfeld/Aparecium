@@ -318,7 +318,7 @@ classdef GraphicalPreviewController < ExportPanelController
                 try
                     plot(xAxis, yAxis, 'Marker', this.markers{mod(timeMoment, numel(this.markers)) + 1}, 'Line', 'none', 'MarkerEdgeColor',[red green blue]);
                 catch MException
-                    if strcmp(MException.message, 'There is no Line property on the Line class.') 
+                    if strcmp(MException.message, 'There is no Line property on the Line class.') || strcmp(MException.message, 'Unrecognized property Line for class Line.')
                         plot(xAxis, yAxis, this.markers{mod(timeMoment, numel(this.markers)) + 1}, 'MarkerEdgeColor',[red green blue]);
                     end
                 end

@@ -33,7 +33,7 @@ function [slopes] = stackLinearRegPartial(path, firstImageName, type, combinatio
         %focus(index) = img.getImageFocus();
         %img = img.getImage();
         %images{index} = img;
-        images{index} = imread([path, rigthFileNames{index}]);
+        images{index} = imread(fullfile(path, rigthFileNames{index}));
         disp(['reading ', rigthFileNames{index}]);
     end
     sortedCombination = sort(combination);
@@ -41,7 +41,7 @@ function [slopes] = stackLinearRegPartial(path, firstImageName, type, combinatio
     try
         X = X(sortedCombination);
     catch MException
-        %'siin'
+        % 
         rethrow(MException)
         %sortedCombination = (3:10)
         %X = X(sortedCombination);
