@@ -313,8 +313,8 @@ classdef ImageImporter < handle
 %                    end
 %                end
 %             end
-            this.nameArray{folder} = unwrappedNameArray(sort(nameArrayIndices));
-            this.secondaryNameArray{folder} = unwrappedSecondaryNameArray(sort(secondaryNameArrayIndices));
+            this.nameArray{folder} = unwrappedNameArray(nameArrayIndices);
+            this.secondaryNameArray{folder} = unwrappedSecondaryNameArray(secondaryNameArrayIndices);
             nameArray = unwrappedNameArray(sort(nameArrayIndices));
         end
         

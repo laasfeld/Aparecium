@@ -22,7 +22,7 @@ function varargout = focusAndQualityAnalyzer(varargin)
 
 % Edit the above text to modify the response to help focusAndQualityAnalyzer
 
-% Last Modified by GUIDE v2.5 02-Jul-2021 12:10:48
+% Last Modified by GUIDE v2.5 21-Oct-2021 11:52:18
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -174,7 +174,7 @@ end
 try
     if handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) <= handles.lowerBound % impossible image index in this context
         if isequal(handles.wellIndex, 1) && isequal(handles.imageInWellIndex, 1) % handle the case where no previous image focus is available
-            handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) = handles.lowerBound;
+            handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) = handles.lowerBound + 1;
         elseif isequal(handles.imageInWellIndex, 1); % handle the case where previous image focus is available but in previous well
             handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) = handles.imageIndex{handles.wellIndex - 1}(end);
         else
@@ -568,7 +568,7 @@ end
 %else
     
 %end
-
+guidata(hObject, handles);
 displayImages(handles);
 guidata(hObject, handles);
 
@@ -693,3 +693,10 @@ set(handles.pushbutton17, 'enable', 'on');
 handles.spaceAllowed = 1;
 set(handles.resumeToNormal, 'enable', 'on');
 guidata(hObject, handles);
+
+
+% --- Executes during object creation, after setting all properties.
+function loadMasks_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to loadMasks (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called

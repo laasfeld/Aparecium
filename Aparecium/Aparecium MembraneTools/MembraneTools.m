@@ -907,12 +907,20 @@ handles.imageImporter = ImageImporter(); % Create a new ImageImporter obejct
 handles.imageImporter.setDetectionChannelRegex(get(handles.detectionChannelRegex, 'String'));
 handles.imageImporter.setQuantificationChannelRegex(get(handles.quantificationChannelRegex, 'String'));
 handles.imageImporter.analyzeQuality = 1;
+lowerStackBound = str2num(get(handles.lowerStackBound,'String'));
+handles.imageImporter.setLowerBound(lowerStackBound);
+higherStackBound = str2num(get(handles.higherStackBound,'String'));
+handles.imageImporter.setHigherBound(higherStackBound);
 fileChooser = FileChooser();
 startingPath = fileChooser.chooseMembraneToolsFolder(); % get the preferred starting folder
 handles.imageImporter.userChooseImageFolders(startingPath); % note that user must still choose the regular images, timing is still read from there but binary image is taken from elsewhere
+
+
 handles.experimentDataStructure = handles.imageImporter.experimentDataStructure; 
 handles.imageProcessingParameters.setFromBinaryMode(); % set the image analysis parameters to accordance with processing binary files
 set(handles.autoSaveBinaryImage, 'value', 0); % Don´t save binary files, they must already be there
+
+
 
 %% disable most of the panels that change parameters which change the way
 %% the bright-field images are analyzer but not how the binary images are

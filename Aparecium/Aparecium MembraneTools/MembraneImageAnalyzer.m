@@ -513,7 +513,7 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             
             % save binary image on hard drive if saving is activated
             % instead of keeping it in memory
-            if strcmp(imageProcessingParameters.autoSaveBinaryFiles, 'on');
+            if strcmp(imageProcessingParameters.autoSaveBinaryFiles, 'on')
                 imagePath = ImageAnalyzer.saveBinaryImage(resultStructure.image, picName, mainDir, usedDir);
                 resultStructure.image = imagePath;
             end
