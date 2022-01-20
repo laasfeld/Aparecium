@@ -1,4 +1,4 @@
-function [ specificTimeForWell ] = fastKineticsCalculator(ID,readingFormat, cycleTime, time )
+function specificTimeForWell = fastKineticsCalculator(ID, readingFormat, cycleTime, time, varargin)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
      timePerWell=cycleTime/size(ID, 1);
@@ -77,7 +77,6 @@ function [ specificTimeForWell ] = fastKineticsCalculator(ID,readingFormat, cycl
                 end
             end
         case 6%-Not checked
-
             plate96WellLayout=fliplr(plate96WellLayout);
             plate96WellLayout=flipud(plate96WellLayout);% flip all rows
             for i=2:2:size(plate96WellLayout,2)
@@ -129,7 +128,6 @@ function [ specificTimeForWell ] = fastKineticsCalculator(ID,readingFormat, cycl
                 end
             end
         case 10
-
              plate96WellLayout=flipud(plate96WellLayout);
              plate96WellLayout=plate96WellLayout';
              for i=2:2:size(plate96WellLayout,2)
@@ -145,14 +143,20 @@ function [ specificTimeForWell ] = fastKineticsCalculator(ID,readingFormat, cycl
             end
 
         case 11
-             plate96WellLayout=plate96WellLayout';
-             a=size(plate96WellLayout,1)*size(plate96WellLayout,2);
+            plate96WellLayout=plate96WellLayout';
+            a=size(plate96WellLayout,1)*size(plate96WellLayout,2);
             k=1;
+            tempPlate96WellLayout = cell(0,0);
             for i=1:a
                 if(ismember(plate96WellLayout{i}, ID))
                     tempPlate96WellLayout{k}=plate96WellLayout{i};
                     k=k+1;       
                 end
+            end
+            if ~isequal(numel(tempPlate96WellLayout), numel(ID))
+                comparator = readingFormatComparatorGenerator([], 11);
+                sortID = quicksort(ID, comparator);
+                tempPlate96WellLayout = ID(sortID);
             end
 
         case 12
@@ -182,7 +186,6 @@ function [ specificTimeForWell ] = fastKineticsCalculator(ID,readingFormat, cycl
                 end
             end
         case 14
-
               plate96WellLayout=flipud(plate96WellLayout);
               plate96WellLayout=fliplr(plate96WellLayout);
               plate96WellLayout=plate96WellLayout';
@@ -198,7 +201,6 @@ function [ specificTimeForWell ] = fastKineticsCalculator(ID,readingFormat, cycl
                 end
             end
         case 15
-
               plate96WellLayout=plate96WellLayout';
               plate96WellLayout=flipud(plate96WellLayout);
               a=size(plate96WellLayout,1)*size(plate96WellLayout,2);

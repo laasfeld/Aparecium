@@ -889,50 +889,49 @@ classdef NeoASCIIReader < handle
                    this.experimentDataStructure.measurements{wellIndex} = measurementsAsDouble;
                end
             else
-               sortedListOfReads = this.generateSortedListOfReads();
-               experimentDataStructureArray = cell(0, 0);
-               legalReadIndex = 0;
-               deleteReads = zeros(1, 0);
-               for readIndex = 1 : numel(sortedListOfReads)
-                   if(~strcmp(sortedListOfReads{readIndex}.readType, 'Fluorescence Spectrum'))
-                       legalReadIndex = legalReadIndex + 1;
-                       read = sortedListOfReads{readIndex};
-                       rawWellID = read.wellID;
-                       wellID = cell(1, 0);
-                       for wellIndex = 1 : numel(rawWellID)
-                            wellID{wellIndex} = rawWellID{wellIndex}{1}; 
-                       end
-                       experimentDataStructureArray{legalReadIndex}.readWasEmpty = read.getReadWasEmpty;
-                       experimentDataStructureArray{legalReadIndex}.numberOfChannels = numel(read.channels);
-                       experimentDataStructureArray{legalReadIndex}.wellID = wellID;
-                       experimentDataStructureArray{legalReadIndex}.cycleTime = read.interval;
-                       experimentDataStructureArray{legalReadIndex}.runtime = read.runtime;
-                       experimentDataStructureArray{legalReadIndex}.timeOfMeasurements = read.measurementTimepoints';
-                       if ~isempty(read.measurementTimepoints)
-                            experimentDataStructureArray{legalReadIndex}.timeOfFastKineticsMeasurements = fastKineticsCalculator(wellID', 11 , read.interval, read.measurementTimepoints)';
-                       else
-                           try
-                            experimentDataStructureArray{legalReadIndex}.timeOfFastKineticsMeasurements = fastKineticsCalculator(wellID', 11 , read.interval, 0)';
-                           catch
-                              'siin' 
-                           end
-                       end
-                       experimentDataStructureArray{legalReadIndex}.channelNames = read.channels;
-                       measurements = read.measurements;
-                       for wellIndex = 1 : numel(read.wellID)
-                           rawWellMeasurements = measurements(:, :, wellIndex);
-                           reshapedWellMeasurements = reshape(rawWellMeasurements, numel(rawWellMeasurements), 1);
-                           measurementsAsDouble = zeros(numel(reshapedWellMeasurements), 1);
-                           for measurementNumber = 1 : numel(reshapedWellMeasurements)
-                              if strcmp(reshapedWellMeasurements{measurementNumber}, 'OVRFLW')
-                                measurementsAsDouble(measurementNumber) = NaN; 
-                                overflowStruct{end + 1} = [read.wellID{wellIndex}{1},' at read ', num2str(legalReadIndex), ' at cycle ', num2str(floor(measurementNumber/numel(read.channels))+1)];
-                              else
-                                measurementsAsDouble(measurementNumber) = str2double(reshapedWellMeasurements{measurementNumber}); 
-                              end
-                           end
-                           experimentDataStructureArray{legalReadIndex}.measurements{wellIndex} = measurementsAsDouble;
-                           
+                sortedListOfReads = this.generateSortedListOfReads();
+                experimentDataStructureArray = cell(0, 0);
+                legalReadIndex = 0;
+                deleteReads = zeros(1, 0);
+                for readIndex = 1 : numel(sortedListOfReads)
+                    if(~strcmp(sortedListOfReads{readIndex}.readType, 'Fluorescence Spectrum'))
+                        legalReadIndex = legalReadIndex + 1;
+                        read = sortedListOfReads{readIndex};
+                        rawWellID = read.wellID;
+                        wellID = cell(1, 0);
+                        for wellIndex = 1 : numel(rawWellID)
+                             wellID{wellIndex} = rawWellID{wellIndex}{1}; 
+                        end
+                        experimentDataStructureArray{legalReadIndex}.readWasEmpty = read.getReadWasEmpty;
+                        experimentDataStructureArray{legalReadIndex}.numberOfChannels = numel(read.channels);
+                        experimentDataStructureArray{legalReadIndex}.wellID = wellID;
+                        experimentDataStructureArray{legalReadIndex}.cycleTime = read.interval;
+                        experimentDataStructureArray{legalReadIndex}.runtime = read.runtime;
+                        experimentDataStructureArray{legalReadIndex}.timeOfMeasurements = read.measurementTimepoints';
+                        if ~isempty(read.measurementTimepoints)
+                             experimentDataStructureArray{legalReadIndex}.timeOfFastKineticsMeasurements = fastKineticsCalculator(wellID', 11 , read.interval, read.measurementTimepoints)';
+                        else
+                            try
+                                experimentDataStructureArray{legalReadIndex}.timeOfFastKineticsMeasurements = fastKineticsCalculator(wellID', 11 , read.interval, 0)';
+                            catch
+                                'siin' 
+                            end
+                        end
+                        experimentDataStructureArray{legalReadIndex}.channelNames = read.channels;
+                        measurements = read.measurements;
+                        for wellIndex = 1 : numel(read.wellID)
+                            rawWellMeasurements = measurements(:, :, wellIndex);
+                            reshapedWellMeasurements = reshape(rawWellMeasurements, numel(rawWellMeasurements), 1);
+                            measurementsAsDouble = zeros(numel(reshapedWellMeasurements), 1);
+                            for measurementNumber = 1 : numel(reshapedWellMeasurements)
+                                if strcmp(reshapedWellMeasurements{measurementNumber}, 'OVRFLW')
+                                    measurementsAsDouble(measurementNumber) = NaN; 
+                                    overflowStruct{end + 1} = [read.wellID{wellIndex}{1},' at read ', num2str(legalReadIndex), ' at cycle ', num2str(floor(measurementNumber/numel(read.channels))+1)];
+                                else
+                                    measurementsAsDouble(measurementNumber) = str2double(reshapedWellMeasurements{measurementNumber}); 
+                                end
+                            end
+                            experimentDataStructureArray{legalReadIndex}.measurements{wellIndex} = measurementsAsDouble;
                        end
                    else
                        deleteReads(end + 1) = readIndex;                       
