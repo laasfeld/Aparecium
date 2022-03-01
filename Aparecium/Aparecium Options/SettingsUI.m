@@ -65,7 +65,7 @@ if isdeployed
 else  
     handles.folderPath = regexprep(fullPath, 'SettingsUIRANDOM556874','', 'once');
 end
-handles.folderImg = imread([regexprep(fullPath, 'SettingsUIRANDOM556874','\..\\Icons\', 'once'),'folder.png']);
+handles.folderImg = imread(fullfile(fileparts(fileparts(mfilename('fullpath'))),'Icons', 'folder.png'));
 set(handles.PHERAStarASCII, 'cdata', handles.folderImg);
 set(handles.Excel, 'cdata', handles.folderImg);
 set(handles.MIDAS, 'cdata', handles.folderImg);
@@ -663,12 +663,12 @@ end
 
 try
     if isequal(handles.saveExitAndReturn, 0) % save as usual, do not return the structure
-        save([handles.folderPath, '\settings'],'settings');
+        save(fullfile(handles.folderPath, 'settings'),'settings');
         guidata(hObject, handles);
         uiresume(handles.figure1);
         delete(handles.figure1);
     elseif isequal(handles.saveExistAndReturn, 1)
-        save([handles.folderPath, '\settings'],'settings');
+        save(fullfile(handles.folderPath, 'settings'),'settings');
         guidata(hObject, handles);
         if isequal(get(handles.figure1, 'waitstatus'),'waiting')
             uiresume(handles.figure1);
@@ -677,7 +677,7 @@ try
         end
     end
 catch MException
-    save([handles.folderPath, '\settings'], 'settings');
+    save(fullfile(handles.folderPath, 'settings'), 'settings');
 end
 
 

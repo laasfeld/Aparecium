@@ -10,11 +10,11 @@ classdef FileChooser < handle
     methods
         function this = FileChooser()
             if isdeployed
-                loaded = load([pwd, '\', 'settings.mat']);
+                loaded = load(fullfile(pwd, 'settings.mat'));
             else
                 loaded = load('settings.mat');
             end
-            this.settingsPath = regexprep(mfilename('fullpath'), 'FileChooser', '');
+            this.settingsPath = fileparts(mfilename('fullpath'));
             this.settings = loaded.settings;
         end
         
@@ -28,7 +28,7 @@ classdef FileChooser < handle
             end
             
             [fileName, filePath] = uigetfile({'*.dat'},'Select PHERAStar ASCII file', startingPath);% opens dialog to select a .dat file, {'*.dat';'*.17_BV'}
-            fullFilePath = [filePath, fileName];% merges filePath and fileName to single variable
+            fullFilePath = fullfile(filePath, fileName);% merges filePath and fileName to single variable
 
             if isequal(fullFilePath(1,1),0)%checks if something was selected, if user pressed cancel, then filename(1,1) would be 0
                error('User selected Cancel')
@@ -42,9 +42,9 @@ classdef FileChooser < handle
                    this.settings.PHERAStarASCII = path;
                    settings = this.settings; % ignore warning, it is used in the save
                    if isdeployed
-                        save([pwd, '\', 'settings.mat'], 'settings');
+                        save(fullfile(pwd, 'settings.mat'), 'settings');
                    else
-                        save([this.settingsPath, 'settings.mat'], 'settings');
+                        save(fullfile(this.settingsPath, 'settings.mat'), 'settings');
                    end
                end
            end
@@ -60,7 +60,7 @@ classdef FileChooser < handle
             end
 
             [fileName, filePath] = uigetfile('*.txt','Select Neo ASCII file',startingPath);
-            fullFilePath = [filePath, fileName];
+            fullFilePath = fullfile(filePath, fileName);
             if isequal(fullFilePath(1,1),0)%checks if something was selected, if user pressed cancel, then filename(1,1) would be 0
                error('User selected Cancel')
             end
@@ -73,9 +73,9 @@ classdef FileChooser < handle
                    this.settings.NeoASCII = path;
                    settings = this.settings; % ignore warning, it is used in the save
                    if isdeployed
-                        save([pwd, '\', 'settings.mat'], 'settings');
+                        save(fullfile(pwd, 'settings.mat'), 'settings');
                    else
-                        save([this.settingsPath, 'settings.mat'], 'settings');
+                        save(fullfile(this.settingsPath, 'settings.mat'), 'settings');
                    end
                end
            end
@@ -92,7 +92,7 @@ classdef FileChooser < handle
 
             [fileName, filePath] = uigetfile('*.xls','Select PerkinElmer platereader excel file', startingPath);
 
-            fullFilePath = [filePath, fileName];
+            fullFilePath = fullfile(filePath, fileName);
             if isequal(fullFilePath(1,1),0)%checks if something was selected, if user pressed cancel, then filename(1,1) would be 0
                error('User selected Cancel')
             end
@@ -105,9 +105,9 @@ classdef FileChooser < handle
                    this.settings.perkinElmerPath = path;
                    settings = this.settings; % ignore warning, it is used in the save
                    if isdeployed
-                        save([pwd, '\', 'settings.mat'], 'settings');
+                        save(fullfile(pwd, 'settings.mat'), 'settings');
                    else
-                        save([this.settingsPath, 'settings.mat'], 'settings');
+                        save(fullfile(this.settingsPath, 'settings.mat'), 'settings');
                    end
                end
            end
@@ -123,7 +123,7 @@ classdef FileChooser < handle
             end
 
             [fileName, filePath] = uigetfile('*.dbf','Select database measure file', [startingPath, '\Measure.dbf']);% select the database main file
-            measureFilename = [filePath, fileName];% select the corresponding file for your experiment
+            measureFilename = fullfile(filePath, fileName);% select the corresponding file for your experiment
 
             try
                 load javapath
@@ -235,9 +235,9 @@ classdef FileChooser < handle
                    this.settings.PHERAStarDatabase = path;
                    settings = this.settings; % ignore warning, it is used in the save
                    if isdeployed
-                        save([pwd, '\', 'settings.mat'], 'settings');
+                        save(fullfile(pwd, 'settings.mat'), 'settings');
                    else
-                        save([this.settingsPath, 'settings.mat'], 'settings');
+                        save(fullfile(this.settingsPath, 'settings.mat'), 'settings');
                    end
                end
            end
@@ -253,7 +253,7 @@ classdef FileChooser < handle
             end
 
             [fileName, filePath] = uigetfile({'*.csv;*.xls'},'Select MIDAS file', startingPath);
-            fullFilePath = [filePath, fileName];
+            fullFilePath = fullfile(filePath, fileName);
 
             if isequal(fullFilePath(1,1),0)
                error('User selected Cancel')
@@ -271,7 +271,7 @@ classdef FileChooser < handle
            [fileNameArray, filePath] = uigetfile({'*.csv;*.xls'},'Select MIDAS file', startingPath, 'MultiSelect', 'on');
            fullFilePathArray = cell(numel(fileNameArray), 1);
            for fileIndex = 1 : numel(fileNameArray)
-                fullFilePathArray{fileIndex} = [filePath, fileNameArray{fileIndex}];
+                fullFilePathArray{fileIndex} = fullfile(filePath, fileNameArray{fileIndex});
            end
 
            if isequal(fullFilePathArray(1,1),0)
@@ -295,9 +295,9 @@ classdef FileChooser < handle
                    this.settings.MIDAS = path;
                    settings = this.settings; % ignore warning, it is used in the save
                    if isdeployed
-                        save([pwd, '\', 'settings.mat'], 'settings');
+                        save(fullfile(pwd, 'settings.mat'), 'settings');
                    else
-                        save([this.settingsPath, 'settings.mat'], 'settings');
+                        save(fullfile(this.settingsPath, 'settings.mat'), 'settings');
                    end
                end
            end
@@ -312,7 +312,7 @@ classdef FileChooser < handle
             end
             
             [fileName, filePath] = uigetfile({'*.csv;*.xls;*.xlsx'},'Select template excel file', startingPath);
-            fullFilePath = [filePath, fileName];
+            fullFilePath = fullfile(filePath, fileName);
 
             if isequal(fullFilePath(1,1),0)
                error('User selected Cancel')
@@ -332,7 +332,7 @@ classdef FileChooser < handle
             end
             
             [fileName, filePath] = uigetfile('.mat','Select Configurations file', startingPath);
-            fullFilePath = [filePath, fileName];
+            fullFilePath = fullfile(filePath, fileName);
             
             if isequal(fullFilePath(1,1),0)
                error('User selected Cancel')
@@ -354,9 +354,9 @@ classdef FileChooser < handle
                    this.settings.Configurations = path;
                    settings = this.settings; % ignore warning, it is used in the save
                    if isdeployed
-                        save([pwd, '\', 'settings.mat'], 'settings');
+                        save(fullfile(pwd, 'settings.mat'), 'settings');
                    else
-                        save([this.settingsPath, 'settings.mat'], 'settings');
+                        save(fullfile(this.settingsPath, 'settings.mat'), 'settings');
                    end
                end
            end
@@ -371,7 +371,7 @@ classdef FileChooser < handle
                 startingPath = '';
             end
             [fileName, filePath] = uigetfile('*.mat', 'Choose grouping format file', startingPath);
-            fullFilePath = [filePath, fileName];
+            fullFilePath = fullfile(filePath, fileName);
 
             if isequal(fullFilePath(1,1),0)
                error('User selected Cancel')
@@ -393,9 +393,9 @@ classdef FileChooser < handle
                    this.settings.GCFPath = path;
                    settings = this.settings; % ignore warning, it is used in the save
                    if isdeployed
-                        save([pwd, '\', 'settings.mat'], 'settings');
+                        save(fullfile(pwd, 'settings.mat'), 'settings');
                    else
-                        save([this.settingsPath, 'settings.mat'], 'settings');
+                        save(fullfile(this.settingsPath, 'settings.mat'), 'settings');
                    end
                end
            end
@@ -410,7 +410,7 @@ classdef FileChooser < handle
             end
 
             [fileName, filePath] = uigetfile('*.mat', 'Choose formula file', startingPath);
-            fullFilePath = [filePath, fileName];
+            fullFilePath = fullfile(filePath, fileName);
 
             if isequal(fullFilePath(1,1),0)
                error('User selected Cancel')
@@ -432,9 +432,9 @@ classdef FileChooser < handle
                    this.settings.FCFPath = path;
                    settings = this.settings; % ignore warning, it is used in the save
                    if isdeployed
-                        save([pwd, '\', 'settings.mat'], 'settings');
+                        save(fullfile(pwd, 'settings.mat'), 'settings');
                    else
-                        save([this.settingsPath, 'settings.mat'], 'settings');
+                        save(fullfile(this.settingsPath, 'settings.mat'), 'settings');
                    end
                end
            end
@@ -451,7 +451,7 @@ classdef FileChooser < handle
 %             end
             
             [fileName, filePath] = uigetfile('*.mat', 'Choose formula file');
-            fullFilePath = [filePath, fileName];
+            fullFilePath = fullfile(filePath, fileName);
         end
         
         function registerProtocolFilePath(this, path)
@@ -474,9 +474,9 @@ classdef FileChooser < handle
                    this.settings.SBToolbox = path;
                    settings = this.settings; % ignore warning, it is used in the save
                    if isdeployed
-                        save([pwd, '\', 'settings.mat'], 'settings');
+                        save(fullfile(pwd, 'settings.mat'), 'settings');
                    else
-                        save([this.settingsPath, 'settings.mat'], 'settings');
+                        save(fullfile(this.settingsPath, 'settings.mat'), 'settings');
                    end
                end
            end
@@ -498,9 +498,9 @@ classdef FileChooser < handle
                    this.settings.Excel = path;
                    settings = this.settings; % ignore warning, it is used in the save
                    if isdeployed
-                        save([pwd, '\', 'settings.mat'], 'settings');
+                        save(fullfile(pwd, 'settings.mat'), 'settings');
                    else
-                        save([this.settingsPath, 'settings.mat'], 'settings');
+                        save(fullfile(this.settingsPath, 'settings.mat'), 'settings');
                    end
                end
            end
@@ -529,9 +529,9 @@ classdef FileChooser < handle
                    this.settings.MembraneToolsPath = path;
                    settings = this.settings; % ignore warning, it is used in the save
                    if isdeployed
-                        save([pwd, '\', 'settings.mat'], 'settings');
+                        save(fullfile(pwd, 'settings.mat'), 'settings');
                    else
-                        save([this.settingsPath, 'settings.mat'], 'settings');
+                        save(fullfile(this.settingsPath, 'settings.mat'), 'settings');
                    end
                end
            end
@@ -545,7 +545,7 @@ classdef FileChooser < handle
             end
             
             [fileName, filePath] = uigetfile('*.ilp', 'Choose Ilastik model', startingPath);
-            fullFilePath = [filePath, fileName];
+            fullFilePath = fullfile(filePath, fileName);
 
             if isequal(fullFilePath(1,1),0)
                error('User selected Cancel')
@@ -561,7 +561,7 @@ classdef FileChooser < handle
             end
             
             [fileName, filePath] = uigetfile('*.h5', 'Choose Keras model', startingPath);
-            fullFilePath = [filePath, fileName];
+            fullFilePath = fullfile(filePath, fileName);
 
             if isequal(fullFilePath(1,1),0)
                error('User selected Cancel')
@@ -575,9 +575,9 @@ classdef FileChooser < handle
                    this.settings.defaultIlastikModelPath = path;
                    settings = this.settings; % ignore warning, it is used in the save
                    if isdeployed
-                        save([pwd, '\', 'settings.mat'], 'settings');
+                        save(fullfile(pwd, 'settings.mat'), 'settings');
                    else
-                        save([this.settingsPath, 'settings.mat'], 'settings');
+                        save(fullfile(this.settingsPath, 'settings.mat'), 'settings');
                    end
                end
            end
@@ -589,9 +589,9 @@ classdef FileChooser < handle
                    this.settings.defaultKerasModelPath = path;
                    settings = this.settings; % ignore warning, it is used in the save
                    if isdeployed
-                        save([pwd, '\', 'settings.mat'], 'settings');
+                        save(fullfile(pwd, 'settings.mat'), 'settings');
                    else
-                        save([this.settingsPath, 'settings.mat'], 'settings');
+                        save(fullfile(this.settingsPath, 'settings.mat'), 'settings');
                    end
                end
            end
@@ -613,7 +613,7 @@ classdef FileChooser < handle
                            switch result
                                case 'Manually'
                                    [fileName, filePath] = uigetfile('*.exe', 'Select Ilastik executable', 'ilastik.exe');
-                                   path = [filePath, fileName];
+                                   path = fullfile(filePath, fileName);
                                case 'Cancel'
                                  path = '';
                            end
@@ -655,7 +655,7 @@ classdef FileChooser < handle
                error('User selected Cancel')
             end
                       
-            fullFilePath = [filePath, fileName];
+            fullFilePath = fullfile(filePath, fileName);
 
             if isequal(fullFilePath(1,1),0)
                error('User selected Cancel')
@@ -669,9 +669,9 @@ classdef FileChooser < handle
                    this.settings.stopwatchPath = path;
                    settings = this.settings; % ignore warning, it is used in the save
                    if isdeployed
-                        save([pwd, '\', 'settings.mat'], 'settings');
+                        save(fullfile(pwd, 'settings.mat'), 'settings');
                    else
-                        save([this.settingsPath, 'settings.mat'], 'settings');
+                        save(fullfile(this.settingsPath, 'settings.mat'), 'settings');
                    end
                end
            end

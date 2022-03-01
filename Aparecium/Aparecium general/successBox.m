@@ -5,7 +5,7 @@ toolboxLocation = fileparts(mfilename('fullpath'));
 filename = mfilename('fullpath');
 thisPath = fileparts(filename);
 
-myicon = imread([thisPath, '\..\\Icons\tick.png']);
+myicon= imread(fullfile(fileparts(fileparts(mfilename('fullpath'))),'Icons', 'tick.png'));
 h = msgbox(message, title, 'custom', myicon);
 
 end
