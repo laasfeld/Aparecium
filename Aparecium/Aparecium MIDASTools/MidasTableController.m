@@ -582,8 +582,7 @@ classdef MidasTableController < handle
         end
         
         function fileName = findFileName(this, fullFilePath)
-            startingIndexOfFileName = strfind(fullFilePath, '\');
-            fileName = fullFilePath(startingIndexOfFileName(end)+1 : end);
+            [~, fileName] = fileparts(fullFilePath);
         end
         
         function fileName = getFileName(this)

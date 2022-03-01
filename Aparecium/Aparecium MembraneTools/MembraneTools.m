@@ -71,7 +71,7 @@ function MembraneTools_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for MembraneTools
 addApareciumToPath();  % Add all required folders to the MATLAB path
-handles.imageImporter = ImageImporter(); % Create a new object that can import the images correctly
+handles.imageImporter = []; % Create a new object that can import the images correctly
 handles.imageProcessingParameters = ImageProcessingParameters(); % Create a new object that holds parameters of image analysis
 handles.imageProcessingParameters.membraneToolsBackgroundCorrection = MembraneToolsBackgroundCorrection();
 handles.imageProcessingParameters.imageSegmentationMode = handles.imageProcessingParameters.Slopes;
@@ -141,7 +141,17 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.imageImporter = ImageImporter(); % Create a new object that can import the images correctly
+if isempty(handles.imageImporter)
+    handles.imageImporter = ImageImporter(); % Create a new object that can import the images correctly
+    answer = 'Load new';
+else
+    answer = questdlg('Images already loaded. Would you like to edit data loading or load new data?', 'question', 'Edit', 'Load new', 'Edit');
+    if strcmp(answer, 'Load new')
+        handles.imageImporter = ImageImporter();    
+    elseif strcmp(answer, 'Edit')
+        % pass
+    end
+end
 
 % set the image name filter options
 regexString = get(handles.quantificationChannelRegex,'String');
@@ -157,8 +167,12 @@ handles.imageImporter.setHigherBound(higherStackBound);
 
 handles.imageImporter.analyzeQuality = 1;
 fileChooser = FileChooser();
-startingPath = fileChooser.chooseMembraneToolsFolder(); % get the preferred starting folder
-handles.imageImporter.userChooseImageFolders(startingPath); % Ask the user to choose the folder where the folders are that contain images
+if strcmp(answer, 'Load new')
+    startingPath = fileChooser.chooseMembraneToolsFolder(); % get the preferred starting folder
+    handles.imageImporter.userChooseImageFolders(startingPath); % Ask the user to choose the folder where the folders are that contain images
+elseif strcmp(answer, 'Edit')
+    handles.imageImporter.editImport();
+end
 handles.experimentDataStructure = handles.imageImporter.experimentDataStructure; % Get information about which wells were used
 handles = generateApareciumExperimentInput(handles, handles.experimentDataStructure); % Generate the ApareciumExperimentInput object based the information from images 
 handles.imageProcessingParameters.setFullImageMode();

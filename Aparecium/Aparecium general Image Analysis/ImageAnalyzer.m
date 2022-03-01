@@ -624,9 +624,13 @@ classdef ImageAnalyzer < handle
                         if(exist('matlabpool'))
                             this.imagesLeftToAnalyse = this.imagesLeftToAnalyse*matlabpool('size') - numel(wellID)*4;
                         else
-                            poolObject = gcp('nocreate');
-                            poolSize = poolObject.NumWorkers;
-                            this.imagesLeftToAnalyse = this.imagesLeftToAnalyse*poolSize - numel(wellID)*4;
+                            try % consider removing calculating this parameter as it is not used.
+                                poolObject = gcp('nocreate');
+                                poolSize = poolObject.NumWorkers;
+                                this.imagesLeftToAnalyse = this.imagesLeftToAnalyse*poolSize - numel(wellID)*4;
+                            catch
+                                
+                            end
                         end
                     catch
 

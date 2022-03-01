@@ -14,7 +14,7 @@ classdef doneHandler < handle
             this.button = handle(button, 'CallbackProperties');
             %'functionHandle([], [], this.handles)'
             this.functionHandle = functionHandle;
-            set(this.button, 'MouseClickedCallback', @this.callback);
+            set(this.button, 'ActionPerformedCallback', @this.callback);
         end
         
         function callback(this, a, b)

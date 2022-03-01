@@ -10,6 +10,9 @@ classdef ImageImporter < handle
         usedDirectories 
         mainDirectory
         experimentDataStructure
+        primaryFocusAndQualityAnalyzerHandleArray = [];
+        secondaryFocusAndQualityAnalyzerHandleArray = [];
+        firstLaunch = true;
         analyzedImages = {''};
         analyzeQuality = 0;
         nameArray = [];
@@ -162,7 +165,7 @@ classdef ImageImporter < handle
                 end
             end
             if isempty(listString) % no subfolders
-                answer = questdlg('This folder contains no subfolders, did you mean to analyze the selected folder?', 'question', 'Yes', 'No', 'Yes')
+                answer = questdlg('This folder contains no subfolders, did you mean to analyze the selected folder?', 'question', 'Yes', 'No', 'Yes');
                 switch(answer)
                     case 'Yes'
                         [mainDir, finalDir, unneeded] = fileparts(mainDir);
@@ -189,6 +192,8 @@ classdef ImageImporter < handle
             this.nameArray = cell(length(chosenDirectories), 1);
             this.experimentDataStructure = cell(length(chosenDirectories), 1);
             this.masks = cell(length(chosenDirectories), 1);
+            this.primaryFocusAndQualityAnalyzerHandleArray = cell(length(chosenDirectories), 1);
+            this.secondaryFocusAndQualityAnalyzerHandleArray = cell(length(chosenDirectories), 1);
             for folder = 1 : length(chosenDirectories)
                 
                 if this.analyzeQuality
@@ -203,8 +208,12 @@ classdef ImageImporter < handle
                             end
                         end
                     end
-
-                    [BFnameArray, standardFocus, this.masks{folder}] = focusAndQualityAnalyzer([mainDir,'\',chosenDirectories{folder}], this.detectionChannelRegex, [this.lowerBound this.higherBound]);
+                    %if ~isempty(primaryFocusAndQualityAnalyzerHandle.handle)
+                    %    answer = questdlg('This folder contains no subfolders, did you mean to analyze the selected folder?', 'question', 'Yes', 'No', 'Yes')
+                    %end
+                    this.primaryFocusAndQualityAnalyzerHandleArray{folder} = FocusAndQualityAnalyzerHandle();
+                    [BFnameArray, standardFocus, this.masks{folder}] = focusAndQualityAnalyzer(fullfile(mainDir,chosenDirectories{folder}), this.detectionChannelRegex, [this.lowerBound this.higherBound], [], this.primaryFocusAndQualityAnalyzerHandleArray(folder));
+                    this.primaryFocusAndQualityAnalyzerHandleArray{folder} = FolderFocusAndQualityAnalyzerHandle;
                     this.maskNameArray{folder} = BFnameArray;
                     %create a more sophisticated pattern
                     pat = '^(';             
@@ -227,11 +236,14 @@ classdef ImageImporter < handle
                     pat = [pat,')(\w*)', this.quantificationChannelRegex];
                     
                     %try
-                        secondaryNameArray = focusAndQualityAnalyzer([mainDir,'\',chosenDirectories{folder}], patMatrix, [0 0], standardFocus);
-                    %catch MException
+                    this.secondaryFocusAndQualityAnalyzerHandleArray{folder} = FocusAndQualityAnalyzerHandle();
+                    [secondaryNameArray, ~, secondaryMasks] = focusAndQualityAnalyzer(fullfile(mainDir, chosenDirectories{folder}), patMatrix, [0 0], standardFocus, this.secondaryFocusAndQualityAnalyzerHandleArray(folder));
+                    
+                        %catch MException
 %                        save('imageImporterMaskAutosave.mat', 'this', 'BFnameArray', 'standardFocus', 'pat')
                     %end
                     nameArray = this.removeIncompatibleImages(BFnameArray, secondaryNameArray, folder);
+                    this.mergeMasks(BFnameArray, secondaryNameArray, folder, secondaryMasks);
                 else
                     fileListArray = dir([mainDir,'\',chosenDirectories{folder},'\*.tif']);
                     nameArray = cell(length(fileListArray),1);
@@ -248,6 +260,59 @@ classdef ImageImporter < handle
                 this.numberOfChannels{folder} = 6;%% a standard parameter for now
                 this.generateExperimentDataStructure(folder);
                 
+            end
+        end
+        
+        function editImport(this)
+            
+            for folder = 1 : length(this.usedDirectories)                
+                if this.analyzeQuality
+
+                    [BFnameArray, standardFocus, this.masks{folder}] = focusAndQualityAnalyzer(this.primaryFocusAndQualityAnalyzerHandleArray{folder});
+                    this.maskNameArray{folder} = BFnameArray;
+                    %create a more sophisticated pattern
+                    pat = '^(';             
+                    patMatrix = cell(0, 3);
+                    for nameIndex = 1 : numel(BFnameArray)
+                        for imageInWellIndes = 1 : numel(BFnameArray{nameIndex})
+                            if ~isempty(BFnameArray{nameIndex}{imageInWellIndes})
+                                wellID = ImageImporter.findWellIDOfString(BFnameArray{nameIndex}{imageInWellIndes});
+                                imageInWellIndex = num2str(ImageImporter.getImageInWellIndexOfString(BFnameArray{nameIndex}{imageInWellIndes}));
+                                %pat = [pat, wellID, '_\d{1,2}_\d{1}_', imageInWellIndex, '(Z|_)|'];
+                                pat = [pat, wellID, '_\d{1,2}_\d{1}_', imageInWellIndex, '|'];
+                                patMatrix{end+1, 1} = wellID;
+                                patMatrix{end, 2} = imageInWellIndex;
+                                patMatrix{end, 3} = this.quantificationChannelRegex;
+                            end                           
+                        end
+                    end                
+                    % remove last | character to correct the pattern
+                    pat(end) = [];
+                    pat = [pat,')(\w*)', this.quantificationChannelRegex];
+                    
+                    %try
+                    secondaryFocusAndQualityAnalyzerHandleArray{folder}.setNewPattern(pat);
+                        [secondaryNameArray, ~, secondaryMasks] = focusAndQualityAnalyzer(secondaryFocusAndQualityAnalyzerHandleArray{folder});
+                    %catch MException
+%                        save('imageImporterMaskAutosave.mat', 'this', 'BFnameArray', 'standardFocus', 'pat')
+                    %end
+                    nameArray = this.removeIncompatibleImages(BFnameArray, secondaryNameArray, folder);
+                    this.mergeMasks(BFnameArray, secondaryNameArray, folder, secondaryMasks);
+                else
+                    fileListArray = dir(fullfile(mainDir, this.usedDirectories{folder}, '*.tif'));
+                    nameArray = cell(length(fileListArray),1);
+                    for i = 1 : length(fileListArray)
+                        nameArray{i} = fileListArray(i).name;
+                    end
+                end
+                
+                %% reorganize the fileListArray to get all the file names
+
+                this.wellID{folder} = cell(0,0);
+                this.wellID{folder} = ImageImporter.getWellIDOfStringArray(nameArray, '.tif');
+                this.time{folder, 1} = 0;
+                this.numberOfChannels{folder} = 6;%% a standard parameter for now
+                this.generateExperimentDataStructure(folder);
             end
         end
         
@@ -282,10 +347,19 @@ classdef ImageImporter < handle
         function setHigherBound(this, higherBound)
             this.higherBound = higherBound;
         end
-                
+        
+        function mergeMasks(this, BFnameArray, secondaryNameArray, folder, secondaryMasks)
+            for wellIndex = 1 : numel(BFnameArray)
+                for imageInWellIndex = 1 : numel(BFnameArray{wellIndex})
+                    for secondaryChannelNameIndex = 1 : numel(secondaryNameArray{wellIndex})
+                        
+                    end
+                end
+            end
+        end
+        
         function nameArray = removeIncompatibleImages(this, nameArray, secondaryNameArray, folder)
 
-            %unwrappedNameArray = vertcat(nameArray{:});
             unwrappedNameArray = vertcat(nameArray{:});
             try
                 unwrappedSecondaryNameArray = vertcat(secondaryNameArray{:});
@@ -313,9 +387,13 @@ classdef ImageImporter < handle
 %                    end
 %                end
 %             end
-            this.nameArray{folder} = unwrappedNameArray(nameArrayIndices);
-            this.secondaryNameArray{folder} = unwrappedSecondaryNameArray(secondaryNameArrayIndices);
-            nameArray = unwrappedNameArray(sort(nameArrayIndices));
+            nameArray = unwrappedNameArray(nameArrayIndices);
+            secondaryNameArray = unwrappedSecondaryNameArray(secondaryNameArrayIndices);
+            % sort according to names
+            
+            this.nameArray{folder} = this.sortImageNames(unwrappedNameArray(nameArrayIndices));
+            this.secondaryNameArray{folder} = this.sortImageNames(unwrappedSecondaryNameArray(secondaryNameArrayIndices));
+            nameArray = this.sortImageNames(unwrappedNameArray(nameArrayIndices));
         end
         
         function nameArray = getNameArrayOfFolder(this, folder)
@@ -508,15 +586,15 @@ classdef ImageImporter < handle
             swapBackWells = cell(0,0);
             swapBackOriginals = cell(0,0);
             for i = 1 : numel(wellID)
-                if isequal(numel(regexp(wellID{i},'([A-Z]{1,2})', 'match', 'once')), 1) && isequal(numel(regexp(wellID{i},'([0-9]{1,2})', 'match', 'once')), 2);
+                if isequal(numel(regexp(wellID{i},'([A-Z]{1,2})', 'match', 'once')), 1) && isequal(numel(regexp(wellID{i},'([0-9]{1,2})', 'match', 'once')), 2)
                     oneLetterArray{end + 1} = wellID{i};
-                elseif isequal(numel(regexp(wellID{i},'([A-Z]{1,2})', 'match', 'once')), 2) && isequal(numel(regexp(wellID{i},'([0-9]{1,2})', 'match', 'once')), 2);
+                elseif isequal(numel(regexp(wellID{i},'([A-Z]{1,2})', 'match', 'once')), 2) && isequal(numel(regexp(wellID{i},'([0-9]{1,2})', 'match', 'once')), 2)
                     twoLetterArray{end + 1} = wellID{i};
-                elseif isequal(numel(regexp(wellID{i},'([A-Z]{1,2})', 'match', 'once')), 1) && isequal(numel(regexp(wellID{i},'([0-9]{1,2})', 'match', 'once')), 1);
+                elseif isequal(numel(regexp(wellID{i},'([A-Z]{1,2})', 'match', 'once')), 1) && isequal(numel(regexp(wellID{i},'([0-9]{1,2})', 'match', 'once')), 1)
                     oneLetterArray{end + 1} = [wellID{i}(1), '0',wellID{i}(2)];
                     swapBackWells{end + 1} = [wellID{i}(1), '0',wellID{i}(2)];
                     swapBackOriginals{end + 1} = wellID{i}; 
-                elseif isequal(numel(regexp(wellID{i},'([A-Z]{1,2})', 'match', 'once')), 2) && isequal(numel(regexp(wellID{i},'([0-9]{1,2})', 'match', 'once')), 1);
+                elseif isequal(numel(regexp(wellID{i},'([A-Z]{1,2})', 'match', 'once')), 2) && isequal(numel(regexp(wellID{i},'([0-9]{1,2})', 'match', 'once')), 1)
                     twoLetterArray{end + 1} = [wellID{i}(1:2), '0',wellID{i}(3)];
                     swapBackWells{end + 1} = [wellID{i}(1:2), '0',wellID{i}(3)];
                     swapBackOriginals{end + 1} = wellID{i}; 
@@ -536,6 +614,38 @@ classdef ImageImporter < handle
             end
         end
 
+        function imageNames = sortImageNames(imageNames)% sorts the cell array according to cell naming logic instead of standard string and number logic. 
+            oneLetterArray = cell(0,0);
+            twoLetterArray = cell(0,0);
+            swapBackWells = cell(0,0);
+            swapBackOriginals = cell(0,0);
+            for i = 1 : numel(imageNames)
+                if isequal(numel(regexp(imageNames{i},'([A-Z]{1,2})', 'match', 'once')), 1) && isequal(numel(regexp(imageNames{i},'([0-9]{1,2})', 'match', 'once')), 2)
+                    oneLetterArray{end + 1} = imageNames{i};
+                elseif isequal(numel(regexp(imageNames{i},'([A-Z]{1,2})', 'match', 'once')), 2) && isequal(numel(regexp(imageNames{i},'([0-9]{1,2})', 'match', 'once')), 2)
+                    twoLetterArray{end + 1} = imageNames{i};
+                elseif isequal(numel(regexp(imageNames{i},'([A-Z]{1,2})', 'match', 'once')), 1) && isequal(numel(regexp(imageNames{i},'([0-9]{1,2})', 'match', 'once')), 1)
+                    oneLetterArray{end + 1} = [imageNames{i}(1), '0',imageNames{i}(2:end)];
+                    swapBackWells{end + 1} = [imageNames{i}(1), '0',imageNames{i}(2:end)];
+                    swapBackOriginals{end + 1} = imageNames{i}; 
+                elseif isequal(numel(regexp(imageNames{i},'([A-Z]{1,2})', 'match', 'once')), 2) && isequal(numel(regexp(imageNames{i},'([0-9]{1,2})', 'match', 'once')), 1)
+                    twoLetterArray{end + 1} = [imageNames{i}(1:2), '0',imageNames{i}(3:end)];
+                    swapBackWells{end + 1} = [imageNames{i}(1:2), '0',imageNames{i}(3:end)];
+                    swapBackOriginals{end + 1} = imageNames{i}; 
+                end
+            end
+            oneLetterArray = natsort(oneLetterArray);
+            twoLetterArray = natsort(twoLetterArray);
+            
+            %oneLetterArray = unique(oneLetterArray);
+            %twoLetterArray = unique(twoLetterArray);
+            imageNames = [oneLetterArray, twoLetterArray];
+            for index = 1 : numel(swapBackWells)
+                swapIndex = strcmp(imageNames, swapBackWells(index));
+                imageNames{swapIndex} = swapBackOriginals{index};
+            end
+        end
+        
         function wellID = sortWellNumbers(wellID) % this function will not sort the wellID-s by name, use sortWellID for sorting both ways
             wellIndices = zeros(numel(wellID), 1);
             for i = 1 : numel(wellID)

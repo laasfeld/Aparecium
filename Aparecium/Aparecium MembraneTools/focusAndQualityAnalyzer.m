@@ -63,7 +63,13 @@ handles.wellIndex = 1;
 handles.imageInWellIndex = 1;
 handles.selectingBadAreas = 0;
 
-if numel(varargin) > 3
+if numel(varargin) > 4 
+    handles.focusAndQualityAnalyzerHandle = varargin{5}{1};
+else
+    handles.focusAndQualityAnalyzerHandle = FocusAndQualityAnalyzerHandle();
+end
+
+if numel(varargin) > 3 && ~isempty(varargin{4})
     handles.imageIndex = varargin{4};
     handles.standardIndex = varargin{4};
     set(handles.undefinedFocus, 'enable', 'on');
@@ -94,7 +100,9 @@ handles = displayImages(handles);
 handles.output = hObject;
 
 % Update handles structure
+handles.focusAndQualityAnalyzerHandle.updateHandles(handles);
 guidata(hObject, handles);
+
 uiwait(handles.figure1);
 % UIWAIT makes focusAndQualityAnalyzer wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
@@ -214,6 +222,7 @@ set(handles.focusDown, 'Enable', 'on');
 if handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) >= numel(handles.imagesOfWell{handles.wellIndex}{handles.imageInWellIndex}) - handles.upperBound
     set(hObject, 'Enable', 'off'); 
 end
+handles.focusAndQualityAnalyzerHandle.updateHandles(handles);
 guidata(hObject, handles);
 
 % --- Executes on button press in focusDown.
@@ -227,6 +236,7 @@ set(handles.focusUp, 'Enable', 'on');
 if handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) <= handles.lowerBound + 1
     set(hObject, 'Enable', 'off');  
 end
+handles.focusAndQualityAnalyzerHandle.updateHandles(handles);
 guidata(hObject, handles);
 
 function handles = nextImageSelection(handles, varargin)
@@ -309,6 +319,7 @@ function declineImage_Callback(hObject, eventdata, handles)
 
 handles.focusImageNames{handles.wellIndex}{handles.imageInWellIndex} = [];
 handles = nextImageSelection(handles);
+handles.focusAndQualityAnalyzerHandle.updateHandles(handles);
 guidata(hObject, handles);
 
 % --- Executes on button press in acceptImage.
@@ -319,6 +330,7 @@ function acceptImage_Callback(hObject, eventdata, handles)
 
 handles.focusImageNames{handles.wellIndex}{handles.imageInWellIndex} = handles.nameArray{handles.imagesOfWell{handles.wellIndex}{handles.imageInWellIndex}(handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex))};
 handles = nextImageSelection(handles);
+handles.focusAndQualityAnalyzerHandle.updateHandles(handles);
 guidata(hObject, handles);
 
 % --- Executes on button press in previousImage.
@@ -329,6 +341,7 @@ function previousImage_Callback(hObject, eventdata, handles)
 
 set(handles.done, 'Enable', 'off');  
 handles = previousImageSelection(handles);
+handles.focusAndQualityAnalyzerHandle.updateHandles(handles);
 guidata(hObject, handles);
 
 % --- Executes on button press in undefinedFocus.
@@ -338,6 +351,7 @@ function undefinedFocus_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles.focusImageNames{handles.wellIndex}{handles.imageInWellIndex} = handles.nameArray{handles.imagesOfWell{handles.wellIndex}{handles.imageInWellIndex}(handles.standardIndex{handles.wellIndex}(handles.imageInWellIndex))};
 handles = nextImageSelection(handles);
+handles.focusAndQualityAnalyzerHandle.updateHandles(handles);
 guidata(hObject, handles);
 
 
@@ -435,6 +449,7 @@ set(handles.badQualitySelection, 'enable', 'on');
 set(handles.pushbutton17, 'enable', 'on');
 handles.spaceAllowed = 1;
 set(handles.resumeToNormal, 'enable', 'on');
+handles.focusAndQualityAnalyzerHandle.updateHandles(handles);
 guidata(hObject, handles);
 
 
@@ -464,6 +479,7 @@ function normalize_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of normalize
 handles = displayImages(handles);
+handles.focusAndQualityAnalyzerHandle.updateHandles(handles);
 guidata(hObject, handles);
 
 
@@ -487,6 +503,7 @@ for index = 1 : numel(handles.wellID)
     end
 end
 nextImageSelection(handles);
+handles.focusAndQualityAnalyzerHandle.updateHandles(handles);
 guidata(hObject, handles)
 
 
@@ -525,6 +542,7 @@ masks = cell(numel(nameArray), 1);
 for index = 1 : numel(nameArray)
     masks{index} = imread([imageDir, '\', nameArray{index}]);
 end
+handles.focusAndQualityAnalyzerHandle.updateHandles(handles);
 guidata(hObject, handles);
 
 %answer = questdlg('Do you want to remove images, that do not have a mask?');
@@ -570,6 +588,7 @@ end
 %end
 guidata(hObject, handles);
 displayImages(handles);
+handles.focusAndQualityAnalyzerHandle.updateHandles(handles);
 guidata(hObject, handles);
 
 
@@ -614,6 +633,7 @@ try
 catch
     'stop'
 end
+handles.focusAndQualityAnalyzerHandle.updateHandles(handles);
 guidata(hObject, handles);
 
 
@@ -692,6 +712,7 @@ set(handles.badQualitySelection, 'enable', 'on');
 set(handles.pushbutton17, 'enable', 'on');
 handles.spaceAllowed = 1;
 set(handles.resumeToNormal, 'enable', 'on');
+handles.focusAndQualityAnalyzerHandle.updateHandles(handles);
 guidata(hObject, handles);
 
 
