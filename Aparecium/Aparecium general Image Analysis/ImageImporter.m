@@ -213,7 +213,7 @@ classdef ImageImporter < handle
                     %end
                     this.primaryFocusAndQualityAnalyzerHandleArray{folder} = FocusAndQualityAnalyzerHandle();
                     [BFnameArray, standardFocus, this.masks{folder}] = focusAndQualityAnalyzer(fullfile(mainDir,chosenDirectories{folder}), this.detectionChannelRegex, [this.lowerBound this.higherBound], [], this.primaryFocusAndQualityAnalyzerHandleArray(folder));
-                    this.primaryFocusAndQualityAnalyzerHandleArray{folder} = FolderFocusAndQualityAnalyzerHandle;
+
                     this.maskNameArray{folder} = BFnameArray;
                     %create a more sophisticated pattern
                     pat = '^(';             
