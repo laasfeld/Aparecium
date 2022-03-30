@@ -42,7 +42,7 @@ classdef NeoASCIIReader < handle
             this.mapBytesToLines();
             this.initializeFileHandle();
             this.readVersion();
-            if(this.checkIfHeaderIsPresent());
+            if(this.checkIfHeaderIsPresent())
                 if this.checkIfOnlyOnePlateIsInFile()
                    errordlg('More than one plate found in the input file. Only a single plate is allowed in the input');
                    error('More than one plate found in the input file. Only a single plate is allowed in the input');
@@ -206,6 +206,12 @@ classdef NeoASCIIReader < handle
                 elseif expectingReadType 
                     currentRead.setReadType(line);
                     expectingReadType = 0;
+                elseif contains(line, 'Wavelengths') && strcmp(currentRead.readType, 'Absorbance Endpoint')
+                    splitLine = strsplit(line, ':');
+                    wavelengths = strsplit(splitLine{2}, ',');
+                    for wavelengthIndex = 1 : numel(wavelengths)
+                        currentRead.setChannel(wavelengths{wavelengthIndex}, wavelengthIndex)
+                    end                    
                 end
             end
             this.totalNumberOfReads = readIndex;

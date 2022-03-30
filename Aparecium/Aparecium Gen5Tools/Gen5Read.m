@@ -30,6 +30,14 @@ classdef Gen5Read < handle
             
         end
         
+        function readCopy = getCopy(this)
+            readCopy = Gen5Read();
+            props = properties(this);
+            for propIndex = 1 : numel(props)
+                readCopy.(props{propIndex}) = this.(props{propIndex});
+            end
+        end
+        
         function setNumberOfCycles(this, cycles)
             this.numberOfCycles = cycles;
         end
@@ -164,6 +172,9 @@ classdef Gen5Read < handle
             % this check
             if(this.isKineticRead())
                 this.cyclesByLineCount = ((this.lastLineOfMeasurements - this.firstLineOfMeasurements)-numel(this.channels)*3)/numel(this.channels);
+                if isequal(numel(this.channels), 1)
+                    this.cyclesByLineCount = this.cyclesByLineCount + 1;
+                end
             else
                 this.cyclesByLineCount = 1; 
             end
