@@ -39,7 +39,7 @@ function varargout = MembraneTools(varargin)
 
 % Edit the above text to modify the response to help MembraneTools
 
-% Last Modified by GUIDE v2.5 12-Sep-2021 22:40:16
+% Last Modified by GUIDE v2.5 14-Apr-2022 15:28:53
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -143,11 +143,13 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 if isempty(handles.imageImporter)
     handles.imageImporter = ImageImporter(); % Create a new object that can import the images correctly
+    guidata(hObject, handles);
     answer = 'Load new';
 else
     answer = questdlg('Images already loaded. Would you like to edit data loading or load new data?', 'question', 'Edit', 'Load new', 'Edit');
     if strcmp(answer, 'Load new')
-        handles.imageImporter = ImageImporter();    
+        handles.imageImporter = ImageImporter();
+        guidata(hObject, handles);
     elseif strcmp(answer, 'Edit')
         % pass
     end
@@ -1746,3 +1748,33 @@ end
 
 eventData.twice = 1;
 guidata(hObject, handles);
+
+
+% --- Executes when selected object is changed in uibuttongroup5.
+function uibuttongroup5_SelectionChangedFcn(hObject, eventdata, handles)
+% hObject    handle to the selected object in uibuttongroup5 
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+
+% --- Executes when selected object is changed in uibuttongroup2.
+function uibuttongroup2_SelectionChangedFcn(hObject, eventdata, handles)
+% hObject    handle to the selected object in uibuttongroup2 
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in SubtractQuantificationChannelBackround.
+function SubtractQuantificationChannelBackround_Callback(hObject, eventdata, handles)
+% hObject    handle to SubtractQuantificationChannelBackround (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of SubtractQuantificationChannelBackround
+switch get(hObject,'Value')
+    case 1
+        handles.imageProcessingParameters.setSubtractBackground(true); % Subtract quantification channel background
+    case 0
+        handles.imageProcessingParameters.setAutoSaveMidas(false); % Do not subtract quantification channel background
+end

@@ -29,6 +29,7 @@ classdef ImageImporter < handle
         function this = ImageImporter()
             
         end
+       
         
         function initializeImageImporter(this, mainFolder, masksPath, detectionFocalMatFile, quantificationFocalMatFile)
             
@@ -268,7 +269,7 @@ classdef ImageImporter < handle
             for folder = 1 : length(this.usedDirectories)                
                 if this.analyzeQuality
 
-                    [BFnameArray, standardFocus, this.masks{folder}] = focusAndQualityAnalyzer(this.primaryFocusAndQualityAnalyzerHandleArray{folder});
+                    [BFnameArray, standardFocus, this.masks{folder}] = focusAndQualityAnalyzer(this.primaryFocusAndQualityAnalyzerHandleArray(folder));
                     this.maskNameArray{folder} = BFnameArray;
                     %create a more sophisticated pattern
                     pat = '^(';             
@@ -291,8 +292,13 @@ classdef ImageImporter < handle
                     pat = [pat,')(\w*)', this.quantificationChannelRegex];
                     
                     %try
-                    secondaryFocusAndQualityAnalyzerHandleArray{folder}.setNewPattern(pat);
-                        [secondaryNameArray, ~, secondaryMasks] = focusAndQualityAnalyzer(secondaryFocusAndQualityAnalyzerHandleArray{folder});
+                    if isempty(this.secondaryFocusAndQualityAnalyzerHandleArray{folder}.handle)
+                        this.secondaryFocusAndQualityAnalyzerHandleArray{folder} = FocusAndQualityAnalyzerHandle();
+                        [secondaryNameArray, ~, secondaryMasks] = focusAndQualityAnalyzer(fullfile(this.mainDirectory, this.usedDirectories{folder}), patMatrix, [0 0], standardFocus, this.secondaryFocusAndQualityAnalyzerHandleArray(folder));
+                    else
+                        this.secondaryFocusAndQualityAnalyzerHandleArray{folder}.setNewPattern(pat)
+                        [secondaryNameArray, ~, secondaryMasks] = focusAndQualityAnalyzer(secondaryFocusAndQualityAnalyzerHandleArray(folder));
+                    end
                     %catch MException
 %                        save('imageImporterMaskAutosave.mat', 'this', 'BFnameArray', 'standardFocus', 'pat')
                     %end

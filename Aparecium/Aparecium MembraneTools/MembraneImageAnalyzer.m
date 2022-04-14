@@ -295,16 +295,10 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                         pause(5)
                         system(IlastikCallStringArray{ilastikCall});
                         tic
-                        'no change'
                     elseif ~isequal(dirPrevious, dirAfter) || isequal(numel(dirAfter) - numel(dirBefore), IlastikExpectedFileCount(ilastikCall))
-                        'has changed'
-                        numel(dirAfter) - numel(dirBefore)
-                        IlastikExpectedFileCount(ilastikCall)
-                        if (numel(dirAfter) - numel(dirBefore) == 48)
-                           '' 
-                        end
-                        if isequal(numel(dirAfter) - numel(dirBefore), IlastikExpectedFileCount(ilastikCall))
-                            'finished'
+                        numel(dirAfter) - numel(dirBefore);
+                        IlastikExpectedFileCount(ilastikCall);
+                        if isequal(numel(dirAfter) - numel(dirBefore), IlastikExpectedFileCount(ilastikCall))                            
                             pause(15) % give some time to finish writing the file
                             break; 
                         end
@@ -412,6 +406,7 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
         
         function resultStructure = analyzeMembranesStatic(picName, secondaryPicName, filePath, secondaryFilePath, imageProcessingParameters, timeParameters, functionHandle, calculationMethod, qualityMask, parametersToCalculate, providedBinary, mainDir, usedDir)
             disp('MembraneImageAnalyzer');
+            subtractBackground = imageProcessingParameters.getSubtractBackground();
             resultStructure = MembraneImageAnalyzer.analyseOneImageStatic(picName, filePath, imageProcessingParameters, timeParameters, functionHandle, parametersToCalculate, providedBinary);
 
             pixelShiftVertical = imageProcessingParameters.getPixelShiftVertical();
@@ -449,7 +444,11 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                 focusedImage = double(focusFromZstack({fullfile(secondaryFilePath, secondaryPicName)}));
                 if strcmp(imageProcessingParameters.membraneToolsBackgroundCorrection.quantificationChannelBackgroundCorrectionFunctionName, 'polyfit')            
                     imageBackground = polybg(focusedImage);
-                    focusedImage = (focusedImage./imageBackground)*mean(mean(imageBackground))-mean(mean(imageBackground));
+                    if subtractBackground
+                        focusedImage = (focusedImage./imageBackground)*mean(mean(imageBackground))-mean(mean(imageBackground));
+                    else
+                        focusedImage = (focusedImage./imageBackground)*mean(mean(imageBackground));
+                    end
                 end                
                 focusedImage = focusedImage(1 : end - pixelShiftVertical, 1 : end - pixelShiftHorizontal);
                 secondaryPicName
@@ -595,4 +594,3 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
     end
     
 end
-

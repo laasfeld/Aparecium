@@ -69,6 +69,8 @@ classdef ImageProcessingParameters < handle
         detectionFocusOrSlopes = 'Slopes';
         
         membraneToolsBackgroundCorrection = [];
+        
+        subtractBackground = true;
     end
     
     methods
@@ -329,7 +331,16 @@ classdef ImageProcessingParameters < handle
         end
         
         function setMembraneToolsBackgroundCorrection(this, BGHandle)
-           this.membraneToolsBackgroundCorrection = BGHandle; 
-        end             
+            this.membraneToolsBackgroundCorrection = BGHandle; 
+        end
+        
+        function setSubtractBackground(this, subtractBackground)
+            this.subtractBackground = subtractBackground;
+        end
+        
+        function subtractBackground = getSubtractBackground(this)
+            subtractBackground = this.subtractBackground;
+        end
+
     end   
 end

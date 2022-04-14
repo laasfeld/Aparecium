@@ -22,7 +22,7 @@ function varargout = focusAndQualityAnalyzer(varargin)
 
 % Edit the above text to modify the response to help focusAndQualityAnalyzer
 
-% Last Modified by GUIDE v2.5 21-Oct-2021 11:52:18
+% Last Modified by GUIDE v2.5 18-Mar-2022 12:19:03
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -53,54 +53,69 @@ function focusAndQualityAnalyzer_OpeningFcn(hObject, eventdata, handles, varargi
 % varargin   command line arguments to focusAndQualityAnalyzer (see VARARGIN)
 
 % Choose default command line output for focusAndQualityAnalyzer
-handles.directoryName = varargin{1};
-handles.requiredPattern = varargin{2};
-handles.lowerBound = varargin{3}(1);
-handles.upperBound = varargin{3}(2);
-handles.spaceAllowed = 1;
-[handles.wellID, handles.wellID_location_indices, handles.nameArray] = ImageImporter.getWellIDOfFolder(handles.directoryName, handles.requiredPattern);
-handles.wellIndex = 1;
-handles.imageInWellIndex = 1;
-handles.selectingBadAreas = 0;
+if ischar(varargin{1})
+    handles.directoryName = varargin{1};
+    handles.requiredPattern = varargin{2};
+    handles.lowerBound = varargin{3}(1);
+    handles.upperBound = varargin{3}(2);
+    handles.spaceAllowed = 1;
+    [handles.wellID, handles.wellID_location_indices, handles.nameArray] = ImageImporter.getWellIDOfFolder(handles.directoryName, handles.requiredPattern);
+    handles.wellIndex = 1;
+    handles.imageInWellIndex = 1;
+    handles.selectingBadAreas = 0;
 
-if numel(varargin) > 4 
-    handles.focusAndQualityAnalyzerHandle = varargin{5}{1};
-else
-    handles.focusAndQualityAnalyzerHandle = FocusAndQualityAnalyzerHandle();
-end
-
-if numel(varargin) > 3 && ~isempty(varargin{4})
-    handles.imageIndex = varargin{4};
-    handles.standardIndex = varargin{4};
-    set(handles.undefinedFocus, 'enable', 'on');
-else
-    handles.imageIndex = cell(numel(handles.wellID), 1);
-    for index = 1 : numel(handles.imageIndex)
-        handles.imageIndex{index} = ones(numel(handles.wellID_location_indices{index}), 1)*-1;
+    if numel(varargin) > 4 
+        handles.focusAndQualityAnalyzerHandle = varargin{5}{1};
+    else
+        handles.focusAndQualityAnalyzerHandle = FocusAndQualityAnalyzerHandle();
     end
+
+    if numel(varargin) > 3 && ~isempty(varargin{4})
+        handles.imageIndex = varargin{4};
+        handles.standardIndex = varargin{4};
+        set(handles.undefinedFocus, 'enable', 'on');
+    else
+        handles.imageIndex = cell(numel(handles.wellID), 1);
+        for index = 1 : numel(handles.imageIndex)
+            handles.imageIndex{index} = ones(numel(handles.wellID_location_indices{index}), 1)*-1;
+        end
+
+        set(handles.undefinedFocus, 'enable', 'off');
+        set(handles.focusDown, 'enable', 'off');
+    end
+    handles.imagesOfWell = [];
+    handles.masks = cell(numel(handles.wellID), 1);
+    for wellIndex = 1 : numel(handles.wellID)
+        for wellImageLocation = 1 : numel(handles.wellID_location_indices{wellIndex})
+            handles.masks{wellIndex}{wellImageLocation} = false(904, 1224);
+        end
+    end
+    handles.focusImageNames = cell(numel(handles.wellID), 1);
+    for index = 1 : numel(handles.focusImageNames)
+        for wellImageLocation = 1 : numel(handles.wellID_location_indices{wellIndex})
+            handles.focusImageNames{index}{wellImageLocation} = []; 
+        end
+    end
+    handles = createImageNameArrays(handles);
+    handles = displayImages(handles);
+    handles.output = hObject;
+    handles.qualityFilterNetwork = [];
+    handles.qualityFilterThreshold = 0.5;
+    set(handles.modelThresholdField, 'String', num2str(handles.qualityFilterThreshold));
+
+    % Update handles structure
+    handles.focusAndQualityAnalyzerHandle.updateHandles(handles);
+else
+    handle_fields = fields(handles);
+    needed_fields = fields(varargin{1}{1}.handle);
+    missing_fields = setdiff(needed_fields, handle_fields);
+    for field_index = 1 : numel(missing_fields)
+        handles.(missing_fields{field_index}) = varargin{1}{1}.handle.(missing_fields{field_index});
+    end
+    handles = displayImages(handles);
+    %handles = varargin{1}{1}.handle;
     
-    set(handles.undefinedFocus, 'enable', 'off');
-    set(handles.focusDown, 'enable', 'off');
 end
-handles.imagesOfWell = [];
-handles.masks = cell(numel(handles.wellID), 1);
-for wellIndex = 1 : numel(handles.wellID)
-    for wellImageLocation = 1 : numel(handles.wellID_location_indices{wellIndex})
-        handles.masks{wellIndex}{wellImageLocation} = false(904, 1224);
-    end
-end
-handles.focusImageNames = cell(numel(handles.wellID), 1);
-for index = 1 : numel(handles.focusImageNames)
-    for wellImageLocation = 1 : numel(handles.wellID_location_indices{wellIndex})
-        handles.focusImageNames{index}{wellImageLocation} = []; 
-    end
-end
-handles = createImageNameArrays(handles);
-handles = displayImages(handles);
-handles.output = hObject;
-
-% Update handles structure
-handles.focusAndQualityAnalyzerHandle.updateHandles(handles);
 guidata(hObject, handles);
 
 uiwait(handles.figure1);
@@ -721,3 +736,53 @@ function loadMasks_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to loadMasks (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes on button press in load_quality_filter.
+function load_quality_filter_Callback(hObject, eventdata, handles)
+% hObject    handle to load_quality_filter (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[fileName, filePath] = uigetfile({'*.hdf5','Keras model'; '*.h5', 'Keras model'});
+handles.qualityFilterNetwork = importKerasNetwork(fullfile(filePath, fileName));
+guidata(hObject, handles);
+
+% --- Executes on button press in Apply_filter.
+function Apply_filter_Callback(hObject, eventdata, handles)
+% hObject    handle to Apply_filter (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.qualityFilterNetwork
+mask = handles.masks{handles.wellIndex}{handles.imageInWellIndex};
+fileName = handles.nameArray{handles.imagesOfWell{handles.wellIndex}{handles.imageInWellIndex}(handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex))};
+image = imread([handles.directoryName, '\', fileName]);
+predictedMask = imresize(handles.qualityFilterNetwork.predict(imresize(double(image)/(2^16), handles.qualityFilterNetwork.Layers(1).InputSize(1:2))), size(image));
+autoMask = predictedMask > handles.qualityFilterThreshold;
+handles.masks{handles.wellIndex}{handles.imageInWellIndex} = or(mask, autoMask);
+guidata(hObject, handles);
+displayImages(handles);
+
+
+
+function modelThresholdField_Callback(hObject, eventdata, handles)
+% hObject    handle to modelThresholdField (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of modelThresholdField as text
+%        str2double(get(hObject,'String')) returns contents of modelThresholdField as a double
+handles.qualityFilterThreshold = str2double(get(hObject,'String'));
+guidata(hObject, handles);
+
+% --- Executes during object creation, after setting all properties.
+function modelThresholdField_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to modelThresholdField (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
