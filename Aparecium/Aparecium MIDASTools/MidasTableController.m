@@ -106,7 +106,7 @@ classdef MidasTableController < handle
         end
         
         function deriveDataFromEventData(this)
-            nanIndices = isnan(nanmean(cell2mat(this.eventData(:, end - this.measurementColumns + 1 : end)), 2));
+            nanIndices = min(isnan(cell2mat(this.eventData(:, end - this.measurementColumns + 1 : end))), [], 2) > 0;%isnan(nanmean(cell2mat(this.eventData(:, end - this.measurementColumns + 1 : end)), 2));
             wellIDColumn = this.eventData(:, 2);
             for i = 2 : numel(wellIDColumn)
                 if(isequal(strcmp(wellIDColumn(i), wellIDColumn(1)), 1))
