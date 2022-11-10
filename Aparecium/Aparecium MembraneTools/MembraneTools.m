@@ -39,7 +39,7 @@ function varargout = MembraneTools(varargin)
 
 % Edit the above text to modify the response to help MembraneTools
 
-% Last Modified by GUIDE v2.5 14-Apr-2022 15:28:53
+% Last Modified by GUIDE v2.5 14-May-2022 13:42:14
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1777,4 +1777,76 @@ switch get(hObject,'Value')
         handles.imageProcessingParameters.setSubtractBackground(true); % Subtract quantification channel background
     case 0
         handles.imageProcessingParameters.setAutoSaveMidas(false); % Do not subtract quantification channel background
+end
+
+
+
+function inputNormalizationMax_Callback(hObject, eventdata, handles)
+% hObject    handle to inputNormalizationMax (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of inputNormalizationMax as text
+%        str2double(get(hObject,'String')) returns contents of inputNormalizationMax as a double
+handles.imageProcessingParameters.setNormalizationMax(str2double(get(hObject,'String')));
+guidata(hObject, handles);
+
+% --- Executes during object creation, after setting all properties.
+function inputNormalizationMax_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to inputNormalizationMax (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function inputNormalizationMin_Callback(hObject, eventdata, handles)
+% hObject    handle to inputNormalizationMin (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of inputNormalizationMin as text
+%        str2double(get(hObject,'String')) returns contents of inputNormalizationMin as a double
+handles.imageProcessingParameters.setNormalizationMin(str2double(get(hObject,'String')));
+guidata(hObject, handles);
+
+% --- Executes during object creation, after setting all properties.
+function inputNormalizationMin_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to inputNormalizationMin (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function binarisationThreshold_Callback(hObject, eventdata, handles)
+% hObject    handle to binarisationThreshold (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of binarisationThreshold as text
+%        str2double(get(hObject,'String')) returns contents of binarisationThreshold as a double
+handles.imageProcessingParameters.setBinarisationThreshold(str2double(get(hObject,'String')));
+guidata(hObject, handles);
+
+% --- Executes during object creation, after setting all properties.
+function binarisationThreshold_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to binarisationThreshold (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
 end

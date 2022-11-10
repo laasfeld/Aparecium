@@ -71,6 +71,11 @@ classdef ImageProcessingParameters < handle
         membraneToolsBackgroundCorrection = [];
         
         subtractBackground = true;
+        
+        % Keras model preprocessing and post processing parameters.
+        binarisationThreshold = 0.5;
+        normalizationMin = 0;
+        normalizationMax = 1;
     end
     
     methods
@@ -340,6 +345,30 @@ classdef ImageProcessingParameters < handle
         
         function subtractBackground = getSubtractBackground(this)
             subtractBackground = this.subtractBackground;
+        end
+        
+        function setBinarisationThreshold(this, binarisationThreshold)
+            this.binarisationThreshold = binarisationThreshold;
+        end
+        
+        function binarisationThreshold = getBinarisationThreshold(this)
+            binarisationThreshold = this.binarisationThreshold;
+        end
+        
+        function setNormalizationMin(this, normalizationMin)
+            this.normalizationMin = normalizationMin;
+        end
+        
+        function normalizationMin = getNormalizationMin(this)
+            normalizationMin = this.normalizationMin;
+        end
+        
+        function setNormalizationMax(this, normalizationMax)
+            this.normalizationMax = normalizationMax;
+        end
+        
+        function normalizationMax = getNormalizationMax(this)
+            normalizationMax = this.normalizationMax;
         end
 
     end   

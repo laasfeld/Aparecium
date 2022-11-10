@@ -96,7 +96,7 @@ classdef NeoASCIIReader < handle
             morePlatesPresent = false;
             while notAtEndOfTheFile(this, line)
                line = this.getNextLine();
-               if strcmp(line, 'Procedure Details');
+               if strcmp(line, 'Procedure Details')
                    morePlatesPresent = true;
                    break;
                end
@@ -153,7 +153,7 @@ classdef NeoASCIIReader < handle
             expectingReadType = 0;
             for currentLine = startingLine : this.lastLineOfHeader
                 line = this.getNextLine();
-                if strfind(line, 'Start Kinetic');
+                if strfind(line, 'Start Kinetic')
                     this.kinetics{end + 1} = Gen5Kinetic(line);
                     this.readAtKineticMode = 1;
                 elseif strfind(line, 'End Kinetic')
@@ -889,7 +889,7 @@ classdef NeoASCIIReader < handle
                         measurementsAsDouble(measurementNumber) = NaN;  
                         overflowStruct{end + 1} = [read.wellID{wellIndex}{1} ,'at read 1 ', 'at cycle ', num2str(floor(measurementNumber/numel(read.channels))+1)]; 
                       else
-                        measurementsAsDouble(measurementNumber) = str2double(reshapedWellMeasurements{measurementNumber}); 
+                        measurementsAsDouble(measurementNumber) = str2double(regexprep(reshapedWellMeasurements{measurementNumber}, ',', '.'));
                       end
                    end
                    this.experimentDataStructure.measurements{wellIndex} = measurementsAsDouble;
@@ -934,7 +934,7 @@ classdef NeoASCIIReader < handle
                                     measurementsAsDouble(measurementNumber) = NaN; 
                                     overflowStruct{end + 1} = [read.wellID{wellIndex}{1},' at read ', num2str(legalReadIndex), ' at cycle ', num2str(floor(measurementNumber/numel(read.channels))+1)];
                                 else
-                                    measurementsAsDouble(measurementNumber) = str2double(reshapedWellMeasurements{measurementNumber}); 
+                                    measurementsAsDouble(measurementNumber) = str2double(regexprep(reshapedWellMeasurements{measurementNumber}, ',', '.')); 
                                 end
                             end
                             experimentDataStructureArray{legalReadIndex}.measurements{wellIndex} = measurementsAsDouble;

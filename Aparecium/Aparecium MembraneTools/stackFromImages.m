@@ -1,4 +1,4 @@
-function [stack] = stackFromImages(path, firstImageName, type, combination)
+function stack = stackFromImages(path, firstImageName, type, combination)
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
     directory = dir(path);

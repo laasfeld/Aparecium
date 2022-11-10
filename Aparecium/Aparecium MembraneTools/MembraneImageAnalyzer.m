@@ -3,7 +3,7 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
     %   Detailed explanation goes here
     
     properties
-        
+        miniBatchSize = 16
     end
     
     methods
@@ -139,36 +139,42 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
         end
         
         function prediction = predictSingleImage(kerasModel, inputImage)
-            prePad = MembraneImageAnalyzer.calculatePrePad(88, 288);
-            postPadY = MembraneImageAnalyzer.calculatePostPad(88, 288, size(inputImage, 1));
-            postPadX = MembraneImageAnalyzer.calculatePostPad(88, 288, size(inputImage, 2));
             
-            yPad = ceil(size(inputImage, 1)/288) * 288 - size(inputImage, 1);
-            xPad = ceil(size(inputImage, 2)/288) * 288 - size(inputImage, 2);
+            modelInputSize = kerasModel.Layers(1).InputSize(1:2);
+            overlapPixels = ceil(modelInputSize(1)*0.305); % 
+            prePad = MembraneImageAnalyzer.calculatePrePad(overlapPixels, modelInputSize(1));
+            
+            
+            postPadY = MembraneImageAnalyzer.calculatePostPad(overlapPixels, modelInputSize(1), size(inputImage, 1));
+            postPadX = MembraneImageAnalyzer.calculatePostPad(overlapPixels, modelInputSize(2), size(inputImage, 2));
+            
+            yPad = ceil(size(inputImage, 1)/modelInputSize(1)) * modelInputSize(1) - size(inputImage, 1);
+            xPad = ceil(size(inputImage, 2)/modelInputSize(2)) * modelInputSize(2) - size(inputImage, 2);
             paddedImage = padarray(inputImage, [prePad, prePad], 'symmetric', 'pre');
             paddedImage = padarray(paddedImage, [postPadY, postPadX], 'symmetric', 'post');
             resultImage = zeros(size(paddedImage));
             predictionCounter = zeros(size(paddedImage));
-            colSequence = 1 : 288 - 88 : size(resultImage, 1) - 200;
-            rowSequence = 1 : 288 - 88 : size(resultImage, 2) - 200;
+            colSequence = 1 : modelInputSize(1) - overlapPixels : size(resultImage, 1) - (modelInputSize(1) - overlapPixels);
+            rowSequence = 1 : modelInputSize(2) - overlapPixels : size(resultImage, 2) - (modelInputSize(2) - overlapPixels);
+            
             try
-                imagesToPredict = zeros(288, 288, 1, numel(colSequence) * numel(rowSequence));
+                imagesToPredict = zeros(modelInputSize(1), modelInputSize(2), 1, numel(colSequence) * numel(rowSequence));
                 counter = 1;
                 for col = colSequence 
                     for row = rowSequence
-                        imagesToPredict(:, :, 1, counter) = paddedImage(col : col + 287, row : row + 287);
+                        imagesToPredict(:, :, 1, counter) = paddedImage(col : col + (modelInputSize(1) - 1), row : row + (modelInputSize(2) - 1));
                         counter = counter + 1;
                     end
                 end
                 
-                predictions = predict(kerasModel, imagesToPredict, 'ExecutionEnvironment', 'gpu', 'MiniBatchSize', 16);
+                predictions = predict(kerasModel, imagesToPredict, 'ExecutionEnvironment', 'gpu', 'MiniBatchSize', 4);
                 
                 counter = 1;
                 for col = colSequence 
                     for row = rowSequence
-                        predictionCounter(col : col + 287, row : row + 287) = predictionCounter(col : col + 287, row : row + 287) + 1;
-                        resultImage(col : col + 287, row : row + 287) = resultImage(col : col + 287, row : row + 287).*(predictionCounter(col : col + 287, row : row + 287) - 1) + predictions(:, :, 1, counter);
-                        resultImage(col : col + 287, row : row + 287) = resultImage(col : col + 287, row : row + 287)./predictionCounter(col : col + 287, row : row + 287);
+                        predictionCounter(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1) = predictionCounter(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1) + 1;
+                        resultImage(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1) = resultImage(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1).*(predictionCounter(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1) - 1) + predictions(:, :, 1, counter);
+                        resultImage(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1) = resultImage(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1)./predictionCounter(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1);
                         counter = counter + 1;
                     end
                 end
@@ -178,14 +184,15 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                 disp('no gpu found or out of memory');
                 for col = colSequence 
                     for row = rowSequence
-                        predictionCounter(col : col + 287, row : row + 287) = predictionCounter(col : col + 287, row : row + 287) + 1;
-                        resultImage(col : col + 287, row : row + 287) = resultImage(col : col + 287, row : row + 287).*(predictionCounter(col : col + 287, row : row + 287) - 1) + predict(kerasModel, paddedImage(col : col + 287, row : row + 287));
-                        resultImage(col : col + 287, row : row + 287) = resultImage(col : col + 287, row : row + 287)./predictionCounter(col : col + 287, row : row + 287);
+                        predictionCounter(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1) = predictionCounter(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1) + 1;
+                        resultImage(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1) = resultImage(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1).*(predictionCounter(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1) - 1) + predict(kerasModel, paddedImage(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1));
+                        resultImage(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1) = resultImage(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1)./predictionCounter(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1);
                     end
                 end
             end
-            prediction = resultImage(prePad : prePad +  size(inputImage, 1) - 1, prePad : prePad + size(inputImage, 2) - 1);
-            prediction = prediction > 0.5;
+            prediction_raw = resultImage(prePad : prePad +  size(inputImage, 1) - 1, prePad : prePad + size(inputImage, 2) - 1);
+            prediction = prediction_raw > 0.5;
+           
         end
         
         function prePad = calculatePrePad(overlap, tileLength)

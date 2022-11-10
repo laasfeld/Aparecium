@@ -292,7 +292,7 @@ classdef ImageImporter < handle
                     pat = [pat,')(\w*)', this.quantificationChannelRegex];
                     
                     %try
-                    if isempty(this.secondaryFocusAndQualityAnalyzerHandleArray{folder}.handle)
+                    if isempty(this.secondaryFocusAndQualityAnalyzerHandleArray{folder}) || isempty(this.secondaryFocusAndQualityAnalyzerHandleArray{folder}.handle)
                         this.secondaryFocusAndQualityAnalyzerHandleArray{folder} = FocusAndQualityAnalyzerHandle();
                         [secondaryNameArray, ~, secondaryMasks] = focusAndQualityAnalyzer(fullfile(this.mainDirectory, this.usedDirectories{folder}), patMatrix, [0 0], standardFocus, this.secondaryFocusAndQualityAnalyzerHandleArray(folder));
                     else
@@ -365,8 +365,12 @@ classdef ImageImporter < handle
         end
         
         function nameArray = removeIncompatibleImages(this, nameArray, secondaryNameArray, folder)
-
-            unwrappedNameArray = vertcat(nameArray{:});
+            try
+                unwrappedNameArray = vertcat(nameArray{:});
+            catch
+                unwrappedNameArray = horzcat(nameArray{:});
+            end
+            
             try
                 unwrappedSecondaryNameArray = vertcat(secondaryNameArray{:});
             catch
