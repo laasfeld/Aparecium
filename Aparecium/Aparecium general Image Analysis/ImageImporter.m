@@ -177,6 +177,7 @@ classdef ImageImporter < handle
             else    
                 [Selection, ok] = listdlg('ListString' ,listString,'ListSize',[600 300],'SelectionMode','multiple','Name','Select folders to be analyzed');
                 chosenDirectories = listString(Selection);
+                this.mainDirectory = mainDir;
             end
             %% Save the directory names that were selected
 
@@ -190,12 +191,12 @@ classdef ImageImporter < handle
             ID = reshape(plate96WellLayout,1,96);
             
             
-            this.nameArray = cell(length(chosenDirectories), 1);
-            this.experimentDataStructure = cell(length(chosenDirectories), 1);
-            this.masks = cell(length(chosenDirectories), 1);
-            this.primaryFocusAndQualityAnalyzerHandleArray = cell(length(chosenDirectories), 1);
-            this.secondaryFocusAndQualityAnalyzerHandleArray = cell(length(chosenDirectories), 1);
-            for folder = 1 : length(chosenDirectories)
+            this.nameArray = cell(length(this.usedDirectories), 1);
+            this.experimentDataStructure = cell(length(this.usedDirectories), 1);
+            this.masks = cell(length(this.usedDirectories), 1);
+            this.primaryFocusAndQualityAnalyzerHandleArray = cell(length(this.usedDirectories), 1);
+            this.secondaryFocusAndQualityAnalyzerHandleArray = cell(length(this.usedDirectories), 1);
+            for folder = 1 : length(this.usedDirectories)
                 
                 if this.analyzeQuality
                     a = ExtendedRowLabels();
@@ -213,7 +214,7 @@ classdef ImageImporter < handle
                     %    answer = questdlg('This folder contains no subfolders, did you mean to analyze the selected folder?', 'question', 'Yes', 'No', 'Yes')
                     %end
                     this.primaryFocusAndQualityAnalyzerHandleArray{folder} = FocusAndQualityAnalyzerHandle();
-                    [BFnameArray, standardFocus, this.masks{folder}] = focusAndQualityAnalyzer(fullfile(mainDir,chosenDirectories{folder}), this.detectionChannelRegex, [this.lowerBound this.higherBound], [], this.primaryFocusAndQualityAnalyzerHandleArray(folder));
+                    [BFnameArray, standardFocus, this.masks{folder}] = focusAndQualityAnalyzer(fullfile(mainDir,this.usedDirectories{folder}), this.detectionChannelRegex, [this.lowerBound this.higherBound], [], this.primaryFocusAndQualityAnalyzerHandleArray(folder));
 
                     this.maskNameArray{folder} = BFnameArray;
                     %create a more sophisticated pattern
@@ -246,7 +247,7 @@ classdef ImageImporter < handle
                     nameArray = this.removeIncompatibleImages(BFnameArray, secondaryNameArray, folder);
                     this.mergeMasks(BFnameArray, secondaryNameArray, folder, secondaryMasks);
                 else
-                    fileListArray = dir([mainDir,'\',chosenDirectories{folder},'\*.tif']);
+                    fileListArray = dir([mainDir,'\',this.usedDirectories{folder},'\*.tif']);
                     nameArray = cell(length(fileListArray),1);
                     for i = 1 : length(fileListArray)
                         nameArray{i} = fileListArray(i).name;
@@ -268,8 +269,30 @@ classdef ImageImporter < handle
             
             for folder = 1 : length(this.usedDirectories)                
                 if this.analyzeQuality
-
-                    [BFnameArray, standardFocus, this.masks{folder}] = focusAndQualityAnalyzer(this.primaryFocusAndQualityAnalyzerHandleArray(folder));
+                    if isempty(this.primaryFocusAndQualityAnalyzerHandleArray{folder}) || isempty(this.primaryFocusAndQualityAnalyzerHandleArray{folder}.handle)
+                        load plate96WellLayout
+                        ID = reshape(plate96WellLayout,1,96);
+            
+                
+                        a = ExtendedRowLabels();
+                        plate96WellLayout = cell(48, numel(a));
+                        for i = 1 : numel(a)
+                            for j = 1 : 48
+                                if j < 10
+                                    plate96WellLayout{j, i} = [a{i},'0', num2str(j)];
+                                else
+                                    plate96WellLayout{j, i} = [a{i}, num2str(j)];
+                                end
+                            end
+                        end
+                        %if ~isempty(primaryFocusAndQualityAnalyzerHandle.handle)
+                        %    answer = questdlg('This folder contains no subfolders, did you mean to analyze the selected folder?', 'question', 'Yes', 'No', 'Yes')
+                        %end
+                        this.primaryFocusAndQualityAnalyzerHandleArray{folder} = FocusAndQualityAnalyzerHandle();
+                        [BFnameArray, standardFocus, this.masks{folder}] = focusAndQualityAnalyzer(fullfile(this.mainDirectory, this.usedDirectories{folder}), this.detectionChannelRegex, [this.lowerBound this.higherBound], [], this.primaryFocusAndQualityAnalyzerHandleArray(folder));
+                    else
+                        [BFnameArray, standardFocus, this.masks{folder}] = focusAndQualityAnalyzer(this.primaryFocusAndQualityAnalyzerHandleArray(folder));
+                    end
                     this.maskNameArray{folder} = BFnameArray;
                     %create a more sophisticated pattern
                     pat = '^(';             
@@ -297,7 +320,7 @@ classdef ImageImporter < handle
                         [secondaryNameArray, ~, secondaryMasks] = focusAndQualityAnalyzer(fullfile(this.mainDirectory, this.usedDirectories{folder}), patMatrix, [0 0], standardFocus, this.secondaryFocusAndQualityAnalyzerHandleArray(folder));
                     else
                         this.secondaryFocusAndQualityAnalyzerHandleArray{folder}.setNewPattern(pat)
-                        [secondaryNameArray, ~, secondaryMasks] = focusAndQualityAnalyzer(secondaryFocusAndQualityAnalyzerHandleArray(folder));
+                        [secondaryNameArray, ~, secondaryMasks] = focusAndQualityAnalyzer(this.secondaryFocusAndQualityAnalyzerHandleArray(folder));
                     end
                     %catch MException
 %                        save('imageImporterMaskAutosave.mat', 'this', 'BFnameArray', 'standardFocus', 'pat')

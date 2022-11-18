@@ -18,6 +18,10 @@ classdef FocusAndQualityAnalyzerHandle < handle
             this.handle = handles;
         end
         
+        function setNewPattern(this, pattern)
+            this.newPattern = pattern;
+        end
+        
         function setPattern(this, pattern)
             this.newPattern = pattern;
         end
