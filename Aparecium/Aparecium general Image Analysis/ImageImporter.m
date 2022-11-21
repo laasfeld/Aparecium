@@ -378,13 +378,17 @@ classdef ImageImporter < handle
         end
         
         function mergeMasks(this, BFnameArray, secondaryNameArray, folder, secondaryMasks)
+            newMaskArray = cell(size(this.masks{folder}));
             for wellIndex = 1 : numel(BFnameArray)
+                goodImageCounter = 1;
                 for imageInWellIndex = 1 : numel(BFnameArray{wellIndex})
-                    for secondaryChannelNameIndex = 1 : numel(secondaryNameArray{wellIndex})
-                        
+                    if ~isempty(BFnameArray{wellIndex}{imageInWellIndex})
+                        newMaskArray{wellIndex}{end + 1} = or(this.masks{folder}{wellIndex}{imageInWellIndex}, secondaryMasks{wellIndex}{goodImageCounter});
+                        goodImageCounter = goodImageCounter + 1;
                     end
                 end
             end
+            this.masks{folder} = newMaskArray;
         end
         
         function nameArray = removeIncompatibleImages(this, nameArray, secondaryNameArray, folder)
