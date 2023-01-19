@@ -1187,6 +1187,12 @@ classdef ImageAnalyzer < handle
             mkdir(fullfile(maindir, ['Binary', subdir]));
             imwrite(image, imagePath)             
         end
+        
+        function imagePath = saveProbabilityMap(image, imageName, maindir, subdir)
+            imagePath = fullfile(maindir, ['ProbabilityMap', subdir], imageName);
+            mkdir(fullfile(maindir, ['ProbabilityMap', subdir]));
+            imwrite(uint16(image*((2^16)-1)), imagePath)
+        end
     end
 end
 

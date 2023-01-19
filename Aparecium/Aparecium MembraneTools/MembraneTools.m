@@ -39,7 +39,7 @@ function varargout = MembraneTools(varargin)
 
 % Edit the above text to modify the response to help MembraneTools
 
-% Last Modified by GUIDE v2.5 14-May-2022 13:42:14
+% Last Modified by GUIDE v2.5 07-Jan-2023 19:21:32
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1850,3 +1850,43 @@ function binarisationThreshold_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in tileImage.
+function tileImage_Callback(hObject, eventdata, handles)
+% hObject    handle to tileImage (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+if get(hObject,'Value')
+    handles.imageProcessingParameters.setTileOrResizePreprocessing('Tile');
+end
+guidata(hObject, handles);
+
+
+% --- Executes on button press in autoSaveProbabilityMap.
+function autoSaveProbabilityMap_Callback(hObject, eventdata, handles)
+% hObject    handle to autoSaveProbabilityMap (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of autoSaveProbabilityMap
+if get(hObject,'Value')
+    handles.imageProcessingParameters.setAutoSaveProbabilityMap('on');
+else
+    handles.imageProcessingParameters.setAutoSaveProbabilityMap('off');
+end
+guidata(hObject, handles);
+
+% --- Executes on button press in resizeImage.
+function resizeImage_Callback(hObject, eventdata, handles)
+% hObject    handle to resizeImage (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of resizeImage
+
+if get(hObject,'Value')
+    handles.imageProcessingParameters.setTileOrResizePreprocessing('Resize');
+end
+guidata(hObject, handles);

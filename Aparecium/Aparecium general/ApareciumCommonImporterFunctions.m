@@ -388,4 +388,3 @@ classdef ApareciumCommonImporterFunctions
         end
     end    
 end
-

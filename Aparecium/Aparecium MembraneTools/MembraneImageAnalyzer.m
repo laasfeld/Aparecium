@@ -8,7 +8,7 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
     
     methods
         function this = MembraneImageAnalyzer()
-           this.ICSEOrMembrane = 'Membrane'; 
+           this.ICSEOrMembrane = 'Membrane';
         end 
     end
     
@@ -16,27 +16,110 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
     
         function measurementParams = performKerasAnalysis(measurementParams)
             
-            for i = 1 : numel(measurementParams) % parfor should be here
-                if strcmp(measurementParams(1).imageProcessingParams.detectionFocusOrSlopes, 'Slopes')
-                    imagesForBinaryGeneration{i} = MembraneImageAnalyzer.createSlopeImage(measurementParams(i));
-                elseif strcmp(measurementParams(1).imageProcessingParams.detectionFocusOrSlopes, 'Focus')
-                    imagesForBinaryGeneration{i} = MembraneImageAnalyzer.createFocusImageNoNorm(measurementParams(i));
-                end
-            end
-            
-            % intoduce the pixel shifts to images
-            for i = 1 : numel(measurementParams)
-                pixelShiftVertical = measurementParams(i).imageProcessingParams.getPixelShiftVertical();
-                pixelShiftHorizontal = measurementParams(i).imageProcessingParams.getPixelShiftHorizontal();
-                imagesForBinaryGeneration{i} = imagesForBinaryGeneration{i}(pixelShiftVertical+1:end, pixelShiftHorizontal+1:end);
-            end
-            
-            binaryImages = MembraneImageAnalyzer.createBinaryImagesWithKeras(imagesForBinaryGeneration, measurementParams);
-            for imageIndex = 1 : numel(measurementParams)
-                measurementParams(imageIndex).results = MembraneImageAnalyzer.analyzeMembranesStatic(...
+            fromBinary = strcmp(measurementParams(1).imageProcessingParams.imageSegmentationMode, measurementParams(1).imageProcessingParams.FromBinary);
+            packedBinaryImages = cell(numel(measurementParams), 1);
+            imageSizes = cell(numel(measurementParams), 1);
+            if fromBinary
+                for imageIndex = 1 : numel(measurementParams)
+                    %%% NB! generalize this (Binary_unmasked is not regular binary folder name)!!!
+                    bw = getBinaryOfImage(fullfile(measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).wellName), 'Binary');
+                    
+                    measurementParams(imageIndex).results = MembraneImageAnalyzer.analyzeMembranesStatic(...
             measurementParams(imageIndex).wellName, measurementParams(imageIndex).secondaryPicOfWell, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).imageProcessingParams,...
             measurementParams(imageIndex).timeParameters, measurementParams(imageIndex).thresholdFunctionHandle, measurementParams(imageIndex).calculationMethod, measurementParams(imageIndex).qualityMask, ...
-            measurementParams(imageIndex).parametersToCalculate, binaryImages{imageIndex}, measurementParams(imageIndex).mainDirectory, measurementParams(imageIndex).usedDirectory);
+            measurementParams(imageIndex).parametersToCalculate, bw, measurementParams(imageIndex).mainDirectory, measurementParams(imageIndex).usedDirectory);
+                end
+            else
+                
+                sectionSize = 10;
+                nrOfSections = ceil(numel(measurementParams)/sectionSize);
+                
+                for startIndex = 1 : sectionSize : nrOfSections * sectionSize
+                    imagesForBinaryGeneration = [];
+                    endIndex = startIndex + sectionSize - 1;
+                    if endIndex > numel(measurementParams)
+                        endIndex = numel(measurementParams);
+                    end
+
+                    counter = 1;
+
+                    for imageIndex = startIndex : endIndex % parfor should be here
+                        disp(['Image index = ', num2str(imageIndex)]);
+                        if strcmp(measurementParams(1).imageProcessingParams.detectionFocusOrSlopes, 'Slopes')
+                            imagesForBinaryGeneration{counter} = MembraneImageAnalyzer.createSlopeImage(measurementParams(imageIndex));
+                        elseif strcmp(measurementParams(1).imageProcessingParams.detectionFocusOrSlopes, 'Focus')
+                            imagesForBinaryGeneration{counter} = MembraneImageAnalyzer.createFocusImageNoNorm(measurementParams(imageIndex));
+                        end
+                        counter = counter + 1;
+                    end
+
+                    % introduce the pixel shifts to images
+                    counter = 1;
+                    for imageIndex = startIndex : endIndex
+                        pixelShiftVertical = measurementParams(imageIndex).imageProcessingParams.getPixelShiftVertical();
+                        pixelShiftHorizontal = measurementParams(imageIndex).imageProcessingParams.getPixelShiftHorizontal();
+                        imagesForBinaryGeneration{counter} = imagesForBinaryGeneration{counter}(pixelShiftVertical+1:end, pixelShiftHorizontal+1:end);
+                        imageSizes{imageIndex} = size(imagesForBinaryGeneration{counter});
+                        counter = counter + 1;
+                    end
+                    try
+                        if strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'off')
+                            binaryImages = MembraneImageAnalyzer.createBinaryImagesWithKeras(imagesForBinaryGeneration, measurementParams(startIndex : endIndex));
+                        elseif strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'on')
+                            [binaryImages, probabilityMaps] = MembraneImageAnalyzer.createBinaryImagesWithKeras(imagesForBinaryGeneration, measurementParams(startIndex : endIndex));                            
+                        end
+                    catch MException
+                        rethrow(MException)
+                    end
+                    
+                    counter = 1;
+                    for imageIndex = endIndex : -1 : startIndex
+                        if strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'on')
+                            measurementParams(imageIndex).results = MembraneImageAnalyzer.analyzeMembranesStatic(...
+                            measurementParams(imageIndex).wellName, measurementParams(imageIndex).secondaryPicOfWell, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).imageProcessingParams,...
+                            measurementParams(imageIndex).timeParameters, measurementParams(imageIndex).thresholdFunctionHandle, measurementParams(imageIndex).calculationMethod, measurementParams(imageIndex).qualityMask, ...
+                            measurementParams(imageIndex).parametersToCalculate, binaryImages{numel(imagesForBinaryGeneration) - counter + 1}, measurementParams(imageIndex).mainDirectory, measurementParams(imageIndex).usedDirectory, probabilityMaps{numel(imagesForBinaryGeneration) - counter + 1});
+                        elseif strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'off')
+                            measurementParams(imageIndex).results = MembraneImageAnalyzer.analyzeMembranesStatic(...
+                            measurementParams(imageIndex).wellName, measurementParams(imageIndex).secondaryPicOfWell, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).imageProcessingParams,...
+                            measurementParams(imageIndex).timeParameters, measurementParams(imageIndex).thresholdFunctionHandle, measurementParams(imageIndex).calculationMethod, measurementParams(imageIndex).qualityMask, ...
+                            measurementParams(imageIndex).parametersToCalculate, binaryImages{numel(imagesForBinaryGeneration) - counter + 1}, measurementParams(imageIndex).mainDirectory, measurementParams(imageIndex).usedDirectory);
+                        end
+                        
+                        binaryImages(numel(imagesForBinaryGeneration) - counter + 1) = [];
+                        
+                        if strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'on')
+                            probabilityMaps(numel(imagesForBinaryGeneration) - counter + 1) = [];
+                        end
+                        counter = counter + 1;
+                    end
+%                 for i = 1 : numel(measurementParams) % parfor should be here
+%                     if strcmp(measurementParams(1).imageProcessingParams.detectionFocusOrSlopes, 'Slopes')
+%                         imagesForBinaryGeneration{i} = MembraneImageAnalyzer.createSlopeImage(measurementParams(i));
+%                     elseif strcmp(measurementParams(1).imageProcessingParams.detectionFocusOrSlopes, 'Focus')
+%                         imagesForBinaryGeneration{i} = MembraneImageAnalyzer.createFocusImageNoNorm(measurementParams(i));
+%                     end
+%                 end
+% 
+%                 % intoduce the pixel shifts to images
+%                 for i = 1 : numel(measurementParams)
+%                     pixelShiftVertical = measurementParams(i).imageProcessingParams.getPixelShiftVertical();
+%                     pixelShiftHorizontal = measurementParams(i).imageProcessingParams.getPixelShiftHorizontal();
+%                     imagesForBinaryGeneration{i} = imagesForBinaryGeneration{i}(pixelShiftVertical+1:end, pixelShiftHorizontal+1:end);
+%                 end
+%                 
+%                 if strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'off')
+%                     [binaryImages, probabilityMaps] = MembraneImageAnalyzer.createBinaryImagesWithKeras(imagesForBinaryGeneration, measurementParams);
+%                     for imageIndex = 1 : numel(measurementParams)
+%                         measurementParams(imageIndex).results = MembraneImageAnalyzer.analyzeMembranesStatic(...
+%                     measurementParams(imageIndex).wellName, measurementParams(imageIndex).secondaryPicOfWell, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).imageProcessingParams,...
+%                     measurementParams(imageIndex).timeParameters, measurementParams(imageIndex).thresholdFunctionHandle, measurementParams(imageIndex).calculationMethod, measurementParams(imageIndex).qualityMask, ...
+%                     measurementParams(imageIndex).parametersToCalculate, binaryImages{imageIndex}, measurementParams(imageIndex).mainDirectory, measurementParams(imageIndex).usedDirectory);
+%                     end
+%                 elseif strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'on')
+
+
+                end
             end
         end
             
@@ -123,14 +206,24 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             %!ilastik.exe --headless --project=C:\Users\Kasutaja\IlastikMembraneDetector.ilp D:\Original_slope_and_stdev_images\*.tif
         end
 
-        function binaryImages = createBinaryImagesWithKeras(slopeImages, measurementParams, KerasModelPath)
+        function [binaryImages, probabilityMaps] = createBinaryImagesWithKeras(slopeImages, measurementParams, KerasModelPath)
             
             binaryImages = cell(size(slopeImages));
+            if strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'on')
+                probabilityMaps = cell(size(slopeImages));
+            end
+      
             kerasModelPath = measurementParams(1).imageProcessingParams.kerasModelPath;
             net = importKerasNetwork(kerasModelPath);
-            for imageIndex = 1 : numel(slopeImages)        
-                binaryImages{imageIndex} = MembraneImageAnalyzer.predictSingleImage(net, slopeImages{imageIndex});
-              
+            for imageIndex = 1 : numel(slopeImages)
+                if strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'off')
+                    binaryImages{imageIndex} = MembraneImageAnalyzer.predictSingleImage(net, slopeImages{imageIndex},...
+                        measurementParams(imageIndex).imageProcessingParams.tileOrResizePreprocessing, measurementParams(imageIndex).imageProcessingParams.binarisationThreshold);
+                elseif strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'on')
+                    [binaryImages{imageIndex}, probabilityMaps{imageIndex}] = MembraneImageAnalyzer.predictSingleImage(net, slopeImages{imageIndex},...
+                        measurementParams(imageIndex).imageProcessingParams.tileOrResizePreprocessing, measurementParams(imageIndex).imageProcessingParams.binarisationThreshold);                    
+                end
+                
                 if measurementParams(1).imageProcessingParams.useMorphologicalOperations
                     binaryImages{imageIndex} = MembraneImageAnalyzer.morphologicalOperations(binaryImages{imageIndex});
                 end
@@ -138,61 +231,83 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             end
         end
         
-        function prediction = predictSingleImage(kerasModel, inputImage)
+        function [prediction, prediction_raw] = predictSingleImage(kerasModel, inputImage, varargin)
             
-            modelInputSize = kerasModel.Layers(1).InputSize(1:2);
-            overlapPixels = ceil(modelInputSize(1)*0.305); % 
-            prePad = MembraneImageAnalyzer.calculatePrePad(overlapPixels, modelInputSize(1));
-            
-            
-            postPadY = MembraneImageAnalyzer.calculatePostPad(overlapPixels, modelInputSize(1), size(inputImage, 1));
-            postPadX = MembraneImageAnalyzer.calculatePostPad(overlapPixels, modelInputSize(2), size(inputImage, 2));
-            
-            yPad = ceil(size(inputImage, 1)/modelInputSize(1)) * modelInputSize(1) - size(inputImage, 1);
-            xPad = ceil(size(inputImage, 2)/modelInputSize(2)) * modelInputSize(2) - size(inputImage, 2);
-            paddedImage = padarray(inputImage, [prePad, prePad], 'symmetric', 'pre');
-            paddedImage = padarray(paddedImage, [postPadY, postPadX], 'symmetric', 'post');
-            resultImage = zeros(size(paddedImage));
-            predictionCounter = zeros(size(paddedImage));
-            colSequence = 1 : modelInputSize(1) - overlapPixels : size(resultImage, 1) - (modelInputSize(1) - overlapPixels);
-            rowSequence = 1 : modelInputSize(2) - overlapPixels : size(resultImage, 2) - (modelInputSize(2) - overlapPixels);
-            
-            try
-                imagesToPredict = zeros(modelInputSize(1), modelInputSize(2), 1, numel(colSequence) * numel(rowSequence));
-                counter = 1;
-                for col = colSequence 
-                    for row = rowSequence
-                        imagesToPredict(:, :, 1, counter) = paddedImage(col : col + (modelInputSize(1) - 1), row : row + (modelInputSize(2) - 1));
-                        counter = counter + 1;
-                    end
-                end
+            binarisationThreshold = 0.5;
+            analysisMode = 'Tile';
                 
-                predictions = predict(kerasModel, imagesToPredict, 'ExecutionEnvironment', 'gpu', 'MiniBatchSize', 4);
-                
-                counter = 1;
-                for col = colSequence 
-                    for row = rowSequence
-                        predictionCounter(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1) = predictionCounter(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1) + 1;
-                        resultImage(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1) = resultImage(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1).*(predictionCounter(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1) - 1) + predictions(:, :, 1, counter);
-                        resultImage(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1) = resultImage(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1)./predictionCounter(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1);
-                        counter = counter + 1;
-                    end
-                end
-            catch
-                % in case when gpu is not available, matlab is out of
-                % memory or gpu is out of memory
-                disp('no gpu found or out of memory');
-                for col = colSequence 
-                    for row = rowSequence
-                        predictionCounter(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1) = predictionCounter(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1) + 1;
-                        resultImage(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1) = resultImage(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1).*(predictionCounter(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1) - 1) + predict(kerasModel, paddedImage(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1));
-                        resultImage(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1) = resultImage(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1)./predictionCounter(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1);
-                    end
-                end
+            if numel(varargin) > 0               
+                if strcmp(varargin{1}, 'Tile')
+                    analysisMode = 'Tile';
+                elseif strcmp(varargin{1}, 'Resize')
+                    analysisMode = 'Resize';
+                end  
             end
-            prediction_raw = resultImage(prePad : prePad +  size(inputImage, 1) - 1, prePad : prePad + size(inputImage, 2) - 1);
-            prediction = prediction_raw > 0.5;
-           
+            
+            if numel(varargin) > 1
+                binarisationThreshold = varargin{2};
+            end
+                
+                
+            modelInputSize = kerasModel.Layers(1).InputSize(1:2);
+            
+            if strcmp(analysisMode, 'Tile')
+
+                overlapPixels = ceil(modelInputSize(1)*0.305); % 
+                prePad = MembraneImageAnalyzer.calculatePrePad(overlapPixels, modelInputSize(1));
+
+
+                postPadY = MembraneImageAnalyzer.calculatePostPad(overlapPixels, modelInputSize(1), size(inputImage, 1));
+                postPadX = MembraneImageAnalyzer.calculatePostPad(overlapPixels, modelInputSize(2), size(inputImage, 2));
+
+                yPad = ceil(size(inputImage, 1)/modelInputSize(1)) * modelInputSize(1) - size(inputImage, 1);
+                xPad = ceil(size(inputImage, 2)/modelInputSize(2)) * modelInputSize(2) - size(inputImage, 2);
+                paddedImage = padarray(inputImage, [prePad, prePad], 'symmetric', 'pre');
+                paddedImage = padarray(paddedImage, [postPadY, postPadX], 'symmetric', 'post');
+                resultImage = zeros(size(paddedImage));
+                predictionCounter = zeros(size(paddedImage));
+                colSequence = 1 : modelInputSize(1) - overlapPixels : size(resultImage, 1) - (modelInputSize(1) - overlapPixels);
+                rowSequence = 1 : modelInputSize(2) - overlapPixels : size(resultImage, 2) - (modelInputSize(2) - overlapPixels);
+
+                try
+                    imagesToPredict = zeros(modelInputSize(1), modelInputSize(2), 1, numel(colSequence) * numel(rowSequence));
+                    counter = 1;
+                    for col = colSequence 
+                        for row = rowSequence
+                            imagesToPredict(:, :, 1, counter) = paddedImage(col : col + (modelInputSize(1) - 1), row : row + (modelInputSize(2) - 1));
+                            counter = counter + 1;
+                        end
+                    end
+
+                    predictions = predict(kerasModel, imagesToPredict, 'ExecutionEnvironment', 'gpu', 'MiniBatchSize', 4);
+
+                    counter = 1;
+                    for col = colSequence 
+                        for row = rowSequence
+                            predictionCounter(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1) = predictionCounter(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1) + 1;
+                            resultImage(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1) = resultImage(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1).*(predictionCounter(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1) - 1) + predictions(:, :, 1, counter);
+                            resultImage(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1) = resultImage(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1)./predictionCounter(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1);
+                            counter = counter + 1;
+                        end
+                    end
+                catch
+                    % in case when gpu is not available, matlab is out of
+                    % memory or gpu is out of memory
+                    disp('no gpu found or out of memory');
+                    for col = colSequence 
+                        for row = rowSequence
+                            predictionCounter(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1) = predictionCounter(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1) + 1;
+                            resultImage(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1) = resultImage(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1).*(predictionCounter(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1) - 1) + predict(kerasModel, paddedImage(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1));
+                            resultImage(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1) = resultImage(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1)./predictionCounter(col : col + modelInputSize(1) - 1, row : row + modelInputSize(2) - 1);
+                        end
+                    end
+                end
+                prediction_raw = resultImage(prePad : prePad +  size(inputImage, 1) - 1, prePad : prePad + size(inputImage, 2) - 1);
+            elseif strcmp(analysisMode, 'Resize')
+                resizedImage = imresize(inputImage, modelInputSize, 'bilinear');
+                prediction_raw = imresize(predict(kerasModel, resizedImage, 'ExecutionEnvironment', 'gpu', 'MiniBatchSize', 1), size(inputImage), 'bilinear');                
+            end            
+            prediction = prediction_raw > binarisationThreshold;          
         end
         
         function prePad = calculatePrePad(overlap, tileLength)
@@ -411,7 +526,8 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             slopeImage = (slopes-min(min(slopes)))/max(max(slopes-min(min(slopes))));
         end
         
-        function resultStructure = analyzeMembranesStatic(picName, secondaryPicName, filePath, secondaryFilePath, imageProcessingParameters, timeParameters, functionHandle, calculationMethod, qualityMask, parametersToCalculate, providedBinary, mainDir, usedDir)
+        function resultStructure = analyzeMembranesStatic(picName, secondaryPicName, filePath, secondaryFilePath, imageProcessingParameters,...
+                timeParameters, functionHandle, calculationMethod, qualityMask, parametersToCalculate, providedBinary, mainDir, usedDir, varargin)
             disp('MembraneImageAnalyzer');
             subtractBackground = imageProcessingParameters.getSubtractBackground();
             resultStructure = MembraneImageAnalyzer.analyseOneImageStatic(picName, filePath, imageProcessingParameters, timeParameters, functionHandle, parametersToCalculate, providedBinary);
@@ -522,6 +638,11 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             if strcmp(imageProcessingParameters.autoSaveBinaryFiles, 'on')
                 imagePath = ImageAnalyzer.saveBinaryImage(resultStructure.image, picName, mainDir, usedDir);
                 resultStructure.image = imagePath;
+            end
+            
+            if numel(varargin) > 0 && strcmp(imageProcessingParameters.autoSaveProbabilityMap, 'on')
+                imagePath = ImageAnalyzer.saveProbabilityMap(varargin{1}, picName, mainDir, usedDir);
+                resultStructure.probabilityMap = imagePath;
             end
         end
         

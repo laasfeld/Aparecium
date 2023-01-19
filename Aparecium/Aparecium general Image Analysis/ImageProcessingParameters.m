@@ -4,8 +4,7 @@ classdef ImageProcessingParameters < handle
     
     properties
         imageSegmentationMode = 'Full image';
-        
-        
+                
         mergeMode = 'on';
         
         %ICSE parameters
@@ -24,8 +23,7 @@ classdef ImageProcessingParameters < handle
         preDilateCutoff = 1;
         postDilateCutoff = 1;
         extraEdgeThreshold = 0.0486227079926121;
-        
-        
+               
         useParallelComputing = 'on';
         characteristicsInUse = {'area', 'areaSTD', 'diameter', 'diameterSTD', 'cellCount'};
         
@@ -52,6 +50,7 @@ classdef ImageProcessingParameters < handle
         
         autoSaveBinaryFiles = 'on';
         autoSaveMasks = 'off';
+        autoSaveProbabilityMap = 'on';
         
         useMorphologicalOperations = true;
         focusOrMaxProjection = 'max projection' % alternative 'focus'
@@ -76,6 +75,10 @@ classdef ImageProcessingParameters < handle
         binarisationThreshold = 0.5;
         normalizationMin = 0;
         normalizationMax = 1;
+        % options are Tile or Resize. In case of Tile, the image is cropped into tiles and predictions are done on tiles. In case of resize,
+        % the image is resized to the input size of the model
+        tileOrResizePreprocessing = 'Tile'; 
+                                    
     end
     
     methods
@@ -239,6 +242,14 @@ classdef ImageProcessingParameters < handle
             autoSave = this.autoSaveBinaryFiles;
         end
         
+        function setAutoSaveProbabilityMap(this, autoSaveProbabilityMap)
+            this.autoSaveProbabilityMap = autoSaveProbabilityMap;
+        end
+        
+        function autoSaveProbabilityMap = getAutoSaveProbabilityMap(this)
+            autoSaveProbabilityMap = this.autoSaveProbabilityMap;
+        end
+        
         function setUpperThreshold(this, upperThreshold)
            this.upperThreshold = upperThreshold;
         end
@@ -370,6 +381,13 @@ classdef ImageProcessingParameters < handle
         function normalizationMax = getNormalizationMax(this)
             normalizationMax = this.normalizationMax;
         end
-
+        
+        function setTileOrResizePreprocessing(this, tileOrResizePreprocessing)
+            this.tileOrResizePreprocessing = tileOrResizePreprocessing;
+        end
+        
+        function tileOrResizePreprocessing = getTileOrResizePreprocessing(this)
+            tileOrResizePreprocessing = this.tileOrResizePreprocessing;
+        end
     end   
 end

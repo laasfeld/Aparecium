@@ -22,7 +22,7 @@ function varargout = focusAndQualityAnalyzer(varargin)
 
 % Edit the above text to modify the response to help focusAndQualityAnalyzer
 
-% Last Modified by GUIDE v2.5 18-Mar-2022 12:19:03
+% Last Modified by GUIDE v2.5 17-Jan-2023 01:27:10
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -85,9 +85,13 @@ if ischar(varargin{1})
     end
     handles.imagesOfWell = [];
     handles.masks = cell(numel(handles.wellID), 1);
+    handles.historySteps = 5;
     for wellIndex = 1 : numel(handles.wellID)
         for wellImageLocation = 1 : numel(handles.wellID_location_indices{wellIndex})
             handles.masks{wellIndex}{wellImageLocation} = false(904, 1224);
+            for historyIndex = 1 : handles.historySteps
+                handles.masks_history{wellIndex}{wellImageLocation}{historyIndex} = [];
+            end
         end
     end
     handles.focusImageNames = cell(numel(handles.wellID), 1);
@@ -116,6 +120,7 @@ else
     %handles = varargin{1}{1}.handle;
     
 end
+handles.loadedMaskMode = 'binary';
 guidata(hObject, handles);
 
 uiwait(handles.figure1);
@@ -198,7 +203,7 @@ try
     if handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) <= handles.lowerBound % impossible image index in this context
         if isequal(handles.wellIndex, 1) && isequal(handles.imageInWellIndex, 1) % handle the case where no previous image focus is available
             handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) = handles.lowerBound + 1;
-        elseif isequal(handles.imageInWellIndex, 1); % handle the case where previous image focus is available but in previous well
+        elseif isequal(handles.imageInWellIndex, 1) % handle the case where previous image focus is available but in previous well
             handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) = handles.imageIndex{handles.wellIndex - 1}(end);
         else
             handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) = handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex - 1);
@@ -208,9 +213,9 @@ try
         fileName = handles.nameArray{handles.imagesOfWell{handles.wellIndex}{handles.imageInWellIndex}(handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex))};
         set(handles.fileName, 'String', ['Current image is ', fileName]);
         if( isequal(get(handles.normalize,'Value'), 0) )
-            image = imread([handles.directoryName, '\', fileName]);
+            image = imread(fullfile(handles.directoryName, fileName));
         else
-            image = double(imread([handles.directoryName, '\', fileName]));
+            image = double(imread(fullfile(handles.directoryName, fileName)));
             image = (image - min(min(image)));
             image = image/max(max(image));
         end
@@ -218,12 +223,40 @@ try
         masked = image;
         masked(mask) = 0;
         image = cat(3, cat(3, image, masked), masked);
+        %image = zeros(904, 1224, 3);
+        if get(handles.displayProbabilityMap, 'Value') && strcmp(handles.loadedMaskMode, 'probability')
+            image(:,:,1) = image(:,:,1) + uint16(log2(double(handles.probabilityMaps{handles.wellIndex}{handles.imageInWellIndex}))*(2^12)*0.5);
+            image(:,:,3) = image(:,:,3) - uint16(log2(double(handles.probabilityMaps{handles.wellIndex}{handles.imageInWellIndex}))*(2^12)*0.5);
+        end
         imshow(image, 'Parent', handles.axes1);
     end
 catch
     
 end
 
+function handles = setMask(mask, wellIndex, wellImageLocation, handles)
+
+for historyIndex = 1 : handles.historySteps - 1
+    handles.masks_history{wellIndex}{wellImageLocation}{historyIndex} = handles.masks_history{wellIndex}{wellImageLocation}{historyIndex + 1};
+end
+handles.masks_history{wellIndex}{wellImageLocation}{handles.historySteps} = handles.masks{handles.wellIndex}{handles.imageInWellIndex};
+handles.masks{handles.wellIndex}{handles.imageInWellIndex} = mask;%or(mask, handles.masks{handles.wellIndex}{handles.imageInWellIndex});
+guidata(handles.figure1, handles);
+
+function reversable = isMaskReversable(wellIndex, wellImageLocation, handles)
+
+reversable = ~isempty(handles.masks_history{wellIndex}{wellImageLocation}{handles.historySteps});
+
+function handles = reverseMask(wellIndex, wellImageLocation, handles)
+
+handles.masks{handles.wellIndex}{handles.imageInWellIndex} = handles.masks_history{wellIndex}{wellImageLocation}{handles.historySteps};
+
+for historyIndex = handles.historySteps : -1 : 2
+    handles.masks_history{wellIndex}{wellImageLocation}{historyIndex} = handles.masks_history{wellIndex}{wellImageLocation}{historyIndex - 1};
+end
+handles.masks_history{wellIndex}{wellImageLocation}{1} = [];
+
+guidata(handles.figure1, handles);
 
 % --- Executes on button press in focusUp.
 function focusUp_Callback(hObject, eventdata, handles)
@@ -419,10 +452,13 @@ try
     mask = k.createMask();
     set(handles.figure1, 'waitstatus', 'waiting');% do not let wait meant for imfreehand interfere with the main figure
     if isempty(handles.masks{handles.wellIndex}{handles.imageInWellIndex})
-        handles.masks{handles.wellIndex}{handles.imageInWellIndex} = mask;
+
     else
-        handles.masks{handles.wellIndex}{handles.imageInWellIndex} = or(handles.masks{handles.wellIndex}{handles.imageInWellIndex}, mask);
+        mask = or(handles.masks{handles.wellIndex}{handles.imageInWellIndex}, mask);
     end
+    handles = setMask(mask, handles.wellIndex, handles.imageInWellIndex, handles);
+
+    
     fileName = handles.nameArray{handles.imagesOfWell{handles.wellIndex}{handles.imageInWellIndex}(handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex))};
 
     image = double(imread([handles.directoryName, '\', fileName]))/(2^16);
@@ -465,9 +501,8 @@ set(handles.pushbutton17, 'enable', 'on');
 handles.spaceAllowed = 1;
 set(handles.resumeToNormal, 'enable', 'on');
 handles.focusAndQualityAnalyzerHandle.updateHandles(handles);
+displayImages(handles);
 guidata(hObject, handles);
-
-
 
 
 % --- Executes on button press in resumeToNormal.
@@ -533,6 +568,15 @@ function figure1_KeyPressFcn(hObject, eventdata, handles)
 key = eventdata.Key;
 if strcmp(key, 'b') && handles.spaceAllowed
     badQualitySelection_Callback(handles.badQualitySelection, [], handles);
+    return
+end
+if strcmp(key, 's') && handles.spaceAllowed
+    pushbutton22_Callback(handles.pushbutton22, eventdata, handles);
+    return
+end
+if strcmp(key, 'd') && handles.spaceAllowed
+    pushbutton23_Callback(handles.pushbutton23, eventdata, handles);
+    return
 end
 
 
@@ -569,7 +613,7 @@ for pic = 1 : numel(masks)
     wellIDIndex = strcmp(handles.wellID, wellIDName);
     imagingLocation = ImageImporter.getImageInWellIndexOfString(nameArray{pic});
     imagingLocationIndex = handles.wellID_location_indices{wellIDIndex} == imagingLocation;    
-    handles.masks{wellIDIndex}{imagingLocationIndex} = masks{pic};
+    handles = setMask(masks{pic}, wellIDIndex, imagingLocationIndex, handles);
 end
 
 indices = zeros(numel(wellID), 1);
@@ -616,8 +660,8 @@ function pushbutton16_Callback(hObject, eventdata, handles)
 try
     
     fileName = handles.nameArray{handles.imagesOfWell{handles.wellIndex}{handles.imageInWellIndex}(handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex))};
-
-    handles.masks{handles.wellIndex}{handles.imageInWellIndex} = zeros(size(double(imread([handles.directoryName, '\', fileName]))/(2^16)));
+    handles = setMask(zeros(size(double(imread([handles.directoryName, '\', fileName]))/(2^16))), handles.wellIndex, handles.imageInWellIndex, handles);
+    %handles.masks{handles.wellIndex}{handles.imageInWellIndex} = zeros(size(double(imread([handles.directoryName, '\', fileName]))/(2^16)));
 
     image = double(imread([handles.directoryName, '\', fileName]))/(2^16);
     mask = handles.masks{handles.wellIndex}{handles.imageInWellIndex};
@@ -681,9 +725,9 @@ try
     mask = k.createMask();
     set(handles.figure1, 'waitstatus', 'waiting');% do not let wait meant for imfreehand interfere with the main figure
     if isempty(handles.masks{handles.wellIndex}{handles.imageInWellIndex})
-        handles.masks{handles.wellIndex}{handles.imageInWellIndex} = zeros(size(mask));
+        handles = setMask(zeros(size(mask)), handles.wellIndex, handles.imageInWellIndex, handles);
     else
-        handles.masks{handles.wellIndex}{handles.imageInWellIndex} = and(handles.masks{handles.wellIndex}{handles.imageInWellIndex}, ~mask);
+        handles = setMask(and(handles.masks{handles.wellIndex}{handles.imageInWellIndex}, ~mask), handles.wellIndex, handles.imageInWellIndex, handles);
     end
     
     fileName = handles.nameArray{handles.imagesOfWell{handles.wellIndex}{handles.imageInWellIndex}(handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex))};
@@ -758,7 +802,7 @@ fileName = handles.nameArray{handles.imagesOfWell{handles.wellIndex}{handles.ima
 image = imread([handles.directoryName, '\', fileName]);
 predictedMask = imresize(handles.qualityFilterNetwork.predict(imresize(double(image)/(2^16), handles.qualityFilterNetwork.Layers(1).InputSize(1:2))), size(image));
 autoMask = predictedMask > handles.qualityFilterThreshold;
-handles.masks{handles.wellIndex}{handles.imageInWellIndex} = or(mask, autoMask);
+handles = setMask(or(mask, autoMask), handles.wellIndex, handles.imageInWellIndex, handles);
 guidata(hObject, handles);
 displayImages(handles);
 
@@ -786,3 +830,173 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+
+
+% --- Executes on button press in pushbutton21.
+function pushbutton21_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton21 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in loadProbabilityMapsAndFocus.
+function loadProbabilityMapsAndFocus_Callback(hObject, eventdata, handles)
+% hObject    handle to loadProbabilityMapsAndFocus (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+imageDir = uigetdir('','Choose the folder with corresponding masks');
+files = dir(imageDir);
+files(1:2) = [];
+nameArray = cell(0, 0);
+for index = 1 : numel(files)
+    if ~isempty(strfind(files(index).name, '.tif'))
+        nameArray{end+1} = files(index).name;
+    end
+end
+%nameArray = ImageImporter.sortWellID(nameArray);
+probabilityMaps = cell(numel(nameArray), 1);
+for index = 1 : numel(nameArray)
+    probabilityMaps{index} = imread([imageDir, '\', nameArray{index}]);
+end
+handles.focusAndQualityAnalyzerHandle.updateHandles(handles);
+guidata(hObject, handles);
+
+%answer = questdlg('Do you want to remove images, that do not have a mask?');
+%if strcmp(answer, 'Yes')
+wellID = ImageImporter.getWellIDOfStringArray(nameArray, '.tif');
+%handles.focusImageNames = nameArray;
+for pic = 1 : numel(probabilityMaps)
+    wellIDName = ImageImporter.findWellIDOfString(nameArray{pic});
+    wellIDIndex = strcmp(handles.wellID, wellIDName);
+    imagingLocation = ImageImporter.getImageInWellIndexOfString(nameArray{pic});
+    imagingLocationIndex = handles.wellID_location_indices{wellIDIndex} == imagingLocation;    
+    handles.probabilityMaps{wellIDIndex}{imagingLocationIndex} = probabilityMaps{pic};
+end
+
+indices = zeros(numel(wellID), 1);
+for index = 1 : numel(wellID)
+    indices(index) = find(strcmp(handles.wellID, wellID{index}) == 1);
+end
+%handles.wellID = handles.wellID(indices);
+%handles.imagesOfWell = handles.imagesOfWell(indices);
+%handles.imageIndex = handles.imageIndex(indices);
+%handles.masks = handles.masks(indices);
+%handles.focusImageNames = handles.focusImageNames(indices);
+for wellIndex = 1 : numel(handles.wellID)
+    for imagingLocation = 1 : numel(handles.imagesOfWell{wellIndex})
+        for imIndex = 1 : numel(handles.imagesOfWell{wellIndex}{imagingLocation})
+            imageName = handles.nameArray{handles.imagesOfWell{wellIndex}{imagingLocation}(imIndex)};
+            if ~isempty(find(strcmp(nameArray, imageName)))
+                handles.imageIndex{wellIndex}(imagingLocation) = imIndex;
+                handles.focusImageNames{wellIndex}{imagingLocation} = imageName;
+                break;
+            end
+            handles.focusImageNames{wellIndex}{imagingLocation} = [];
+        end
+    end
+    handles.wellIndex = wellIndex;
+    handles.imageInWellIndex = imagingLocation;
+end
+%elseif strcmp(answer, 'No')
+    
+%else
+    
+%end
+handles.loadedMaskMode = 'probability';
+guidata(hObject, handles);
+displayImages(handles);
+handles.focusAndQualityAnalyzerHandle.updateHandles(handles);
+set(handles.previousImage, 'Enable', 'on'); 
+guidata(hObject, handles);
+
+% --- Executes on button press in pushbutton22.
+function pushbutton22_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton22 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+while true
+    axes(handles.axes1);
+    h = drawpoint(handles.axes1);
+    if isempty(h.Position)       
+        break
+    end
+    position = round(h.Position);
+    probabilityValue = handles.probabilityMaps{handles.wellIndex}{handles.imageInWellIndex}(position(2), position(1));
+    probabilityValue
+    maskedProbability = handles.probabilityMaps{handles.wellIndex}{handles.imageInWellIndex} >= probabilityValue;
+    cc = bwconncomp(maskedProbability);
+    ind = sub2ind(size(maskedProbability), position(2), position(1)); 
+    for ccindex = 1 : numel(cc.PixelIdxList)
+        if find(cc.PixelIdxList{ccindex} == ind)
+            object_index = ccindex;
+            break
+        end
+    end
+    %figure
+    mask = zeros(size(maskedProbability));
+    mask(cc.PixelIdxList{object_index}) = 1;
+    %mask = mask';
+    %imshow(mask);
+    addedMask = logical(handles.masks{handles.wellIndex}{handles.imageInWellIndex} + logical(maskedProbability));
+    handles = setMask(addedMask,handles.wellIndex,handles.imageInWellIndex, handles);
+    guidata(hObject, handles);
+    displayImages(handles);
+end
+
+
+% --- Executes on button press in pushbutton23.
+function pushbutton23_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton23 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+while true
+    h = drawpoint(handles.axes1);
+    if isempty(h.Position)       
+        break
+    end
+    position = round(h.Position);
+    guidata(hObject, handles);
+    
+    probabilityValue = handles.probabilityMaps{handles.wellIndex}{handles.imageInWellIndex}(position(2), position(1));
+    probabilityValue
+    maskedProbability = handles.probabilityMaps{handles.wellIndex}{handles.imageInWellIndex} >= probabilityValue;
+    cc = bwconncomp(maskedProbability);
+    ind = sub2ind(size(maskedProbability), position(2), position(1)); 
+    for ccindex = 1 : numel(cc.PixelIdxList)
+        if find(cc.PixelIdxList{ccindex} == ind)
+            object_index = ccindex;
+            break
+        end
+    end
+    %figure
+    mask = zeros(size(maskedProbability));
+    mask(cc.PixelIdxList{object_index}) = 1;
+    %mask = mask';
+    %imshow(mask);
+    addedMask = logical(handles.masks{handles.wellIndex}{handles.imageInWellIndex} + logical(mask));
+    handles = setMask(addedMask,handles.wellIndex,handles.imageInWellIndex, handles);
+    guidata(hObject, handles);
+
+    displayImages(handles);
+end
+guidata(hObject, handles);
+
+% --- Executes on button press in displayProbabilityMap.
+function displayProbabilityMap_Callback(hObject, eventdata, handles)
+% hObject    handle to displayProbabilityMap (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+displayImages(handles);
+% Hint: get(hObject,'Value') returns toggle state of displayProbabilityMap
+
+
+% --- Executes on button press in reverseMask.
+function reverseMask_Callback(hObject, eventdata, handles)
+% hObject    handle to reverseMask (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if isMaskReversable(handles.wellIndex, handles.imageInWellIndex, handles)
+    handles = reverseMask(handles.wellIndex, handles.imageInWellIndex, handles);
+end
+displayImages(handles);
+guidata(hObject, handles)
