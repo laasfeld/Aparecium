@@ -239,8 +239,8 @@ function handles = setMask(mask, wellIndex, wellImageLocation, handles)
 for historyIndex = 1 : handles.historySteps - 1
     handles.masks_history{wellIndex}{wellImageLocation}{historyIndex} = handles.masks_history{wellIndex}{wellImageLocation}{historyIndex + 1};
 end
-handles.masks_history{wellIndex}{wellImageLocation}{handles.historySteps} = handles.masks{handles.wellIndex}{handles.imageInWellIndex};
-handles.masks{handles.wellIndex}{handles.imageInWellIndex} = mask;%or(mask, handles.masks{handles.wellIndex}{handles.imageInWellIndex});
+handles.masks_history{wellIndex}{wellImageLocation}{handles.historySteps} = handles.masks{wellIndex}{wellImageLocation};
+handles.masks{wellIndex}{wellImageLocation} = mask;%or(mask, handles.masks{handles.wellIndex}{handles.imageInWellIndex});
 guidata(handles.figure1, handles);
 
 function reversable = isMaskReversable(wellIndex, wellImageLocation, handles)
@@ -610,10 +610,12 @@ wellID = ImageImporter.getWellIDOfStringArray(nameArray, '.tif');
 %handles.focusImageNames = nameArray;
 for pic = 1 : numel(masks)
     wellIDName = ImageImporter.findWellIDOfString(nameArray{pic});
-    wellIDIndex = strcmp(handles.wellID, wellIDName);
+    wellIDIndex = find(strcmp(handles.wellID, wellIDName) == 1);
     imagingLocation = ImageImporter.getImageInWellIndexOfString(nameArray{pic});
-    imagingLocationIndex = handles.wellID_location_indices{wellIDIndex} == imagingLocation;    
-    handles = setMask(masks{pic}, wellIDIndex, imagingLocationIndex, handles);
+    imagingLocationIndex = handles.wellID_location_indices{wellIDIndex} == imagingLocation;
+    wellIDIndex
+    imagingLocationIndex
+    handles = setMask(masks{pic}, wellIDIndex, find(imagingLocationIndex==1), handles);
 end
 
 indices = zeros(numel(wellID), 1);
@@ -645,6 +647,7 @@ end
 %else
     
 %end
+set(handles.previousImage, 'enable', 'on');
 guidata(hObject, handles);
 displayImages(handles);
 handles.focusAndQualityAnalyzerHandle.updateHandles(handles);
