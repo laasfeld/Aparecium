@@ -122,7 +122,7 @@ function handles = mergeReadsInSameKinetics(handles)
             newRead.numberOfCycles = newRead.numberOfCycles + currentRead.numberOfCycles;
         end
         newRead.runtime = max(newRead.measurementTimepoints) - min(newRead.measurementTimepoints);
-        for orderIndex = 1 : numel(orderIndeces)
+        for orderIndex = 2 : numel(orderIndeces)
             for index = 1 : numel(handles.sortedListOfReads)
                if isequal(handles.sortedListOfReads{index}.orderIndex, orderIndeces(orderIndex))
                   handles.sortedListOfReads(index) = [];
@@ -131,22 +131,30 @@ function handles = mergeReadsInSameKinetics(handles)
             end
         end
         
-        finalIndex = numel(handles.sortedListOfReads) + 1;
         for index = 1 : numel(handles.sortedListOfReads)
-           orderIndex = handles.sortedListOfReads{index};
-           if orderIndex < newRead.orderIndex
-              finalIndex = index;
-           end
-        end
-        if isempty(handles.sortedListOfReads(finalIndex : end))
-            try % the shape of these arrays must be standardized instead of error catching. Error occurs when concetenating several ASCII files
-                handles.sortedListOfReads = [handles.sortedListOfReads(1 : finalIndex - 1)', {newRead}];
-            catch
-                handles.sortedListOfReads = [handles.sortedListOfReads(1 : finalIndex - 1), {newRead}];
+            if isequal(handles.sortedListOfReads{index}.orderIndex, orderIndeces(1))
+                handles.sortedListOfReads{index} = newRead;
+                break;
             end
-        else
-            handles.sortedListOfReads = [handles.sortedListOfReads(1 : finalIndex - 1), {newRead}, handles.sortedListOfReads(finalIndex : end)];
         end
+        
+        
+%         finalIndex = numel(handles.sortedListOfReads) + 1;
+%         for index = 1 : numel(handles.sortedListOfReads)
+%            orderIndex = handles.sortedListOfReads{index}.orderIndex;
+%            if orderIndex < newRead.orderIndex
+%               finalIndex = index;
+%            end
+%         end
+%         if isempty(handles.sortedListOfReads(finalIndex : end))
+%             try % the shape of these arrays must be standardized instead of error catching. Error occurs when concetenating several ASCII files
+%                 handles.sortedListOfReads = [handles.sortedListOfReads(1 : finalIndex - 1)', {newRead}];
+%             catch
+%                 handles.sortedListOfReads = [handles.sortedListOfReads(1 : finalIndex - 1), {newRead}];
+%             end
+%         else
+%             handles.sortedListOfReads = [handles.sortedListOfReads(1 : finalIndex - 1), {newRead}, handles.sortedListOfReads(finalIndex : end)];
+%         end
     end
     handles.experimentDataStructureArray = [];
     for readIndex = 1 : numel(handles.sortedListOfReads)
@@ -287,11 +295,12 @@ function handles = generateDataStructure(handles)
 
 tableData = get(handles.experimentTable, 'data');
 handles.experimentDataStructure = [];
+firstReadHasNotBeenFound = 1;
 for readIndex = 1 : numel(handles.experimentDataStructureArray)
    if isequal(tableData{readIndex, 6}, 1);
        handles.experimentDataStructureArray{readIndex} = standardizeWellOrder(handles.experimentDataStructureArray{readIndex});
-       if isequal(readIndex, 1)
-           
+       if isequal(readIndex, 1) || firstReadHasNotBeenFound
+           firstReadHasNotBeenFound = 0;
            handles.experimentDataStructure = handles.experimentDataStructureArray{readIndex};
            handles.experimentDataStructure.timeOfMeasurements = handles.experimentDataStructure.timeOfMeasurements + tableData{1, 5};
            handles.experimentDataStructure.timeOfFastKineticsMeasurements = handles.experimentDataStructure.timeOfFastKineticsMeasurements + tableData{1, 5};

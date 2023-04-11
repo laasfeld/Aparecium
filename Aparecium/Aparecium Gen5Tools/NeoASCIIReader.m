@@ -52,6 +52,45 @@ classdef NeoASCIIReader < handle
                 this.readPlateType();
                 this.findReads();
                 this.findMeasurements();
+                this.fixStartTimesOfNonKineticReads();
+            end
+        end
+        
+        function fixStartTimesOfNonKineticReads(this)
+            for nonKineticReadIndex = 1 : numel(this.reads)
+                if isequal(this.reads{nonKineticReadIndex}.orderIndex, 1)
+                    continue
+                end
+                
+                orderIndexToFind = this.reads{nonKineticReadIndex}.orderIndex - 1;
+                matchFound = 0;
+                
+                for nonKineticReadIndexToMatch = 1 : numel(this.reads)
+                    if isequal(this.reads{nonKineticReadIndexToMatch}.orderIndex, orderIndexToFind)
+                        this.reads{nonKineticReadIndex}.measurementTimepoints = this.reads{nonKineticReadIndexToMatch}.measurementTimepoints;
+                        matchFound = 1;
+                        break
+                    end
+                end
+                
+                if matchFound
+                   continue 
+                end
+                
+                for kineticReadIndex = 1 : numel(this.kinetics)
+                    for readIndexInKinetics = 1 : numel(this.kinetics{kineticReadIndex}.listOfReads)
+                        if isequal(this.kinetics{kineticReadIndex}.listOfReads{readIndexInKinetics}.orderIndex, orderIndexToFind)
+                            this.reads{nonKineticReadIndex}.measurementTimepoints = this.kinetics{kineticReadIndex}.listOfReads{readIndexInKinetics}.timepointForAppendStorage...
+                                + this.kinetics{kineticReadIndex}.listOfReads{readIndexInKinetics}.interval;
+                            matchFound = 1;
+                            break
+                        end
+                    end
+                    if matchFound
+                        break
+                    end
+                end
+                
             end
         end
         
