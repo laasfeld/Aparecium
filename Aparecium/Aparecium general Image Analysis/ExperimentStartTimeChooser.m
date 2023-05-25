@@ -53,13 +53,28 @@ function ExperimentStartTimeChooser_OpeningFcn(hObject, eventdata, handles, vara
 % varargin   command line arguments to ExperimentStartTimeChooser (see VARARGIN)
 
 % Choose default command line output for ExperimentStartTimeChooser
-handles.output = hObject;
-handles.year = str2num(datestr(now, 'yyyy'));
-handles.month = str2num(datestr(now, 'mm'));
-handles.day = str2num(datestr(now, 'dd'));;
-handles.h = 0;
-handles.minute = 0;
-handles.second = 0;
+if numel(varargin) > 0
+    datetimeDefault = datetime(varargin{1}, 'convertfrom', 'datenum');
+    handles.year = str2num(datestr(datetimeDefault, 'yyyy'));
+    handles.month = str2num(datestr(datetimeDefault, 'mm'));
+    handles.day = str2num(datestr(datetimeDefault, 'dd'));
+    handles.h = str2num(datestr(datetimeDefault, 'HH'));
+    handles.minute = str2num(datestr(datetimeDefault, 'MM'));
+    handles.second = str2num(datestr(datetimeDefault, 'ss'));
+    
+    set(handles.hour, 'String', num2str(handles.h));
+    set(handles.min, 'String', num2str(handles.minute));
+    set(handles.s, 'String', num2str(handles.second));
+    set(handles.date, 'String', datestr(datetimeDefault, 24))
+
+else
+    handles.year = str2num(datestr(now, 'yyyy'));
+    handles.month = str2num(datestr(now, 'mm'));
+    handles.day = str2num(datestr(now, 'dd'));
+    handles.h = 0;
+    handles.minute = 0;
+    handles.second = 0;
+end
 % Update handles structure
 guidata(hObject, handles);
 uiwait(handles.figure1);
@@ -234,7 +249,7 @@ function chooseDate_Callback(hObject, eventdata, handles)
 % hObject    handle to chooseDate (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if license('test', 'financial_toolbox')
+if license('test', 'financial_toolbox') && exist('uicalendar')
     uicalendar('OutputDateFormat', 'dd/mm/yyyy', 'DestinationUI', handles.date);
 else %looks like the financial toolbox is not available
     dateString = datestr(uigetdate(), 'dd/mm/yyyy');

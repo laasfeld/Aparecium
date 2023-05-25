@@ -106,7 +106,7 @@ if ischar(varargin{1})
     handles.qualityFilterNetwork = [];
     handles.qualityFilterThreshold = 0.5;
     set(handles.modelThresholdField, 'String', num2str(handles.qualityFilterThreshold));
-
+    
     % Update handles structure
     handles.focusAndQualityAnalyzerHandle.updateHandles(handles);
 else
@@ -118,7 +118,8 @@ else
     end
     handles = displayImages(handles);
     %handles = varargin{1}{1}.handle;
-    
+    set(handles.done, 'enable', 'on');
+    set(handles.previousImage, 'enable', 'on');
 end
 handles.loadedMaskMode = 'binary';
 guidata(hObject, handles);

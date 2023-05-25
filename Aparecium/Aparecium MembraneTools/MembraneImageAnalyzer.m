@@ -531,7 +531,12 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             disp('MembraneImageAnalyzer');
             subtractBackground = imageProcessingParameters.getSubtractBackground();
             resultStructure = MembraneImageAnalyzer.analyseOneImageStatic(picName, filePath, imageProcessingParameters, timeParameters, functionHandle, parametersToCalculate, providedBinary);
-
+            
+            %small_eroded = imerode(resultStructure.image, strel('disk', 5));
+            %eroded = imerode(resultStructure.image, strel('disk', 12));
+            
+            %resultStructure.image = small_eroded - eroded;
+            
             pixelShiftVertical = imageProcessingParameters.getPixelShiftVertical();
             pixelShiftHorizontal = imageProcessingParameters.getPixelShiftHorizontal();
            

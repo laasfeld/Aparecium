@@ -39,7 +39,7 @@ function varargout = MembraneTools(varargin)
 
 % Edit the above text to modify the response to help MembraneTools
 
-% Last Modified by GUIDE v2.5 07-Jan-2023 19:21:32
+% Last Modified by GUIDE v2.5 23-May-2023 19:04:30
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -408,8 +408,9 @@ function chooseStartTime_Callback(hObject, eventdata, handles)
 % hObject    handle to chooseStartTime (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-startTime = ExperimentStartTimeChooser(); % Let the user choose the starting time of the experiment
+startTime = ExperimentStartTimeChooser(handles.imageAnalyzer.getExperimentStartTime()); % Let the user choose the starting time of the experiment
 handles.imageAnalyzer.setExperimentStartTime(startTime); % Let the imageAnalyzer know that which experiment start time was defined
+set(handles.startTimeText, 'String', ['Start time : ', datestr(datetime(handles.imageAnalyzer.getExperimentStartTime(), 'convertfrom', 'datenum'), 'dd.mm.yyyy HH:MM:ss')]);
 guidata(hObject, handles);
 
 % --- Executes when selected object is changed in mergePanel.
@@ -818,16 +819,25 @@ function chooseReference_SelectionChangeFcn(hObject, eventdata, handles)
 %	OldValue: handle of the previously selected object or empty if none was selected
 %	NewValue: handle of the currently selected object
 % handles    structure with handles and user data (see GUIDATA)
-switch eventdata.NewValue; 
+switch eventdata.NewValue 
     case handles.chooseTime % in case the user wants to manually choose the experiment start time
         %% Enable choosing start time and disable time shift
         set(handles.chooseStartTime, 'enable', 'on');
         set(handles.timeShift, 'enable', 'off');
         handles.imageAnalyzer.setReferenceTimeMode('Choose time');
+        try
+            set(handles.startTimeText, 'String', ['Start time : ', datestr(datetime(handles.imageAnalyzer.getExperimentStartTime(), 'convertfrom', 'datenum'), 'dd.mm.yyyy HH:MM:ss')]);
+        catch
+            set(handles.startTimeText, 'String', 'Start time : Not set');
+            
+        end
     case handles.firstPoint % in case the user wants to automatically set the experiment start time equal to the time the first image was taken
         %% Enable time shift and disable choosing start time
         set(handles.chooseStartTime, 'enable', 'off');
         set(handles.timeShift, 'enable', 'on');
+        
+        set(handles.startTimeText, 'String', 'Start time : First timepoint');
+
         handles.imageAnalyzer.setReferenceTimeMode('First point');
 end
 
@@ -1890,3 +1900,12 @@ if get(hObject,'Value')
     handles.imageProcessingParameters.setTileOrResizePreprocessing('Resize');
 end
 guidata(hObject, handles);
+
+
+% --- Executes on button press in firstPoint.
+function firstPoint_Callback(hObject, eventdata, handles)
+% hObject    handle to firstPoint (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of firstPoint
