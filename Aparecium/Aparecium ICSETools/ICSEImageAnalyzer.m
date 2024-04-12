@@ -17,13 +17,13 @@ classdef ICSEImageAnalyzer < ImageAnalyzer
             'ICSE'    
             tic
                 try
-                    image = Cytation5TIFFImage([filePath, picName]);
+                    image = Cytation5TIFFImage(fullfile(filePath, picName));
                     I_org1 = image.getImage();
                     imageTime = image.getImageTime();
                     imageWidthMicrons = image.getImageWidthMicrons();
                     imageHeightMicrons = image.getImageHeightMicrons();
                 catch
-                    I_org1 = imread([filePath, picName]); 
+                    I_org1 = imread(fullfile(filePath, picName)); 
                     imageTime = 0;
                     'failed to get image time'
                 end
@@ -49,7 +49,7 @@ classdef ICSEImageAnalyzer < ImageAnalyzer
                        bw2 = ImageAnalyzer.segmentImage(imageProcessingParameters, I_orgTrue);
                     case imageProcessingParameters.FromBinary
                         I_orgTrue = I_org(:,:,1); 
-                        bw2 = getBinaryOfImage([filePath, picName]);
+                        bw2 = getBinaryOfImage(fullfile(filePath, picName));
                 end
                 
                 binaryImageCalculator = BinaryImageCalculator();
