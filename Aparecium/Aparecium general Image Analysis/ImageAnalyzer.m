@@ -569,9 +569,13 @@ classdef ImageAnalyzer < handle
 
                         for well = 1 : numel(wellID)   
                             if well == 1
-                               measurementParams = this.configureWellMeasurementParameters(well, nameArray, secondaryNameArray, wellID, directoryPath, folder); 
+                                measurementParams = this.configureWellMeasurementParameters(well, nameArray, secondaryNameArray, wellID, directoryPath, folder); 
                             else
-                               measurementParams = [measurementParams, this.configureWellMeasurementParameters(well, nameArray, secondaryNameArray, wellID, directoryPath, folder)];
+                                try
+                                    measurementParams = [measurementParams, this.configureWellMeasurementParameters(well, nameArray, secondaryNameArray, wellID, directoryPath, folder)];
+                                catch
+                                   '' 
+                                end
                             end                                   
                                %wellMeasurementInfo{well} = this.analyzeOneWell(well, nameArray, secondaryNameArray, wellID, directoryPath, folder);
                         end                      
@@ -638,7 +642,7 @@ classdef ImageAnalyzer < handle
 
                     java.lang.Runtime.getRuntime().gc;
                 case 'off'
-                    for well = 1 : numel(wellID)
+                    %for well = 1 : numel(wellID)
                         if strcmp(this.ICSEOrMembrane, 'ICSE') 
                             for well = 1 : numel(wellID)
                                if well == 1
@@ -701,7 +705,7 @@ classdef ImageAnalyzer < handle
                             %    wellMeasurementInfo{well} = this.analyzeOneWell(well, nameArray, secondaryNameArray, wellID, directoryPath, folder);
                             %end
                         end
-                    end
+                    %end
                 end
             
         end
@@ -729,8 +733,10 @@ classdef ImageAnalyzer < handle
             if strcmp(ICSEOrMembrane, 'Membrane')
                 secondaryNameArrayOfWell = secondaryNameArray(imagesOfWell);
                 qualityMasks = this.imageImporter.masks{folder};
+                qualityMasks(cellfun(@isempty, qualityMasks)) = [];
             else
-               qualityMasks = []; % parfor wants the variable to be present, but won´t use it 
+               qualityMasks = []; % parfor wants the variable to be present, but won´t use it
+               
             end
             if strcmp(ICSEOrMembrane, 'Membrane') && ~isequal(imageProcessingParams.imageSegmentationMode, imageProcessingParams.FromBinary)
                 imageProcessingParams.imageSegmentationMode = imageProcessingParams.Slopes;
@@ -1143,18 +1149,52 @@ classdef ImageAnalyzer < handle
         end
         
         function handles = standardizeData(handles, cameraAndLensParameters, ICSEorMembrane, parametersToCalculate)
+            
             data = cell(1,length(handles.ID));
             if strcmp(ICSEorMembrane, 'Membrane')
-                parametersToCalculate{end + 1} = 'averageMembraneIntensity';
-                parametersToCalculate{end + 1} = 'averageSecondaryImageIntensity';
-                parametersToCalculate{end + 1} = 'averageNonMembraneIntensity';
-                parametersToCalculate{end + 1} = 'firstNonMembraneQuadrileIntensity';
-                parametersToCalculate{end + 1} = 'averageUnmaskedMembraneIntensity';
-                parametersToCalculate{end + 1} = 'averageUnmaskedNonMembraneIntensity';
-                parametersToCalculate{end + 1} = 'firstUnmaskedNonMembraneQuadrileIntensity';
-                parametersToCalculate{end + 1} = 'averageUnmaskedSecondaryImageIntensity';
-                parametersToCalculate{end + 1} = 'pixelCount';
-                parametersToCalculate{end + 1} = 'intensitySTD';
+                if isfield(handles.imageData{1}{1}, 'nrOfQuantChannels')
+                    nrOfQuantChannels = handles.imageData{1}{1}.nrOfQuantChannels;
+                    quantChannelPrefixes = handles.imageData{1}{1}.QuantChannelPrefixes;
+                    baseParamNames = cell(0,0);                    
+                    baseParamNames{end + 1} = 'averageMembraneIntensity';
+                    baseParamNames{end + 1} = 'averageSecondaryImageIntensity';
+                    baseParamNames{end + 1} = 'averageNonMembraneIntensity';
+                    baseParamNames{end + 1} = 'firstNonMembraneQuadrileIntensity';
+                    baseParamNames{end + 1} = 'averageUnmaskedMembraneIntensity';
+                    baseParamNames{end + 1} = 'averageUnmaskedNonMembraneIntensity';
+                    baseParamNames{end + 1} = 'firstUnmaskedNonMembraneQuadrileIntensity';
+                    baseParamNames{end + 1} = 'averageUnmaskedSecondaryImageIntensity';                   
+                    baseParamNames{end + 1} = 'intensitySTD';
+                    
+                    prefixCell = cell(size(parametersToCalculate));
+                    [prefixCell{:}] = deal('');
+                    
+                    for channelIndex = 1 : nrOfQuantChannels
+                        prefix = quantChannelPrefixes{channelIndex};
+                        for baseParamIndex = 1 : numel(baseParamNames)
+                            parametersToCalculate{end + 1} = [prefix, baseParamNames{baseParamIndex}];
+                            prefixCell{end + 1} = prefix;
+                        end
+                    end
+                    parametersToCalculate{end + 1} = 'pixelCount';
+                    prefixCell{end + 1} = '';
+                else
+                    parametersToCalculate{end + 1} = 'averageMembraneIntensity';
+                    parametersToCalculate{end + 1} = 'averageSecondaryImageIntensity';
+                    parametersToCalculate{end + 1} = 'averageNonMembraneIntensity';
+                    parametersToCalculate{end + 1} = 'firstNonMembraneQuadrileIntensity';
+                    parametersToCalculate{end + 1} = 'averageUnmaskedMembraneIntensity';
+                    parametersToCalculate{end + 1} = 'averageUnmaskedNonMembraneIntensity';
+                    parametersToCalculate{end + 1} = 'firstUnmaskedNonMembraneQuadrileIntensity';
+                    parametersToCalculate{end + 1} = 'averageUnmaskedSecondaryImageIntensity';
+                    parametersToCalculate{end + 1} = 'pixelCount';
+                    parametersToCalculate{end + 1} = 'intensitySTD';
+                    prefixCell = cell(size(parametersToCalculate));
+                    [prefixCell{:}] = deal('');
+                end
+            else
+                prefixCell = cell(size(parametersToCalculate));
+                [prefixCell{:}] = deal('');
             end
             for well = 1 : length(handles.ID)
                 % generate temporary variable wellData for holding data for that particular well
@@ -1163,7 +1203,7 @@ classdef ImageAnalyzer < handle
 
                 for parameterIndex = 1 : numel(parametersToCalculate)
                     try
-                        wellData(end + 1, 1) = BinaryImageCalculator.averageParameter(handles.imageData{well}, parametersToCalculate{parameterIndex}, cameraAndLensParameters);
+                        wellData(end + 1, 1) = BinaryImageCalculator.averageParameter(handles.imageData{well}, parametersToCalculate{parameterIndex}, cameraAndLensParameters, 'prefix', prefixCell{parameterIndex});
                     catch MException
                         disp(['No numerical representation possible for ', parametersToCalculate{parameterIndex}, ' using NaN instead']);
                         wellData(end + 1, 1) = NaN;
@@ -1174,7 +1214,7 @@ classdef ImageAnalyzer < handle
             end
             handles.channelNames = cell(1, numel(parametersToCalculate));
             for parameterIndex = 1 : numel(parametersToCalculate)
-                handles.channelNames{1, parameterIndex} = [parametersToCalculate{parameterIndex}, '_',BinaryImageCalculator.getUnitOfParameter(parametersToCalculate{parameterIndex})];
+                handles.channelNames{1, parameterIndex} = [parametersToCalculate{parameterIndex}, '_',BinaryImageCalculator.getUnitOfParameter(parametersToCalculate{parameterIndex}, 'prefix', prefixCell{parameterIndex})];
             end
             handles.data = data;
             handles.measurementTimeOfCycle = mean(handles.measurementTimeOfWell);

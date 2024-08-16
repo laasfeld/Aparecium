@@ -247,8 +247,8 @@ classdef NeoASCIIReader < handle
                     currentRead.setReadType(line);
                     expectingReadType = 0;
                 elseif contains(line, 'Wavelengths') && strcmp(currentRead.readType, 'Absorbance Endpoint')
-                    splitLine = strsplit(line, ':');
-                    wavelengths = strsplit(splitLine{2}, ',');
+                    splitLine = ApaStrsplit(line, ':');
+                    wavelengths = ApaStrsplit(splitLine{2}, ',');
                     for wavelengthIndex = 1 : numel(wavelengths)
                         currentRead.setChannel(wavelengths{wavelengthIndex}, wavelengthIndex)
                     end                    

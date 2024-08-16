@@ -321,7 +321,28 @@ classdef BinaryImageCalculator < handle
     
     methods(Static)
         
-        function unit = getUnitOfParameter(parameterName)
+        function parameterName = fixParameterName(binImCalcVarargin, parameterName)
+           if strcmp(binImCalcVarargin{1}, 'prefix')
+               parameterName = regexprep(parameterName, ['^', binImCalcVarargin{2}], '');
+           end
+        end
+        
+        function [prefixRemovedParameterName, wellData] = fixParameterNameAndWellData(binImCalcVarargin, wellData, parameterName)
+            prefixRemovedParameterName = BinaryImageCalculator.fixParameterName(binImCalcVarargin, parameterName);
+            for imageIndex = 1 : numel(wellData)
+                for field = fields(wellData{imageIndex})'
+                    wellData{imageIndex}.(regexprep(field{1}, ['^', binImCalcVarargin{2}], '')) = wellData{imageIndex}.(field{1});
+                end
+            end
+        end
+
+        
+        function unit = getUnitOfParameter(parameterName, varargin)
+            
+            if numel(varargin) > 1
+                parameterName = BinaryImageCalculator.fixParameterName(varargin, parameterName);
+            end
+            
             switch parameterName
                 case 'area'
                     unit = 'um2';
@@ -374,7 +395,7 @@ classdef BinaryImageCalculator < handle
             end
         end
         
-        function average = averageParameter(wellData, parameterName, cameraAndLensParameters)
+        function average = averageParameter(wellData, parameterName, cameraAndLensParameters, varargin)
 %             another way of implementation
 %             functionHandles = BinaryImageCalculator.averagingFunctionHandles;
 %             functionHandleIndex = strcmp(this.implementedParameters, parameterName)==1; % find the matching function handle index
@@ -396,6 +417,11 @@ classdef BinaryImageCalculator < handle
                 magnification = cameraAndLensParameters.magnification;
                 pixelSize = cameraAndLensParameters.pixelSize;
             end
+            
+            if numel(varargin) > 1
+                [parameterName, wellData] = BinaryImageCalculator.fixParameterNameAndWellData(varargin, wellData, parameterName);
+            end
+            
             switch parameterName
                 case 'area'
                     average = BinaryImageCalculator.averageArea(wellData)*(pixelSize/magnification)^2;
@@ -604,7 +630,7 @@ classdef BinaryImageCalculator < handle
             end         
         end
         
-        function average = averageMembraneIntensity(resultStructures)
+        function average = averageMembraneIntensity(resultStructures, prefix)
             intensity = 0;
             totalPixels = BinaryImageCalculator.averageConfluency(resultStructures)*numel(resultStructures);
             for imageIndex = 1 : numel(resultStructures)

@@ -18,7 +18,7 @@ function [times, labels] = readStopwatch(fileName)
             break;     
         end
         temp = textscan(lineSplits{1}{4 + additionalLabelParts}, '%s');
-        timeSplit = strsplit(temp{1}{1}, ':');
+        timeSplit = ApaStrsplit(temp{1}{1}, ':');
         times(lineIndex - 1) = str2double(timeSplit{1})*3600 + str2double(timeSplit{2})*60 + str2double(timeSplit{3});
         labels{lineIndex - 1} = strjoin(lineSplits{1}(2:2+additionalLabelParts));
     end

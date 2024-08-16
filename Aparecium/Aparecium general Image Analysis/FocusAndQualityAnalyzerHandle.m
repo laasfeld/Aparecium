@@ -5,7 +5,9 @@ classdef FocusAndQualityAnalyzerHandle < handle
     
     properties
         handle = [];
+        focusImageNamePreference = [];
         newPattern = [];
+        focusPreferenceSet = false;
     end
     
     methods
@@ -28,6 +30,19 @@ classdef FocusAndQualityAnalyzerHandle < handle
         
         function adaptToNewPattern(this)
             
+        end
+        
+        function this = setFocusImageNamePreference(this, imageNamesCell)
+            this.focusImageNamePreference = imageNamesCell;
+            this.focusPreferenceSet = true;
+        end
+              
+        function focusImageNamePreference = getFocusImageNamePreference(this)
+            focusImageNamePreference = this.focusImageNamePreference;
+        end
+        
+        function focusPreferenceSet = isFocusImageNamePreferenceSet(this)
+            focusPreferenceSet = this.focusPreferenceSet;
         end
     end
 end

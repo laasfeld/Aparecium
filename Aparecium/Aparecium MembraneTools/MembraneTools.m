@@ -39,7 +39,7 @@ function varargout = MembraneTools(varargin)
 
 % Edit the above text to modify the response to help MembraneTools
 
-% Last Modified by GUIDE v2.5 23-May-2023 19:04:30
+% Last Modified by GUIDE v2.5 13-Aug-2024 14:25:28
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1383,15 +1383,32 @@ function saveQualityMaskNow_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 maskdir = uigetdir([handles.imageImporter.mainDirectory, '\','Mask'], 'Select directory for saving the masks');
 for folder = 1 : handles.imageImporter.getNumberOfUsedDirectories()
-    mkdir([maskdir,'\' , handles.imageImporter.getUsedDirectoryWithIndex(folder), '\']);
-    for well = 1 : numel(handles.imageImporter.masks{folder}) 
-        for imageInWell = 1 : numel(handles.imageImporter.masks{folder}{well})
-            if ~isempty(handles.imageImporter.maskNameArray{folder}{well}{imageInWell})
-                imwrite(handles.imageImporter.masks{folder}{well}{imageInWell}, [maskdir, '\', handles.imageImporter.getUsedDirectoryWithIndex(folder), '\', handles.imageImporter.maskNameArray{folder}{well}{imageInWell}], 'tif')
-        
-            end
+    mkdir(fullfile(maskdir, handles.imageImporter.getUsedDirectoryWithIndex(folder)));
+    matchEquivalents = fields(handles.imageImporter.imageNameStructure{folder});
+    for matchEquivalentIndex = 1 : numel(matchEquivalents)
+        localStruct = handles.imageImporter.imageNameStructure{folder}.(matchEquivalents{matchEquivalentIndex});
+
+        if isfield(localStruct, 'mask')
+            
+            imwrite(localStruct.mask, fullfile(maskdir, handles.imageImporter.getUsedDirectoryWithIndex(folder), localStruct.detectionChannelName), 'tif')
+
         end
     end
+    %% new
+    
+    %%
+    
+    %% old
+%     for well = 1 : numel(handles.imageImporter.masks{folder}) 
+%         for imageInWell = 1 : numel(handles.imageImporter.masks{folder}{well})
+%             if ~isempty(handles.imageImporter.maskNameArray{folder}{well}{imageInWell})
+%                 imwrite(handles.imageImporter.masks{folder}{well}{imageInWell}, [maskdir, '\', handles.imageImporter.getUsedDirectoryWithIndex(folder), '\', handles.imageImporter.maskNameArray{folder}{well}{imageInWell}], 'tif')
+%         
+%             end
+%         end
+%     end
+
+    %%
 end
 
 % --- Executes on button press in saveBrightFieldFocusNow.
@@ -1909,3 +1926,32 @@ function firstPoint_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of firstPoint
+
+
+% --- Executes on button press in pushbutton38.
+function pushbutton38_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton38 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+appOutput = AppOutput();
+QuantificationChannelChooser(get(handles.quantificationChannelRegex, 'String'), appOutput)
+waitfor(appOutput, 'output')
+output = appOutput.output;
+set(handles.quantificationChannelRegex, 'String', strjoin(output, ';'));
+handles.imageProcessingParameters.setQuantificationChannelRegex(strjoin(output, ';'));
+
+guidata(hObject, handles);
+
+
+% --- Executes on button press in pushbutton39.
+function pushbutton39_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton39 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in pushbutton40.
+function pushbutton40_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton40 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)

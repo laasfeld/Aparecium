@@ -13,7 +13,7 @@ classdef Gen5Kinetic < handle
     methods
         function this = Gen5Kinetic(startingLine)
             informationString = regexprep(startingLine, 'Start Kinetic', '');
-            informationMatrix = strsplit(informationString, ',');
+            informationMatrix = ApaStrsplit(informationString, ',');
             this.setRuntimeFromString(informationMatrix{1});
             this.setIntervalFromString(informationMatrix{2});
             this.setCyclesFromString(informationMatrix{3});            
@@ -24,19 +24,19 @@ classdef Gen5Kinetic < handle
         end
         
         function setRuntimeFromString(this, string)
-            stringComponents = strsplit(string, ' ');
+            stringComponents = ApaStrsplit(string, ' ');
             timeString = stringComponents{2};
             this.runtime = this.timeStringToSec(timeString); 
         end
         
         function setIntervalFromString(this, string)
-           stringComponents = strsplit(string, ' ');
+           stringComponents = ApaStrsplit(string, ' ');
            timeString = stringComponents{2};
            this.interval = this.timeStringToSec(timeString);
         end
         
         function setCyclesFromString(this, string)
-            stringComponents = strsplit(string, ' ');
+            stringComponents = ApaStrsplit(string, ' ');
             this.numberOfCycles = str2double(stringComponents{1});
         end      
         
@@ -52,7 +52,7 @@ classdef Gen5Kinetic < handle
     
     methods(Static)
         function sec = timeStringToSec(string)
-            timeComponents = strsplit(string, ':');
+            timeComponents = ApaStrsplit(string, ':');
             sec = 3600*str2double(timeComponents{1}) + 60*str2double(timeComponents{2}) + str2double(timeComponents{3});
         end 
     end

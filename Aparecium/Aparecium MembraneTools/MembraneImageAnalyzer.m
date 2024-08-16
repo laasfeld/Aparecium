@@ -526,6 +526,104 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             slopeImage = (slopes-min(min(slopes)))/max(max(slopes-min(min(slopes))));
         end
         
+        function focusedImage = loadFocusedImage(imageName, imageProcessingParameters, filePath)
+            
+            imagePlaneIndex = str2double(regexp(regexp(regexp(imageName,'(_\d{1,2}Z\d{1,2})', 'match', 'once'), '(Z\d{1,3})', 'match', 'once'), '(\d{1,3})', 'match', 'once'));        
+            subtractBackground = imageProcessingParameters.getSubtractBackground();
+            pixelShiftVertical = imageProcessingParameters.getPixelShiftVertical();
+            pixelShiftHorizontal = imageProcessingParameters.getPixelShiftHorizontal();
+            
+            if strcmp(imageProcessingParameters.focusOrMaxProjection, 'max projection') && ~isnan(imagePlaneIndex)
+                % prepare Zstack image names
+                ZIndex = regexp(imageName, '_\d{1,2}Z\d{1,2}');
+                substr = regexp(imageName, '_\d{1,2}Z\d{1,2}', 'match', 'once');
+                ZIndex = ZIndex + regexp(substr, 'Z') - 1;
+                names = cell(1, numel(possibleNames));
+                index = 0;
+                while 1
+                    pathlessName = [imageName(1:ZIndex), num2str(index), '_',imageProcessingParameters.quantificationChannelRegex,'_', imageName(end-6:end)];
+                    if isequal(sum(strcmp(possibleNames, pathlessName)), 0)
+                       break; 
+                    end
+
+                    names{index + 1} = fullfile(filePath, [imageName(1:ZIndex), num2str(index),'_',imageProcessingParameters.quantificationChannelRegex,'_', imageName(end-6:end)]);
+                    index = index + 1;
+                end
+
+                names = names(~cellfun(@isempty, names));
+                focusedImage = focusFromZstack(names);
+            elseif strcmp(imageProcessingParameters.focusOrMaxProjection, 'focus') || isnan(imagePlaneIndex)
+                focusedImage = double(focusFromZstack({fullfile(filePath, imageName)}));
+                if strcmp(imageProcessingParameters.membraneToolsBackgroundCorrection.quantificationChannelBackgroundCorrectionFunctionName, 'polyfit')            
+                    imageBackground = polybg(focusedImage);
+                    if subtractBackground
+                        focusedImage = (focusedImage./imageBackground)*mean(mean(imageBackground))-mean(mean(imageBackground));
+                    else
+                        focusedImage = (focusedImage./imageBackground)*mean(mean(imageBackground));
+                    end
+                end                
+                focusedImage = focusedImage(1 : end - pixelShiftVertical, 1 : end - pixelShiftHorizontal);             
+            end
+        end
+        
+        function resultStructure = calculateSingleImageResultStructure(resultStructure, qualityMask, focusedImage, functionHandle, imageName, originalBinaryImage, calculationMethod, prefix)
+            if strcmp(calculationMethod, 'Binary')
+                
+                binaryImageCalculator = BinaryImageCalculator();
+                parametersToCalculate = {'confluency', 'image'};
+                maskedImage = and(1-qualityMask, resultStructure.image);
+                binaryImageCalculator.calculateImageParameters(maskedImage, parametersToCalculate, functionHandle);
+                maskedResultStructure = binaryImageCalculator.resultStructure;
+                indices = maskedResultStructure.image == 1;
+                resultStructure.image = maskedResultStructure.image;
+                resultStructure.confluency = maskedResultStructure.confluency;
+                resultStructure.([prefix, 'averageMembraneIntensity']) = mean(focusedImage(indices)); % image was instead of focusedImage
+                nonMaskIndices = qualityMask == 0;
+                resultStructure.([prefix, 'averageSecondaryImageIntensity']) = mean(mean(focusedImage(nonMaskIndices)));
+                
+                resultStructure.membranePixelCount = numel(find(indices==1));
+                resultStructure.([prefix, 'membraneIntensityStandardDeviation']) = std(double(focusedImage(indices)));
+                
+                reverseMaskedImage = and(1-qualityMask, 1-resultStructure.image);
+                binaryImageCalculator = BinaryImageCalculator();
+                binaryImageCalculator.calculateImageParameters(reverseMaskedImage, parametersToCalculate, functionHandle);
+                maskedResultStructure = binaryImageCalculator.resultStructure;
+                indices = maskedResultStructure.image == 1;
+                resultStructure.([prefix, 'averageNonMembraneIntensity']) = mean(focusedImage(indices));
+                sortedPixels = sort(focusedImage(indices));
+                try
+                    resultStructure.([prefix, 'firstNonMembraneQuadrileIntensity']) = mean(sortedPixels(1:ceil(numel(sortedPixels)/4)));
+                catch
+                    resultStructure.([prefix, 'firstNonMembraneQuadrileIntensity']) = mean(sortedPixels(1:floor(numel(sortedPixels)/4)));
+                end
+                               
+                binaryImageCalculator = BinaryImageCalculator();
+                parametersToCalculate = {'confluency', 'image'};
+                binaryImageCalculator.calculateImageParameters(originalBinaryImage, parametersToCalculate, functionHandle);
+                unmaskedResultStructure = binaryImageCalculator.resultStructure;
+                indices = unmaskedResultStructure.image == 1;
+                resultStructure.([prefix, 'averageUnmaskedMembraneIntensity']) = mean(focusedImage(indices));
+                resultStructure.([prefix, 'averageUnmaskedSecondaryImageIntensity']) = mean(mean(focusedImage));
+                reverseImage = 1-resultStructure.image;
+                binaryImageCalculator = BinaryImageCalculator();
+                binaryImageCalculator.calculateImageParameters(reverseImage, parametersToCalculate, functionHandle);
+                unmaskedResultStructure = binaryImageCalculator.resultStructure;
+                indices = unmaskedResultStructure.image == 1;
+                
+                resultStructure.([prefix, 'averageUnmaskedNonMembraneIntensity']) = mean(focusedImage(indices));
+                sortedPixels = sort(focusedImage(indices));
+                try
+                    resultStructure.([prefix, 'firstUnmaskedNonMembraneQuadrileIntensity']) = mean(sortedPixels(1:ceil(numel(sortedPixels)/4)));
+                catch
+                    resultStructure.([prefix, 'firstUnmaskedNonMembraneQuadrileIntensity']) = mean(sortedPixels(1:floor(numel(sortedPixels)/4)));
+                end
+                resultStructure.([prefix, 'secondaryImageName']) = imageName;
+                
+            elseif strcmp(calculationMethod, 'Probability')
+                 resultStructure.([prefix, 'averageMembraneIntensity']) = sum(sum(double(focusedImage).*resultStructure.probabilityImage))/(sum(sum(resultStructure.probabilityImage)));
+            end
+        end
+        
         function resultStructure = analyzeMembranesStatic(picName, secondaryPicName, filePath, secondaryFilePath, imageProcessingParameters,...
                 timeParameters, functionHandle, calculationMethod, qualityMask, parametersToCalculate, providedBinary, mainDir, usedDir, varargin)
             disp('MembraneImageAnalyzer');
@@ -546,109 +644,137 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             cellContents = struct2cell(contents);
             possibleNames = cellContents(1, :);
             
-            % Check if Z-stack at all is present
-            imagePlaneIndex = str2double(regexp(regexp(regexp(secondaryPicName,'(_\d{1,2}Z\d{1,2})', 'match', 'once'), '(Z\d{1,3})', 'match', 'once'), '(\d{1,3})', 'match', 'once'));
-            
-            if strcmp(imageProcessingParameters.focusOrMaxProjection, 'max projection') && ~isnan(imagePlaneIndex)
-                % prepare Zstack image names
-                ZIndex = regexp(secondaryPicName, '_\d{1,2}Z\d{1,2}');
-                substr = regexp(secondaryPicName, '_\d{1,2}Z\d{1,2}', 'match', 'once');
-                ZIndex = ZIndex + regexp(substr, 'Z') - 1;
-                names = cell(1, numel(possibleNames));
-                index = 0;
-                while 1
-                    pathlessName = [secondaryPicName(1:ZIndex), num2str(index), '_',imageProcessingParameters.quantificationChannelRegex,'_', secondaryPicName(end-6:end)];
-                    if isequal(sum(strcmp(possibleNames, pathlessName)), 0)
-                       break; 
-                    end
-
-                    names{index + 1} = fullfile(filePath, [secondaryPicName(1:ZIndex), num2str(index),'_',imageProcessingParameters.quantificationChannelRegex,'_', secondaryPicName(end-6:end)]);
-                    index = index + 1;
-                end
-
-                names = names(~cellfun(@isempty, names));
-                focusedImage = focusFromZstack(names);
-            elseif strcmp(imageProcessingParameters.focusOrMaxProjection, 'focus') || isnan(imagePlaneIndex)
-                focusedImage = double(focusFromZstack({fullfile(secondaryFilePath, secondaryPicName)}));
-                if strcmp(imageProcessingParameters.membraneToolsBackgroundCorrection.quantificationChannelBackgroundCorrectionFunctionName, 'polyfit')            
-                    imageBackground = polybg(focusedImage);
-                    if subtractBackground
-                        focusedImage = (focusedImage./imageBackground)*mean(mean(imageBackground))-mean(mean(imageBackground));
-                    else
-                        focusedImage = (focusedImage./imageBackground)*mean(mean(imageBackground));
-                    end
-                end                
-                focusedImage = focusedImage(1 : end - pixelShiftVertical, 1 : end - pixelShiftHorizontal);
-                secondaryPicName
-            end
-            originalBinaryImage = resultStructure.image;
-            if strcmp(calculationMethod, 'Binary')
-                
-                binaryImageCalculator = BinaryImageCalculator();
-                parametersToCalculate = {'confluency', 'image'};
-                maskedImage = and(1-qualityMask, resultStructure.image);
-                binaryImageCalculator.calculateImageParameters(maskedImage, parametersToCalculate, functionHandle);
-                maskedResultStructure = binaryImageCalculator.resultStructure;
-                indices = maskedResultStructure.image == 1;
-                resultStructure.image = maskedResultStructure.image;
-                resultStructure.confluency = maskedResultStructure.confluency;
-                resultStructure.averageMembraneIntensity = mean(focusedImage(indices)); % image was instead of focusedImage
-                nonMaskIndices = qualityMask == 0;
-                resultStructure.averageSecondaryImageIntensity = mean(mean(focusedImage(nonMaskIndices)));
-                
-                resultStructure.membranePixelCount = numel(find(indices==1));
-                resultStructure.membraneIntensityStandardDeviation = std(double(focusedImage(indices)));
-                
-                reverseMaskedImage = and(1-qualityMask, 1-resultStructure.image);
-                binaryImageCalculator = BinaryImageCalculator();
-                binaryImageCalculator.calculateImageParameters(reverseMaskedImage, parametersToCalculate, functionHandle);
-                maskedResultStructure = binaryImageCalculator.resultStructure;
-                indices = maskedResultStructure.image == 1;
-                resultStructure.averageNonMembraneIntensity = mean(focusedImage(indices));
-                sortedPixels = sort(focusedImage(indices));
-                try
-                    resultStructure.firstNonMembraneQuadrileIntensity = mean(sortedPixels(1:ceil(numel(sortedPixels)/4)));
-                catch
-                    resultStructure.firstNonMembraneQuadrileIntensity = mean(sortedPixels(1:floor(numel(sortedPixels)/4)));
-                end
-                               
-                binaryImageCalculator = BinaryImageCalculator();
-                parametersToCalculate = {'confluency', 'image'};
-                binaryImageCalculator.calculateImageParameters(originalBinaryImage, parametersToCalculate, functionHandle);
-                unmaskedResultStructure = binaryImageCalculator.resultStructure;
-                indices = unmaskedResultStructure.image == 1;
-                resultStructure.averageUnmaskedMembraneIntensity = mean(focusedImage(indices));
-                resultStructure.averageUnmaskedSecondaryImageIntensity = mean(mean(focusedImage));
-                reverseImage = 1-resultStructure.image;
-                binaryImageCalculator = BinaryImageCalculator();
-                binaryImageCalculator.calculateImageParameters(reverseImage, parametersToCalculate, functionHandle);
-                unmaskedResultStructure = binaryImageCalculator.resultStructure;
-                indices = unmaskedResultStructure.image == 1;
-                
-                resultStructure.averageUnmaskedNonMembraneIntensity = mean(focusedImage(indices));
-                sortedPixels = sort(focusedImage(indices));
-                try
-                    resultStructure.firstUnmaskedNonMembraneQuadrileIntensity = mean(sortedPixels(1:ceil(numel(sortedPixels)/4)));
-                catch
-                    resultStructure.firstUnmaskedNonMembraneQuadrileIntensity = mean(sortedPixels(1:floor(numel(sortedPixels)/4)));
-                end
-                resultStructure.secondaryImageName = secondaryPicName;
-                
-            elseif strcmp(calculationMethod, 'Probability')
-                 resultStructure.averageMembraneIntensity = sum(sum(double(focusedImage).*resultStructure.probabilityImage))/(sum(sum(resultStructure.probabilityImage)));
+            if iscell(secondaryPicName)
+                secondaryPicNameCellArray = secondaryPicName;
+            else
+                secondaryPicNameCellArray = {secondaryPicName};
             end
             
-            % save binary image on hard drive if saving is activated
-            % instead of keeping it in memory
+            channelCounter = 1;
+            for secondaryPicNameCell = secondaryPicNameCellArray
+                secondaryPicName = secondaryPicNameCell{1};
+                focusedImage = MembraneImageAnalyzer.loadFocusedImage(secondaryPicName, imageProcessingParameters, filePath);
+                originalBinaryImage = resultStructure.image;
+                prefixes = imageProcessingParameters.getQuantificationChannelPrefixes();
+                prefix = prefixes{channelCounter};
+                %imageProcessingParameters.getQuantificationChannelPrefixes
+                
+                %nrOfQuantChannels = handles.imageData{1}{1}.nrOfQuantChannels;
+                %quantChannelPrefixes = handles.imageData{1}{1}.QuantChannelPrefixes
+                
+                resultStructure = MembraneImageAnalyzer.calculateSingleImageResultStructure(resultStructure, qualityMask, focusedImage, functionHandle, secondaryPicName, originalBinaryImage, calculationMethod, prefix);           
+                channelCounter = channelCounter + 1;
+            end
+            
+            resultStructure.nrOfQuantChannels = numel(secondaryPicNameCellArray);
+            resultStructure.QuantChannelPrefixes = imageProcessingParameters.getQuantificationChannelPrefixes();
+            
             if strcmp(imageProcessingParameters.autoSaveBinaryFiles, 'on')
                 imagePath = ImageAnalyzer.saveBinaryImage(resultStructure.image, picName, mainDir, usedDir);
                 resultStructure.image = imagePath;
             end
-            
+
             if numel(varargin) > 0 && strcmp(imageProcessingParameters.autoSaveProbabilityMap, 'on')
                 imagePath = ImageAnalyzer.saveProbabilityMap(varargin{1}, picName, mainDir, usedDir);
                 resultStructure.probabilityMap = imagePath;
             end
+            
+            % Check if Z-stack at all is present
+%             imagePlaneIndex = str2double(regexp(regexp(regexp(secondaryPicName,'(_\d{1,2}Z\d{1,2})', 'match', 'once'), '(Z\d{1,3})', 'match', 'once'), '(\d{1,3})', 'match', 'once'));
+% 
+%                 
+%             if strcmp(imageProcessingParameters.focusOrMaxProjection, 'max projection') && ~isnan(imagePlaneIndex)
+%                 % prepare Zstack image names
+%                 ZIndex = regexp(secondaryPicName, '_\d{1,2}Z\d{1,2}');
+%                 substr = regexp(secondaryPicName, '_\d{1,2}Z\d{1,2}', 'match', 'once');
+%                 ZIndex = ZIndex + regexp(substr, 'Z') - 1;
+%                 names = cell(1, numel(possibleNames));
+%                 index = 0;
+%                 while 1
+%                     pathlessName = [secondaryPicName(1:ZIndex), num2str(index), '_',imageProcessingParameters.quantificationChannelRegex,'_', secondaryPicName(end-6:end)];
+%                     if isequal(sum(strcmp(possibleNames, pathlessName)), 0)
+%                        break; 
+%                     end
+% 
+%                     names{index + 1} = fullfile(filePath, [secondaryPicName(1:ZIndex), num2str(index),'_',imageProcessingParameters.quantificationChannelRegex,'_', secondaryPicName(end-6:end)]);
+%                     index = index + 1;
+%                 end
+% 
+%                 names = names(~cellfun(@isempty, names));
+%                 focusedImage = focusFromZstack(names);
+%             elseif strcmp(imageProcessingParameters.focusOrMaxProjection, 'focus') || isnan(imagePlaneIndex)
+%                 focusedImage = double(focusFromZstack({fullfile(secondaryFilePath, secondaryPicName)}));
+%                 if strcmp(imageProcessingParameters.membraneToolsBackgroundCorrection.quantificationChannelBackgroundCorrectionFunctionName, 'polyfit')            
+%                     imageBackground = polybg(focusedImage);
+%                     if subtractBackground
+%                         focusedImage = (focusedImage./imageBackground)*mean(mean(imageBackground))-mean(mean(imageBackground));
+%                     else
+%                         focusedImage = (focusedImage./imageBackground)*mean(mean(imageBackground));
+%                     end
+%                 end                
+%                 focusedImage = focusedImage(1 : end - pixelShiftVertical, 1 : end - pixelShiftHorizontal);
+%                 secondaryPicName
+%             end
+%             originalBinaryImage = resultStructure.image;
+%             if strcmp(calculationMethod, 'Binary')
+%                 
+%                 binaryImageCalculator = BinaryImageCalculator();
+%                 parametersToCalculate = {'confluency', 'image'};
+%                 maskedImage = and(1-qualityMask, resultStructure.image);
+%                 binaryImageCalculator.calculateImageParameters(maskedImage, parametersToCalculate, functionHandle);
+%                 maskedResultStructure = binaryImageCalculator.resultStructure;
+%                 indices = maskedResultStructure.image == 1;
+%                 resultStructure.image = maskedResultStructure.image;
+%                 resultStructure.confluency = maskedResultStructure.confluency;
+%                 resultStructure.averageMembraneIntensity = mean(focusedImage(indices)); % image was instead of focusedImage
+%                 nonMaskIndices = qualityMask == 0;
+%                 resultStructure.averageSecondaryImageIntensity = mean(mean(focusedImage(nonMaskIndices)));
+%                 
+%                 resultStructure.membranePixelCount = numel(find(indices==1));
+%                 resultStructure.membraneIntensityStandardDeviation = std(double(focusedImage(indices)));
+%                 
+%                 reverseMaskedImage = and(1-qualityMask, 1-resultStructure.image);
+%                 binaryImageCalculator = BinaryImageCalculator();
+%                 binaryImageCalculator.calculateImageParameters(reverseMaskedImage, parametersToCalculate, functionHandle);
+%                 maskedResultStructure = binaryImageCalculator.resultStructure;
+%                 indices = maskedResultStructure.image == 1;
+%                 resultStructure.averageNonMembraneIntensity = mean(focusedImage(indices));
+%                 sortedPixels = sort(focusedImage(indices));
+%                 try
+%                     resultStructure.firstNonMembraneQuadrileIntensity = mean(sortedPixels(1:ceil(numel(sortedPixels)/4)));
+%                 catch
+%                     resultStructure.firstNonMembraneQuadrileIntensity = mean(sortedPixels(1:floor(numel(sortedPixels)/4)));
+%                 end
+%                                
+%                 binaryImageCalculator = BinaryImageCalculator();
+%                 parametersToCalculate = {'confluency', 'image'};
+%                 binaryImageCalculator.calculateImageParameters(originalBinaryImage, parametersToCalculate, functionHandle);
+%                 unmaskedResultStructure = binaryImageCalculator.resultStructure;
+%                 indices = unmaskedResultStructure.image == 1;
+%                 resultStructure.averageUnmaskedMembraneIntensity = mean(focusedImage(indices));
+%                 resultStructure.averageUnmaskedSecondaryImageIntensity = mean(mean(focusedImage));
+%                 reverseImage = 1-resultStructure.image;
+%                 binaryImageCalculator = BinaryImageCalculator();
+%                 binaryImageCalculator.calculateImageParameters(reverseImage, parametersToCalculate, functionHandle);
+%                 unmaskedResultStructure = binaryImageCalculator.resultStructure;
+%                 indices = unmaskedResultStructure.image == 1;
+%                 
+%                 resultStructure.averageUnmaskedNonMembraneIntensity = mean(focusedImage(indices));
+%                 sortedPixels = sort(focusedImage(indices));
+%                 try
+%                     resultStructure.firstUnmaskedNonMembraneQuadrileIntensity = mean(sortedPixels(1:ceil(numel(sortedPixels)/4)));
+%                 catch
+%                     resultStructure.firstUnmaskedNonMembraneQuadrileIntensity = mean(sortedPixels(1:floor(numel(sortedPixels)/4)));
+%                 end
+%                 resultStructure.secondaryImageName = secondaryPicName;
+%                 
+%             elseif strcmp(calculationMethod, 'Probability')
+%                  resultStructure.averageMembraneIntensity = sum(sum(double(focusedImage).*resultStructure.probabilityImage))/(sum(sum(resultStructure.probabilityImage)));
+%             end
+            
+            % save binary image on hard drive if saving is activated
+            % instead of keeping it in memory
+
         end
         
         function resultStructure = analyseOneImageStatic(picName, filePath, imageProcessingParameters, timeParameters, functionHandle, parametersToCalculate, providedBinary)

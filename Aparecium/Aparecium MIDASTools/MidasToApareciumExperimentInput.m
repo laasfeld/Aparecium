@@ -198,6 +198,7 @@ function [ concChangeEvent, eventTimes ] = eventReader(handles)
     eventList = cell(noOfWells,1);
     isevent = cell(noOfWells,1);
     eventTimes = cell(noOfWells,1);
+    eventData = zeros(noOfWells, size(data, 3));
     for well = 1:noOfWells
        eventList{well} = cell(0); 
        event{well} = 0;

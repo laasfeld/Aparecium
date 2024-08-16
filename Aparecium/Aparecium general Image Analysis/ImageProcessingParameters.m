@@ -61,6 +61,7 @@ classdef ImageProcessingParameters < handle
         % Parameters related to image name filtering
         detectionChannelRegex = 'Bright Field';
         quantificationChannelRegex = 'RFP';
+        quantificationChannelPrefixes = {'RFP'};
         expectZstack = true;
         
         % For MembraneTools - 'Slopes' detects from linear regression
@@ -324,10 +325,15 @@ classdef ImageProcessingParameters < handle
         
         function setQuantificationChannelRegex(this, quantificationChannelRegex)
             this.quantificationChannelRegex = quantificationChannelRegex;
+            this.quantificationChannelPrefixes = strsplit(regexprep(quantificationChannelRegex, '\s','_') , ';');
         end
         
         function quantificationChannelRegex = getQuantificationChannelRegex(this)
             quantificationChannelRegex = this.quantificationChannelRegex;
+        end
+        
+        function quantificationChannelPrefixes = getQuantificationChannelPrefixes(this)
+            quantificationChannelPrefixes = this.quantificationChannelPrefixes;
         end
         
         function setExpectZstack(this, expectZstack)

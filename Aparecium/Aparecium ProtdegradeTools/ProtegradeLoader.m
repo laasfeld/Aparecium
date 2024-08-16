@@ -38,7 +38,7 @@ function [nrOfChannels, channelNames] = readToCell(filePath)
     %read true table header line. From here we can get the number of
     %channels
     line = fgetl(fileHandle);
-    header = strsplit(line, ' ');
+    header = ApaStrsplit(line, ' ');
     nrOfChannels = numel(header) - 6;
     channelNames = header(7:end);
     %resultCell = cell(lines - 2, numel(header));

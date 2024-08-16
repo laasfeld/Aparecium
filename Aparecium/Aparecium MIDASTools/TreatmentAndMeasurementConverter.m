@@ -88,7 +88,7 @@ set(handles.finalUnitsTable, 'ColumnName', treatmentNames);
 values = treatmentTable(:, 2);
 data = cell(1, numel(values));
 for i = 1 : numel(data)
-   splited = strsplit(values{i});
+   splited = ApaStrsplit(values{i});
    data(1 : numel(splited), i) = splited; 
 end
 set(handles.OriginalValuesTable, 'data', data);
