@@ -1002,9 +1002,9 @@ for index = 1 : numel(masks)
     try
         wellIDName = ImageImporter.findWellIDOfString(nameArray{index});
         imagingLocation = ImageImporter.getImageInWellIndexOfString(nameArray{index});
-        handles.imageMap.([handles.wellID{index}, '_',num2str(imageInWellIndex)]).focusImageNames = nameArray{index};
-        imageNames = handles.imageMap.([handles.wellID{index}, '_',num2str(imageInWellIndex)]).imageNamesOfLocation;
-        handles.imageMap.([handles.wellID{index}, '_',num2str(imageInWellIndex)]).indexMap = find(~cellfun(@isempty, (strfind(imageNames, nameArray{index}))), 1, 'first');            
+        handles.imageMap.([wellIDName, '_',num2str(imagingLocation)]).focusImageNames = nameArray{index};
+        imageNames = handles.imageMap.([wellIDName, '_',num2str(imagingLocation)]).imageNamesOfLocation;
+        handles.imageMap.([wellIDName, '_',num2str(imagingLocation)]).indexMap = find(~cellfun(@isempty, (strfind(imageNames, nameArray{index}))), 1, 'first');
         handles.currentImageIndex = index;
     catch
        disp('mask match not found'); 

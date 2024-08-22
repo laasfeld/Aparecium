@@ -384,7 +384,7 @@ classdef ImageImporter < handle
                         [patMatrix, pat] = ImageImporter.generatePatternMatrix(BFnameArray, secondaryChannelName);
                   
                         %try
-                        if isempty(this.secondaryFocusAndQualityAnalyzerHandleArray{folder}{secondaryChannelCounter}) || isempty(this.secondaryFocusAndQualityAnalyzerHandleArray{folder}{secondaryChannelCounter}.handle)
+                        if isempty(this.secondaryFocusAndQualityAnalyzerHandleArray{folder}) || isempty(this.secondaryFocusAndQualityAnalyzerHandleArray{folder}{secondaryChannelCounter}) || isempty(this.secondaryFocusAndQualityAnalyzerHandleArray{folder}{secondaryChannelCounter}.handle)
                             this.secondaryFocusAndQualityAnalyzerHandleArray{folder}{secondaryChannelCounter} = FocusAndQualityAnalyzerHandle();
                             [secondaryNameArray, ~, secondaryMasks] = focusAndQualityAnalyzer(fullfile(this.mainDirectory, this.usedDirectories{folder}), patMatrix, [0 0], standardFocus, this.secondaryFocusAndQualityAnalyzerHandleArray{folder}(secondaryChannelCounter));
                         else
