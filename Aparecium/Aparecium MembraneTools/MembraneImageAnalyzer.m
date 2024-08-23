@@ -781,7 +781,7 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                 tic
 
                 try
-                    image = Cytation5TIFFImage(fullfile(filePath, picName));
+                    image = Cytation5TIFFImage(fullfile(filePath, picName), 1);
                     I_org1 = image.getImage();
                     imageTime = image.getImageTime();
                     imageWidthMicrons = image.getImageWidthMicrons();

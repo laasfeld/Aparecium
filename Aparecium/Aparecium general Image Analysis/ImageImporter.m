@@ -9,6 +9,8 @@ classdef ImageImporter < handle
         numberOfChannels  
         usedDirectories 
         mainDirectory
+        binaryDirectory
+        binaryMode = false;
         experimentDataStructure
         primaryFocusAndQualityAnalyzerHandleArray = [];
         secondaryFocusAndQualityAnalyzerHandleArray = [];
@@ -156,10 +158,18 @@ classdef ImageImporter < handle
             elseif isequal(nargin, 2)
                 mainDir = varargin{1};
             end
-            
-
-
             this.mainDirectory = mainDir;
+
+            %% generate the secondary channel names
+            
+            secondaryChannelNames = strsplit(this.quantificationChannelRegex, ';');
+
+            %% initialize states
+            detectionNamesLoaded = false;
+            quantificationChannelNamesLoaded = cell(1, numel(secondaryChannelNames));
+            [quantificationChannelNamesLoaded{:}] = deal(false);
+            
+            
             %% get all folders from the path
             folderNames = dir([mainDir,'\*']);
             folderNames(1:2) = [];
@@ -193,13 +203,28 @@ classdef ImageImporter < handle
             prechooseFocusAnswer = questdlg('Would you like to select focus preselection file for this dataset?', 'Yes', 'Yes', 'No', 'No');
                 
             if strcmp(prechooseFocusAnswer, 'Yes')
+
                 [detectionChannelFile, detectionChannelPath] = uigetfile('*.mat','Choose the detection channel focal planes .mat file.');
-                [quantificationChannelFile, quantificationChannelPath] = uigetfile('*.mat','Choose the quantification channel focal planes .mat file.');
-
-
-                detectionChannelNames = load(fullfile(detectionChannelPath, detectionChannelFile));
-                quantificationChannelNames = load(fullfile(quantificationChannelPath, quantificationChannelFile));
-
+                if ~isequal(detectionChannelFile, 0) && ~isequal(detectionChannelPath, 0)
+                    detectionChannelNames = load(fullfile(detectionChannelPath, detectionChannelFile));
+                    detectionNamesLoaded = true;
+                else
+                    detectionNamesLoaded = false;
+                end
+                
+                quantificationChannelFile = cell(1, numel(secondaryChannelNames));
+                quantificationChannelPath = cell(1, numel(secondaryChannelNames));
+                quantificationChannelNames = cell(1, numel(secondaryChannelNames));
+                
+                for secondaryChannelIndex = 1 : numel(secondaryChannelNames)
+                    [quantificationChannelFile{secondaryChannelIndex}, quantificationChannelPath{secondaryChannelIndex}] = uigetfile('*.mat',['Choose the quantification channel ', secondaryChannelNames{secondaryChannelIndex}, ' focal planes .mat file.']);
+                    if ~isequal(quantificationChannelFile{secondaryChannelIndex}, 0) && ~isequal(quantificationChannelPath{secondaryChannelIndex}, 0)
+                        quantificationChannelNames{secondaryChannelIndex} = load(fullfile(quantificationChannelPath{secondaryChannelIndex}, quantificationChannelFile{secondaryChannelIndex}));
+                        quantificationChannelNamesLoaded{secondaryChannelIndex} = true;
+                    else
+                        quantificationChannelNamesLoaded{secondaryChannelIndex} = false;
+                    end
+                end
 
             elseif strcmp(prechooseFocusAnswer, 'No')
 
@@ -236,19 +261,30 @@ classdef ImageImporter < handle
                     %if ~isempty(primaryFocusAndQualityAnalyzerHandle.handle)
                     %    answer = questdlg('This folder contains no subfolders, did you mean to analyze the selected folder?', 'question', 'Yes', 'No', 'Yes')
                     %end
+                    
                     this.primaryFocusAndQualityAnalyzerHandleArray{folder} = FocusAndQualityAnalyzerHandle();
-                    if strcmp(prechooseFocusAnswer, 'Yes')
+                    if detectionNamesLoaded
                         this.primaryFocusAndQualityAnalyzerHandleArray{folder}.setFocusImageNamePreference(detectionChannelNames.fileNames{folder});
                     end
-                    [BFnameArray, standardFocus, this.masks{folder}] = focusAndQualityAnalyzer(fullfile(mainDir,this.usedDirectories{folder}), this.detectionChannelRegex, [this.lowerBound this.higherBound], [], this.primaryFocusAndQualityAnalyzerHandleArray(folder));
                     
+                    if this.binaryMode
+                        % binary mode is true, so we must filter out images
+                        % for which binary images do not exist
+                        [~, ~, binaryNameArray] = ImageImporter.getWellIDOfFolder(...
+                            fullfile(mainDir,this.usedDirectories{folder}, '..', ['Binary', this.usedDirectories{folder}]), '\.*');
+                            [patMatrix, pat] = ImageImporter.generatePatternMatrix(binaryNameArray, this.detectionChannelRegex);
+                            
+                        [BFnameArray, standardFocus, this.masks{folder}] = focusAndQualityAnalyzer(fullfile(mainDir,this.usedDirectories{folder}), patMatrix, [this.lowerBound this.higherBound], [], this.primaryFocusAndQualityAnalyzerHandleArray(folder));
 
-                    
-                    
+                    else
+                        [BFnameArray, standardFocus, this.masks{folder}] = focusAndQualityAnalyzer(fullfile(mainDir,this.usedDirectories{folder}), this.detectionChannelRegex, [this.lowerBound this.higherBound], [], this.primaryFocusAndQualityAnalyzerHandleArray(folder));
+
+                    end
+
                     this.maskNameArray{folder} = BFnameArray;
                     %create a more sophisticated pattern
                     
-                    secondaryChannelNames = strsplit(this.quantificationChannelRegex, ';');
+                    
                     secondaryChannelCounter = 1;
                     imageProcessingParameters = ImageProcessingParameters();
                     imageProcessingParameters.setQuantificationChannelRegex(this.quantificationChannelRegex);
@@ -266,7 +302,13 @@ classdef ImageImporter < handle
                         %pat = [pat,')(\w*)', this.quantificationChannelRegex];
 
                         %try
+
                         this.secondaryFocusAndQualityAnalyzerHandleArray{folder}{secondaryChannelCounter} = FocusAndQualityAnalyzerHandle();
+                        
+                        if quantificationChannelNamesLoaded{secondaryChannelCounter}
+                            this.secondaryFocusAndQualityAnalyzerHandleArray{folder}{secondaryChannelCounter}.setFocusImageNamePreference(quantificationChannelNames{secondaryChannelCounter}.fileNames{folder});
+                        end
+                        
                         [secondaryNameArray, ~, secondaryMasks] = focusAndQualityAnalyzer(fullfile(mainDir, chosenDirectories{folder}), patMatrix, [0 0], standardFocus, this.secondaryFocusAndQualityAnalyzerHandleArray{folder}(secondaryChannelCounter));
 
                             %catch MException
@@ -445,12 +487,8 @@ classdef ImageImporter < handle
             
         end
         
-        
-        
-        
-        
-        function unwrapImageImporterToFlatOrganization(this)
-            
+        function setBinaryMode(this, binaryMode)
+            this.binaryMode = binaryMode;
         end
         
         function setDetectionChannelRegex(this, detectionChannelRegex)
@@ -1148,4 +1186,3 @@ classdef ImageImporter < handle
         end
     end  
 end
-

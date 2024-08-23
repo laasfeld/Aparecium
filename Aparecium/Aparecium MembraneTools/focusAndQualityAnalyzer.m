@@ -234,29 +234,13 @@ function handles = chooseFocusResultsFromFocusPreference(handles)
 
 %% new
 preferredFocusNames = handles.focusAndQualityAnalyzerHandle.getFocusImageNamePreference();
-for imageName = preferredFocusNames'
+for imageName = preferredFocusNames
     imageName = imageName{1};
     wellID = ImageImporter.findWellIDOfString(imageName);
     imageInWellIndex = ImageImporter.getImageInWellIndexOfString(imageName);
     handles.imageMap.([wellID, '_',num2str(imageInWellIndex)]).focusImageNames = imageName;
-end
-
-%% old
-preferredFocusNames = handles.focusAndQualityAnalyzerHandle.getFocusImageNamePreference();
-
-for wellIDIndex = 1 : numel(handles.imagesOfWell)
-    for imageLocationIndex = 1 : numel(handles.imagesOfWell{wellIDIndex})
-        wellImageLocationNames = handles.nameArray(handles.imagesOfWell{wellIDIndex}{imageLocationIndex});
-        
-        for nameToCompare = preferredFocusNames
-            exact_match_mask = strcmp(wellImageLocationNames, nameToCompare);
-            exact_match_locations = find(exact_match_mask);
-            if ~isempty(exact_match_locations)
-                handles.imageIndex{wellIDIndex}(imageLocationIndex) = exact_match_locations;
-                handles.focusImageNames{wellIDIndex}{imageLocationIndex} = wellImageLocationNames{exact_match_locations};
-            end            
-        end
-    end
+    imageNamesOfLocation = handles.imageMap.([wellID, '_',num2str(imageInWellIndex)]).imageNamesOfLocation;
+    handles.imageMap.([wellID, '_',num2str(imageInWellIndex)]).indexMap = find(cellfun(@isempty, strfind(imageNamesOfLocation, imageName))==0);
 end
 
 
