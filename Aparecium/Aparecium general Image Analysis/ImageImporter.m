@@ -10,7 +10,7 @@ classdef ImageImporter < handle
         usedDirectories 
         mainDirectory
         binaryDirectory
-        binaryMode = false;
+        binaryMode = false; % parameter to show if imageImporter works with binary images to select images to import
         experimentDataStructure
         primaryFocusAndQualityAnalyzerHandleArray = [];
         secondaryFocusAndQualityAnalyzerHandleArray = [];
