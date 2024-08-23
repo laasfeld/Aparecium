@@ -23,8 +23,8 @@ classdef ImageImporter < handle
         masks = [];
         maskNameArray = [];
         detectionChannelRegex = 'Bright Field';
-        quantificationChannelRegex = 'RFP';
-        quantificationChannelPrefixes = [];
+        quantificationChannelRegex = 'RFP'; % default regex of the quantification channel
+        quantificationChannelPrefixes = []; % list of prefixes to use. Different from regex to remove spaces which are not allowed in matlab variable names
         lowerBound = 0; % 2 would be the default value for Quantitative analysis of fluorescent ligand binding to dopamine D3 receptors using live cell microscopy. 0 means no restriction
         higherBound = 0; % 5 would be the default value for Quantitative analysis of fluorescent ligand binding to dopamine D3 receptors using live cell microscopy. 0 means no restriction
     end
