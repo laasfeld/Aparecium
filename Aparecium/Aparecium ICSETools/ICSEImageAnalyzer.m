@@ -17,7 +17,7 @@ classdef ICSEImageAnalyzer < ImageAnalyzer
             'ICSE'    
             tic
                 try
-                    image = Cytation5TIFFImage([filePath, picName]);
+                    image = Cytation5TIFFImage(fullfile(filePath, picName));
                     I_org1 = image.getImage();
                     imageTime = image.getImageTime();
                     imageWidthMicrons = image.getImageWidthMicrons();

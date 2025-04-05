@@ -383,8 +383,13 @@ classdef ImageImporter < handle
                 goodImageCounter = 1;
                 for imageInWellIndex = 1 : numel(BFnameArray{wellIndex})
                     if ~isempty(BFnameArray{wellIndex}{imageInWellIndex})
-                        newMaskArray{wellIndex}{end + 1} = or(this.masks{folder}{wellIndex}{imageInWellIndex}, secondaryMasks{wellIndex}{goodImageCounter});
-                        goodImageCounter = goodImageCounter + 1;
+                        try
+                            newMaskArray{wellIndex}{end + 1} = or(this.masks{folder}{wellIndex}{imageInWellIndex}, secondaryMasks{wellIndex}{goodImageCounter});
+                            goodImageCounter = goodImageCounter + 1;
+
+                        catch
+                           '' 
+                        end
                     end
                 end
             end

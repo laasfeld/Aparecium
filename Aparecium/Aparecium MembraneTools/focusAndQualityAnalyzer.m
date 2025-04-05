@@ -106,7 +106,7 @@ if ischar(varargin{1})
     handles.qualityFilterNetwork = [];
     handles.qualityFilterThreshold = 0.5;
     set(handles.modelThresholdField, 'String', num2str(handles.qualityFilterThreshold));
-    
+
     % Update handles structure
     handles.focusAndQualityAnalyzerHandle.updateHandles(handles);
 else
@@ -118,8 +118,7 @@ else
     end
     handles = displayImages(handles);
     %handles = varargin{1}{1}.handle;
-    set(handles.done, 'enable', 'on');
-    set(handles.previousImage, 'enable', 'on');
+    
 end
 handles.loadedMaskMode = 'binary';
 guidata(hObject, handles);
@@ -352,11 +351,14 @@ try
 catch
     ''
 end
-
-if handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) <= handles.lowerBound + 1
-    set(handles.focusDown, 'Enable', 'off');  
-else
-    set(handles.focusDown, 'Enable', 'on');
+try
+    if handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex) <= handles.lowerBound + 1
+        set(handles.focusDown, 'Enable', 'off');  
+    else
+        set(handles.focusDown, 'Enable', 'on');
+    end
+catch
+   '' 
 end
 
 
@@ -376,8 +378,11 @@ function acceptImage_Callback(hObject, eventdata, handles)
 % hObject    handle to acceptImage (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-handles.focusImageNames{handles.wellIndex}{handles.imageInWellIndex} = handles.nameArray{handles.imagesOfWell{handles.wellIndex}{handles.imageInWellIndex}(handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex))};
+try
+    handles.focusImageNames{handles.wellIndex}{handles.imageInWellIndex} = handles.nameArray{handles.imagesOfWell{handles.wellIndex}{handles.imageInWellIndex}(handles.imageIndex{handles.wellIndex}(handles.imageInWellIndex))};
+catch
+   '' 
+end
 handles = nextImageSelection(handles);
 handles.focusAndQualityAnalyzerHandle.updateHandles(handles);
 guidata(hObject, handles);

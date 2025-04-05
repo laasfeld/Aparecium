@@ -33,7 +33,7 @@ function stack = stackFromImages(path, firstImageName, type, combination)
         %focus(index) = img.getImageFocus();
         %img = img.getImage();
         %images{index} = img;
-        images{index} = imread([path, rigthFileNames{index}]);
+        images{index} = imread(fullfile(path, rigthFileNames{index}));
         disp(['reading ', rigthFileNames{index}]);
     end
     sortedCombination = sort(combination);
