@@ -32,6 +32,7 @@ classdef ImageProcessingParameters < handle
         Fast = 'Image center';
         FromBinary = 'From binary image';
         Slopes = 'Slopes';
+        emptyRun = 'Empty run';
         
         FromBinaryAndMask = 'From binary and mask image';
         
@@ -39,6 +40,7 @@ classdef ImageProcessingParameters < handle
         IlastikModel = 'IlastikModel';
         SobelModel = 'SobelModel';
         KerasModel = 'KerasModel';
+        PrecalculatedProbabilityMaps = 'PrecalculatedProbabilityMaps';
         
         detectionModel = 'SobelModel';
         membraneLabelIndex = 3;
@@ -61,6 +63,7 @@ classdef ImageProcessingParameters < handle
         % Parameters related to image name filtering
         detectionChannelRegex = 'Bright Field';
         quantificationChannelRegex = 'RFP';
+        quantificationChannelPrefixes = {'RFP'};
         expectZstack = true;
         
         % For MembraneTools - 'Slopes' detects from linear regression
@@ -78,6 +81,20 @@ classdef ImageProcessingParameters < handle
         % options are Tile or Resize. In case of Tile, the image is cropped into tiles and predictions are done on tiles. In case of resize,
         % the image is resized to the input size of the model
         tileOrResizePreprocessing = 'Tile'; 
+        
+        % Precalculated probability maps processing
+        useAnomalyMaps = 1; % 0 - use anomaly maps that were done using the Focus and Quality Analyzer, 1 - use the precalculated probability maps
+        anomalyMapsMainPath = []; % main path for the anomaly probability maps
+        anomalyMapsPrefix = '';
+        anomalyMapsChannelIndex = 1;
+        anomalyMapsThreshold = 0.4;
+        
+        useForegroundMaps = 1; % 0 - some other detection method, 1 - use the precalculated probability maps for foreground (cells)
+        foregroundMapsMainPath = [];
+        foregroundMapsPrefix = '';
+        foregroundMapsChannelIndex = 1;
+        foregroundMapsThreshold = 0.6;
+        
                                     
     end
     
@@ -324,10 +341,15 @@ classdef ImageProcessingParameters < handle
         
         function setQuantificationChannelRegex(this, quantificationChannelRegex)
             this.quantificationChannelRegex = quantificationChannelRegex;
+            this.quantificationChannelPrefixes = strsplit(regexprep(quantificationChannelRegex, '\s','_') , ';');
         end
         
         function quantificationChannelRegex = getQuantificationChannelRegex(this)
             quantificationChannelRegex = this.quantificationChannelRegex;
+        end
+        
+        function quantificationChannelPrefixes = getQuantificationChannelPrefixes(this)
+            quantificationChannelPrefixes = this.quantificationChannelPrefixes;
         end
         
         function setExpectZstack(this, expectZstack)
@@ -389,5 +411,96 @@ classdef ImageProcessingParameters < handle
         function tileOrResizePreprocessing = getTileOrResizePreprocessing(this)
             tileOrResizePreprocessing = this.tileOrResizePreprocessing;
         end
+        
+        % Getter and Setter for useAnomalyMaps
+        function setUseAnomalyMaps(this, value)
+            this.useAnomalyMaps = value;
+        end
+        
+        function value = getUseAnomalyMaps(this)
+            value = this.useAnomalyMaps;
+        end
+        
+        % Getter and Setter for anomalyMapsMainPath
+        function setAnomalyMapsMainPath(this, value)
+            this.anomalyMapsMainPath = value;
+        end
+        
+        function value = getAnomalyMapsMainPath(this)
+            value = this.anomalyMapsMainPath;
+        end
+        
+        % Getter and Setter for anomalyMapsPrefix
+        function setAnomalyMapsPrefix(this, value)
+            this.anomalyMapsPrefix = value;
+        end
+        
+        function value = getAnomalyMapsPrefix(this)
+            value = this.anomalyMapsPrefix;
+        end
+        
+        % Getter and Setter for anomalyMapsChannelIndex
+        function setAnomalyMapsChannelIndex(this, value)
+            this.anomalyMapsChannelIndex = value;
+        end
+        
+        function value = getAnomalyMapsChannelIndex(this)
+            value = this.anomalyMapsChannelIndex;
+        end
+        
+        % Getter and Setter for anomalyMapsThreshold
+        function setAnomalyMapsThreshold(this, value)
+            this.anomalyMapsThreshold = value;
+        end
+        
+        function value = getAnomalyMapsThreshold(this)
+            value = this.anomalyMapsThreshold;
+        end
+        
+        % Getter and Setter for useForegroundMaps
+        function setUseForegroundMaps(this, value)
+            this.useForegroundMaps = value;
+        end
+        
+        function value = getUseForegroundMaps(this)
+            value = this.useForegroundMaps;
+        end
+        
+        % Getter and Setter for foregroundMapsMainPath
+        function setForegroundMapsMainPath(this, value)
+            this.foregroundMapsMainPath = value;
+        end
+        
+        function value = getForegroundMapsMainPath(this)
+            value = this.foregroundMapsMainPath;
+        end
+        
+        % Getter and Setter for foregroundMapsPrefix
+        function setForegroundMapsPrefix(this, value)
+            this.foregroundMapsPrefix = value;
+        end
+        
+        function value = getForegroundMapsPrefix(this)
+            value = this.foregroundMapsPrefix;
+        end
+        
+        % Getter and Setter for foregroundMapsChannelIndex
+        function setForegroundMapsChannelIndex(this, value)
+            this.foregroundMapsChannelIndex = value;
+        end
+        
+        function value = getForegroundMapsChannelIndex(this)
+            value = this.foregroundMapsChannelIndex;
+        end
+        
+        % Getter and Setter for foregroundMapsThreshold
+        function setForegroundMapsThreshold(this, value)
+            this.foregroundMapsThreshold = value;
+        end
+        
+        function value = getForegroundMapsThreshold(this)
+            value = this.foregroundMapsThreshold;
+        end
+        
     end   
 end

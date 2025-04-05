@@ -156,6 +156,7 @@ function specificTimeForWell = fastKineticsCalculator(ID, readingFormat, cycleTi
             if ~isequal(numel(tempPlate96WellLayout), numel(ID))
                 comparator = readingFormatComparatorGenerator([], 11);
                 sortID = quicksort(ID, comparator);
+                disp('here')
                 tempPlate96WellLayout = ID(sortID);
             end
 

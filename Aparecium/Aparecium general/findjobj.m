@@ -2188,7 +2188,11 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
             end
             try
                 [fieldNames, sortedIdx] = sort(fieldNames);
-                s = strsplit(dataFieldsStr, sprintf('\n'))';
+                try
+                    s = strsplit(dataFieldsStr, sprintf('\n'))';
+                catch
+                    s = ApaStrsplit(dataFieldsStr, sprintf('\n'))';                    
+                end
                 dataFieldsStr = strjoin(s(sortedIdx), sprintf('\n'));
             catch
                 % never mind... - ignore, leave unsorted

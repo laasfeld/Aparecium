@@ -1,7 +1,7 @@
 function fullPath = findIlastikPath()
     [status,cmdout] = system('wmic logicaldisk get caption');
     drives = regexprep(cmdout, 'Caption', '');
-    drivesList = strsplit(drives, '    ');
+    drivesList = ApaStrsplit(drives, '    ');
     suitableFolders = cell(1,0);
     suitableFolderVerCheck = cell(1,0);
     for drive = drivesList

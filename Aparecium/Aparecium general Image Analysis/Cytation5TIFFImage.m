@@ -8,9 +8,19 @@ classdef Cytation5TIFFImage < handle
     end
     
     methods
-        function this = Cytation5TIFFImage(imagePath)
-            this.imageData = bfopen(imagePath);
-            this.generateXMLStruct();
+        function this = Cytation5TIFFImage(imagePath, varargin)
+            if numel(varargin) > 0
+                this.imageData{1, 1}{1, 2} = imagePath;
+                this.imageData{1, 1}{1, 1} = imread(imagePath);
+                try
+                    this.xmlStruct = XMLStringToVariable(imfinfo(imagePath).ImageDescription);
+                catch
+                    this.xmlStruct = xml_parse(imfinfo(imagePath).ImageDescription);
+                end
+            else
+                this.imageData = bfopen(imagePath);
+                this.generateXMLStruct();
+            end
         end
         
         function image = getImage(this)
@@ -18,7 +28,7 @@ classdef Cytation5TIFFImage < handle
         end
         
         function imageTime = getImageTime(this)
-            this.generateXMLStruct();
+            %this.generateXMLStruct();
             date = this.xmlStruct.ImageReference.Date;
             month = str2double(date(1:2));
             day = str2double(date(4:5));
@@ -35,6 +45,18 @@ classdef Cytation5TIFFImage < handle
             wellName = this.xmlStruct.ImageReference.Well;
         end
         
+        function generateXMLStructWithIminfo(this)
+            metadata = this.imageData{1, 2};
+            value = metadata.get('Global Comment');
+            newValue = regexprep(value, '</Channel>','');
+            newValue = ['<BTIImageMetaData>', newValue];
+            try
+                this.xmlStruct = XMLStringToVariable(newValue);
+            catch
+                this.xmlStruct = xml_parse(newValue);
+            end
+        end
+            
         function generateXMLStruct(this)
             metadata = this.imageData{1, 2};
             value = metadata.get('Global Comment');

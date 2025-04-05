@@ -9,6 +9,8 @@ classdef ImageImporter < handle
         numberOfChannels  
         usedDirectories 
         mainDirectory
+        binaryDirectory
+        binaryMode = false; % parameter to show if imageImporter works with binary images to select images to import
         experimentDataStructure
         primaryFocusAndQualityAnalyzerHandleArray = [];
         secondaryFocusAndQualityAnalyzerHandleArray = [];
@@ -17,12 +19,14 @@ classdef ImageImporter < handle
         analyzeQuality = 0;
         nameArray = [];
         secondaryNameArray = []
+        imageNameStructure = []
         masks = [];
         maskNameArray = [];
         detectionChannelRegex = 'Bright Field';
-        quantificationChannelRegex = 'RFP';
-        lowerBound = 2; % 2 is default value for Quantitative analysis of fluorescent ligand binding to dopamine D3 receptors using live cell microscopy.
-        higherBound = 5; % 5 is default value for Quantitative analysis of fluorescent ligand binding to dopamine D3 receptors using live cell microscopy.
+        quantificationChannelRegex = 'RFP'; % default regex of the quantification channel
+        quantificationChannelPrefixes = []; % list of prefixes to use. Different from regex to remove spaces which are not allowed in matlab variable names
+        lowerBound = 0; % 2 would be the default value for Quantitative analysis of fluorescent ligand binding to dopamine D3 receptors using live cell microscopy. 0 means no restriction
+        higherBound = 0; % 5 would be the default value for Quantitative analysis of fluorescent ligand binding to dopamine D3 receptors using live cell microscopy. 0 means no restriction
     end
     
     methods
@@ -40,7 +44,7 @@ classdef ImageImporter < handle
             chosenDirectories = cell(1, 0);
             for itemIndex = 1 : numel(folderNames)
                 if(folderNames(itemIndex).isdir && exist(fullfile(this.mainDirectory, folderNames(itemIndex).name),'dir') && ~contains(folderNames(itemIndex).name, 'Binary') && ~contains(folderNames(itemIndex).name, 'Mask'))
-                    if exist([masksPath, '/', folderNames(itemIndex).name], 'dir') || exist(masksPath, 'dir')
+                    if exist(fullfile(masksPath, folderNames(itemIndex).name), 'dir') || exist(masksPath, 'dir')
                         chosenDirectories{end + 1} = folderNames(itemIndex).name;
                     end
                 end
@@ -150,11 +154,22 @@ classdef ImageImporter < handle
             
             if isequal(nargin, 1)
                 mainDir = uigetdir('Choose the folder which contains folders with all the image files for all the timepoints');
+
             elseif isequal(nargin, 2)
                 mainDir = varargin{1};
             end
-
             this.mainDirectory = mainDir;
+
+            %% generate the secondary channel names
+            
+            secondaryChannelNames = strsplit(this.quantificationChannelRegex, ';');
+
+            %% initialize states
+            detectionNamesLoaded = false;
+            quantificationChannelNamesLoaded = cell(1, numel(secondaryChannelNames));
+            [quantificationChannelNamesLoaded{:}] = deal(false);
+            
+            
             %% get all folders from the path
             folderNames = dir([mainDir,'\*']);
             folderNames(1:2) = [];
@@ -183,6 +198,39 @@ classdef ImageImporter < handle
 
             
             this.usedDirectories = chosenDirectories;
+            
+            %% Ask if focuses have been preselected
+            prechooseFocusAnswer = questdlg('Would you like to select focus preselection file for this dataset?', 'Yes', 'Yes', 'No', 'No');
+                
+            if strcmp(prechooseFocusAnswer, 'Yes')
+
+                [detectionChannelFile, detectionChannelPath] = uigetfile('*.mat','Choose the detection channel focal planes .mat file.');
+                if ~isequal(detectionChannelFile, 0) && ~isequal(detectionChannelPath, 0)
+                    detectionChannelNames = load(fullfile(detectionChannelPath, detectionChannelFile));
+                    detectionNamesLoaded = true;
+                else
+                    detectionNamesLoaded = false;
+                end
+                
+                quantificationChannelFile = cell(1, numel(secondaryChannelNames));
+                quantificationChannelPath = cell(1, numel(secondaryChannelNames));
+                quantificationChannelNames = cell(1, numel(secondaryChannelNames));
+                
+                for secondaryChannelIndex = 1 : numel(secondaryChannelNames)
+                    [quantificationChannelFile{secondaryChannelIndex}, quantificationChannelPath{secondaryChannelIndex}] = uigetfile('*.mat',['Choose the quantification channel ', secondaryChannelNames{secondaryChannelIndex}, ' focal planes .mat file.']);
+                    if ~isequal(quantificationChannelFile{secondaryChannelIndex}, 0) && ~isequal(quantificationChannelPath{secondaryChannelIndex}, 0)
+                        quantificationChannelNames{secondaryChannelIndex} = load(fullfile(quantificationChannelPath{secondaryChannelIndex}, quantificationChannelFile{secondaryChannelIndex}));
+                        quantificationChannelNamesLoaded{secondaryChannelIndex} = true;
+                    else
+                        quantificationChannelNamesLoaded{secondaryChannelIndex} = false;
+                    end
+                end
+
+            elseif strcmp(prechooseFocusAnswer, 'No')
+
+            end
+            
+            
             %% store all the filenames needed for the calculations
             % loop through all the folders
 
@@ -190,14 +238,14 @@ classdef ImageImporter < handle
             load plate96WellLayout
             ID = reshape(plate96WellLayout,1,96);
             
-            
+            this.imageNameStructure = cell(length(this.usedDirectories), 1);
             this.nameArray = cell(length(this.usedDirectories), 1);
             this.experimentDataStructure = cell(length(this.usedDirectories), 1);
             this.masks = cell(length(this.usedDirectories), 1);
             this.primaryFocusAndQualityAnalyzerHandleArray = cell(length(this.usedDirectories), 1);
             this.secondaryFocusAndQualityAnalyzerHandleArray = cell(length(this.usedDirectories), 1);
-            for folder = 1 : length(this.usedDirectories)
-                
+            
+            for folder = 1 : length(this.usedDirectories)                
                 if this.analyzeQuality
                     a = ExtendedRowLabels();
                     plate96WellLayout = cell(48, numel(a));
@@ -213,57 +261,124 @@ classdef ImageImporter < handle
                     %if ~isempty(primaryFocusAndQualityAnalyzerHandle.handle)
                     %    answer = questdlg('This folder contains no subfolders, did you mean to analyze the selected folder?', 'question', 'Yes', 'No', 'Yes')
                     %end
+                    
                     this.primaryFocusAndQualityAnalyzerHandleArray{folder} = FocusAndQualityAnalyzerHandle();
-                    [BFnameArray, standardFocus, this.masks{folder}] = focusAndQualityAnalyzer(fullfile(mainDir,this.usedDirectories{folder}), this.detectionChannelRegex, [this.lowerBound this.higherBound], [], this.primaryFocusAndQualityAnalyzerHandleArray(folder));
+                    if detectionNamesLoaded
+                        this.primaryFocusAndQualityAnalyzerHandleArray{folder}.setFocusImageNamePreference(detectionChannelNames.fileNames{folder});
+                    end
+                    
+                    if this.binaryMode
+                        % binary mode is true, so we must filter out images
+                        % for which binary images do not exist
+                        [~, ~, binaryNameArray] = ImageImporter.getWellIDOfFolder(...
+                            fullfile(mainDir,this.usedDirectories{folder}, '..', ['Binary', this.usedDirectories{folder}]), '\.*');
+                            [patMatrix, pat] = ImageImporter.generatePatternMatrix(binaryNameArray, this.detectionChannelRegex);
+                            
+                        [BFnameArray, standardFocus, this.masks{folder}] = focusAndQualityAnalyzer(fullfile(mainDir,this.usedDirectories{folder}), patMatrix, [this.lowerBound this.higherBound], [], this.primaryFocusAndQualityAnalyzerHandleArray(folder));
+
+                    else
+                        [BFnameArray, standardFocus, this.masks{folder}] = focusAndQualityAnalyzer(fullfile(mainDir,this.usedDirectories{folder}), this.detectionChannelRegex, [this.lowerBound this.higherBound], [], this.primaryFocusAndQualityAnalyzerHandleArray(folder));
+
+                    end
 
                     this.maskNameArray{folder} = BFnameArray;
                     %create a more sophisticated pattern
-                    pat = '^(';             
-                    patMatrix = cell(0, 3);
-                    for nameIndex = 1 : numel(BFnameArray)
-                        for imageInWellIndes = 1 : numel(BFnameArray{nameIndex})
-                            if ~isempty(BFnameArray{nameIndex}{imageInWellIndes})
-                                wellID = ImageImporter.findWellIDOfString(BFnameArray{nameIndex}{imageInWellIndes});
-                                imageInWellIndex = num2str(ImageImporter.getImageInWellIndexOfString(BFnameArray{nameIndex}{imageInWellIndes}));
-                                %pat = [pat, wellID, '_\d{1,2}_\d{1}_', imageInWellIndex, '(Z|_)|'];
-                                pat = [pat, wellID, '_\d{1,2}_\d{1}_', imageInWellIndex, '|'];
-                                patMatrix{end+1, 1} = wellID;
-                                patMatrix{end, 2} = imageInWellIndex;
-                                patMatrix{end, 3} = this.quantificationChannelRegex;
-                            end                           
+                    
+                    
+                    secondaryChannelCounter = 1;
+                    imageProcessingParameters = ImageProcessingParameters();
+                    imageProcessingParameters.setQuantificationChannelRegex(this.quantificationChannelRegex);
+                    this.quantificationChannelPrefixes = imageProcessingParameters.getQuantificationChannelPrefixes();
+                    
+                    this = updateImageNameStructure(this, BFnameArray, BFnameArray, [], folder, this.masks{folder});
+
+                    for secondaryChannelName = secondaryChannelNames 
+                        secondaryChannelName = secondaryChannelName{1}; % extract from cell array
+                           
+                        [patMatrix, pat] = ImageImporter.generatePatternMatrix(BFnameArray, secondaryChannelName);
+              
+                        % remove last | character to correct the pattern
+                        %pat(end) = [];
+                        %pat = [pat,')(\w*)', this.quantificationChannelRegex];
+
+                        %try
+
+                        this.secondaryFocusAndQualityAnalyzerHandleArray{folder}{secondaryChannelCounter} = FocusAndQualityAnalyzerHandle();
+                        
+                        if quantificationChannelNamesLoaded{secondaryChannelCounter}
+                            this.secondaryFocusAndQualityAnalyzerHandleArray{folder}{secondaryChannelCounter}.setFocusImageNamePreference(quantificationChannelNames{secondaryChannelCounter}.fileNames{folder});
                         end
-                    end                
-                    % remove last | character to correct the pattern
-                    pat(end) = [];
-                    pat = [pat,')(\w*)', this.quantificationChannelRegex];
-                    
-                    %try
-                    this.secondaryFocusAndQualityAnalyzerHandleArray{folder} = FocusAndQualityAnalyzerHandle();
-                    [secondaryNameArray, ~, secondaryMasks] = focusAndQualityAnalyzer(fullfile(mainDir, chosenDirectories{folder}), patMatrix, [0 0], standardFocus, this.secondaryFocusAndQualityAnalyzerHandleArray(folder));
-                    
-                        %catch MException
-%                        save('imageImporterMaskAutosave.mat', 'this', 'BFnameArray', 'standardFocus', 'pat')
-                    %end
-                    nameArray = this.removeIncompatibleImages(BFnameArray, secondaryNameArray, folder);
-                    this.mergeMasks(BFnameArray, secondaryNameArray, folder, secondaryMasks);
+                        
+                        [secondaryNameArray, ~, secondaryMasks] = focusAndQualityAnalyzer(fullfile(mainDir, chosenDirectories{folder}), patMatrix, [0 0], standardFocus, this.secondaryFocusAndQualityAnalyzerHandleArray{folder}(secondaryChannelCounter));
+
+                            %catch MException
+    %                        save('imageImporterMaskAutosave.mat', 'this', 'BFnameArray', 'standardFocus', 'pat')
+                        %end
+                        
+                        %% new logic
+
+                        this = updateImageNameStructure(this, BFnameArray, secondaryNameArray, this.quantificationChannelPrefixes{secondaryChannelCounter}, folder, secondaryMasks);
+                        matchEquivalents = fields(this.imageNameStructure{folder});
+                        BFnameArray = cell(1, numel(matchEquivalents));
+                        for fieldIndex = 1 : numel(matchEquivalents)
+                            BFnameArray{fieldIndex} = this.imageNameStructure{folder}.(matchEquivalents{fieldIndex}).detectionChannelName;
+                        end
+                        secondaryChannelCounter = secondaryChannelCounter + 1;
+                        %%
+                        
+%                         if numel(secondaryChannelNames) > 1
+%                             nameArray = this.removeIncompatibleImages(BFnameArray, secondaryNameArray, folder, 'add', secondaryChannelCounter);
+%                         elseif numel(secondaryChannelNames) == 1
+%                             nameArray = this.removeIncompatibleImages(BFnameArray, secondaryNameArray, folder);
+%                         end
+                        
+                        %% old
+%                         BFnameArray = ImageImporter.removeImagesFromDetectionNameArray(BFnameArray, nameArray);
+% 
+%                         this.mergeMasks(BFnameArray, secondaryNameArray, folder, secondaryMasks);
+%                         for indexToFix = 1 : secondaryChannelCounter
+%                             secondaryNameArrayToFix = cell(0,1);
+%                             for imageIndex = 1 : numel(this.secondaryNameArray{folder})
+%                                 try
+%                                     secondaryNameArrayToFix{end + 1} = this.secondaryNameArray{folder}{imageIndex}{indexToFix};
+%                                 catch
+%                                     % if some are missing, it is ok
+%                                 end
+%                             end
+%                             this.removeIncompatibleImages(BFnameArray, secondaryNameArrayToFix, folder, 'update', indexToFix);
+%                         end
+%                         secondaryChannelCounter = secondaryChannelCounter + 1;
+                        
+                        %%
+                    end
                 else
                     fileListArray = dir([mainDir,'\',this.usedDirectories{folder},'\*.tif']);
                     nameArray = cell(length(fileListArray),1);
                     for i = 1 : length(fileListArray)
                         nameArray{i} = fileListArray(i).name;
                     end
+                    BFnameArray = nameArray;
                 end
                 
                 %% reorganize the fileListArray to get all the file names
 
                 this.wellID{folder} = cell(0,0);
-                this.wellID{folder} = ImageImporter.getWellIDOfStringArray(nameArray, '.tif');
+                this.wellID{folder} = ImageImporter.getWellIDOfStringArray(BFnameArray, '.tif');
                 this.time{folder, 1} = 0;
                 this.numberOfChannels{folder} = 6;%% a standard parameter for now
                 this.generateExperimentDataStructure(folder);
                 
             end
+            try
+                this = standardizeImageNameStructure(this);
+                this = wrapImageImporterToWellWiseOrganization(this);
+            catch
+                
+            end
+                
         end
+        
+
         
         function editImport(this)
             
@@ -293,56 +408,87 @@ classdef ImageImporter < handle
                     else
                         [BFnameArray, standardFocus, this.masks{folder}] = focusAndQualityAnalyzer(this.primaryFocusAndQualityAnalyzerHandleArray(folder));
                     end
-                    this.maskNameArray{folder} = BFnameArray;
+                                        this.maskNameArray{folder} = BFnameArray;
                     %create a more sophisticated pattern
-                    pat = '^(';             
-                    patMatrix = cell(0, 3);
-                    for nameIndex = 1 : numel(BFnameArray)
-                        for imageInWellIndes = 1 : numel(BFnameArray{nameIndex})
-                            if ~isempty(BFnameArray{nameIndex}{imageInWellIndes})
-                                wellID = ImageImporter.findWellIDOfString(BFnameArray{nameIndex}{imageInWellIndes});
-                                imageInWellIndex = num2str(ImageImporter.getImageInWellIndexOfString(BFnameArray{nameIndex}{imageInWellIndes}));
-                                %pat = [pat, wellID, '_\d{1,2}_\d{1}_', imageInWellIndex, '(Z|_)|'];
-                                pat = [pat, wellID, '_\d{1,2}_\d{1}_', imageInWellIndex, '|'];
-                                patMatrix{end+1, 1} = wellID;
-                                patMatrix{end, 2} = imageInWellIndex;
-                                patMatrix{end, 3} = this.quantificationChannelRegex;
-                            end                           
-                        end
-                    end                
-                    % remove last | character to correct the pattern
-                    pat(end) = [];
-                    pat = [pat,')(\w*)', this.quantificationChannelRegex];
                     
-                    %try
-                    if isempty(this.secondaryFocusAndQualityAnalyzerHandleArray{folder}) || isempty(this.secondaryFocusAndQualityAnalyzerHandleArray{folder}.handle)
-                        this.secondaryFocusAndQualityAnalyzerHandleArray{folder} = FocusAndQualityAnalyzerHandle();
-                        [secondaryNameArray, ~, secondaryMasks] = focusAndQualityAnalyzer(fullfile(this.mainDirectory, this.usedDirectories{folder}), patMatrix, [0 0], standardFocus, this.secondaryFocusAndQualityAnalyzerHandleArray(folder));
-                    else
-                        this.secondaryFocusAndQualityAnalyzerHandleArray{folder}.setNewPattern(pat)
-                        [secondaryNameArray, ~, secondaryMasks] = focusAndQualityAnalyzer(this.secondaryFocusAndQualityAnalyzerHandleArray(folder));
+                    
+                    
+                    secondaryChannelNames = strsplit(this.quantificationChannelRegex, ';');
+                    secondaryChannelCounter = 1;
+                    imageProcessingParameters = ImageProcessingParameters();
+                    imageProcessingParameters.setQuantificationChannelRegex(this.quantificationChannelRegex);
+                    this.quantificationChannelPrefixes = imageProcessingParameters.getQuantificationChannelPrefixes();                    
+                    this = updateImageNameStructure(this, BFnameArray, BFnameArray, [], folder, this.masks{folder});
+                    
+                    
+                    for secondaryChannelName = secondaryChannelNames 
+                        secondaryChannelName = secondaryChannelName{1}; % extract from cell array
+                        [patMatrix, pat] = ImageImporter.generatePatternMatrix(BFnameArray, secondaryChannelName);
+                  
+                        %try
+                        if isempty(this.secondaryFocusAndQualityAnalyzerHandleArray{folder}) || isempty(this.secondaryFocusAndQualityAnalyzerHandleArray{folder}{secondaryChannelCounter}) || isempty(this.secondaryFocusAndQualityAnalyzerHandleArray{folder}{secondaryChannelCounter}.handle)
+                            this.secondaryFocusAndQualityAnalyzerHandleArray{folder}{secondaryChannelCounter} = FocusAndQualityAnalyzerHandle();
+                            [secondaryNameArray, ~, secondaryMasks] = focusAndQualityAnalyzer(fullfile(this.mainDirectory, this.usedDirectories{folder}), patMatrix, [0 0], standardFocus, this.secondaryFocusAndQualityAnalyzerHandleArray{folder}(secondaryChannelCounter));
+                        else
+                            this.secondaryFocusAndQualityAnalyzerHandleArray{folder}{secondaryChannelCounter}.setNewPattern(pat)
+                            [secondaryNameArray, ~, secondaryMasks] = focusAndQualityAnalyzer(this.secondaryFocusAndQualityAnalyzerHandleArray{folder}(secondaryChannelCounter));
+                        end
+                        %catch MException
+    %                        save('imageImporterMaskAutosave.mat', 'this', 'BFnameArray', 'standardFocus', 'pat')
+                        %end
+                        
+                        %% new logic
+                        this = updateImageNameStructure(this, BFnameArray, secondaryNameArray, this.quantificationChannelPrefixes{secondaryChannelCounter}, folder, secondaryMasks);
+                        matchEquivalents = fields(this.imageNameStructure{folder});
+                        BFnameArray = cell(1, numel(matchEquivalents));
+                        for fieldIndex = 1 : numel(matchEquivalents)
+                            BFnameArray{fieldIndex} = this.imageNameStructure{folder}.(matchEquivalents{fieldIndex}).detectionChannelName;
+                        end
+                        secondaryChannelCounter = secondaryChannelCounter + 1;
+                        %%
+                        
+%                         if numel(secondaryChannelNames) > 1
+%                             nameArray = this.removeIncompatibleImages(BFnameArray, secondaryNameArray, folder, 'add', secondaryChannelCounter);
+%                         elseif numel(secondaryChannelNames) == 1
+%                             nameArray = this.removeIncompatibleImages(BFnameArray, secondaryNameArray, folder);
+%                         end
+%                         this.mergeMasks(BFnameArray, secondaryNameArray, folder, secondaryMasks);
+%                         
+%                         BFnameArray = ImageImporter.removeImagesFromDetectionNameArray(BFnameArray, nameArray);
+%                         for indexToFix = 1 : secondaryChannelCounter
+%                             this.removeIncompatibleImages(this, BFnameArray, secondaryNameArray, folder, varargin);
+%                         end
+
                     end
-                    %catch MException
-%                        save('imageImporterMaskAutosave.mat', 'this', 'BFnameArray', 'standardFocus', 'pat')
-                    %end
-                    nameArray = this.removeIncompatibleImages(BFnameArray, secondaryNameArray, folder);
-                    this.mergeMasks(BFnameArray, secondaryNameArray, folder, secondaryMasks);
                 else
                     fileListArray = dir(fullfile(mainDir, this.usedDirectories{folder}, '*.tif'));
                     nameArray = cell(length(fileListArray),1);
                     for i = 1 : length(fileListArray)
                         nameArray{i} = fileListArray(i).name;
                     end
+                    BFnameArray = nameArray;
                 end
                 
                 %% reorganize the fileListArray to get all the file names
 
                 this.wellID{folder} = cell(0,0);
-                this.wellID{folder} = ImageImporter.getWellIDOfStringArray(nameArray, '.tif');
+                this.wellID{folder} = ImageImporter.getWellIDOfStringArray(BFnameArray, '.tif');
                 this.time{folder, 1} = 0;
                 this.numberOfChannels{folder} = 6;%% a standard parameter for now
                 this.generateExperimentDataStructure(folder);
             end
+            
+            try
+                this = standardizeImageNameStructure(this);
+                this = wrapImageImporterToWellWiseOrganization(this);
+            catch
+                
+            end
+            
+        end
+        
+        function setBinaryMode(this, binaryMode)
+            this.binaryMode = binaryMode;
         end
         
         function setDetectionChannelRegex(this, detectionChannelRegex)
@@ -378,17 +524,48 @@ classdef ImageImporter < handle
         end
         
         function mergeMasks(this, BFnameArray, secondaryNameArray, folder, secondaryMasks)
-            newMaskArray = cell(size(this.masks{folder}));
-            for wellIndex = 1 : numel(BFnameArray)
-                goodImageCounter = 1;
-                for imageInWellIndex = 1 : numel(BFnameArray{wellIndex})
-                    if ~isempty(BFnameArray{wellIndex}{imageInWellIndex})
-                        try
-                            newMaskArray{wellIndex}{end + 1} = or(this.masks{folder}{wellIndex}{imageInWellIndex}, secondaryMasks{wellIndex}{goodImageCounter});
-                            goodImageCounter = goodImageCounter + 1;
+            newMaskArray = cell(1, 0);
+            nameToMaskMap = containers.Map;
+            
+            [flatStyleCheck, nestedStyleCheck] = ImageImporter.flatAndNestedCheck(BFnameArray);
+            
+            if flatStyleCheck
+                for imageIndex = 1 : numel(secondaryMasks)
+                    nameArrayMathcEquivalent = this.generateNameArrayMatchEquivalent(secondaryNameArray(imageIndex));
+                    if ~isempty(nameArrayMathcEquivalent)
+                        nameToMaskMap(nameArrayMathcEquivalent{1}) = secondaryMasks{imageIndex};
+                    end 
+                end
+                
+                for imageIndex = 1 : numel(BFnameArray)
+                    nameArrayMatchEquivalent = this.generateNameArrayMatchEquivalent(BFnameArray(imageIndex));
+                    if ~isempty(nameArrayMatchEquivalent)
+                        newMaskArray{end + 1} = or(this.masks{folder}{imageIndex}, nameToMaskMap(nameArrayMatchEquivalent{1}));
+                    end
+                end
+            
+            elseif nestedStyleCheck
+            
+                for wellIndex = 1 : numel(secondaryNameArray)
+                    nameArrayMathcEquivalent = this.generateNameArrayMatchEquivalent({secondaryNameArray{wellIndex}});
+                    for imageInWellIndex = 1 : numel(secondaryMasks{wellIndex})
+                        if ~isempty(nameArrayMathcEquivalent{imageInWellIndex})
+                            nameToMaskMap(nameArrayMathcEquivalent{imageInWellIndex}) = secondaryMasks{wellIndex}{imageInWellIndex};
+                        end                  
+                    end
+                end
 
-                        catch
-                           '' 
+                for wellIndex = 1 : numel(BFnameArray)
+                    goodImageCounter = 1;
+                    for imageInWellIndex = 1 : numel(BFnameArray{wellIndex})
+                        if ~isempty(BFnameArray{wellIndex}{imageInWellIndex})
+                            try
+                                nameArrayMatchEquivalent = this.generateNameArrayMatchEquivalent({{BFnameArray{wellIndex}{imageInWellIndex}}});
+                                newMaskArray{wellIndex}{end + 1} = or(this.masks{folder}{wellIndex}{imageInWellIndex}, nameToMaskMap(nameArrayMatchEquivalent{1}));
+                            catch
+                                ''
+                            end
+                            goodImageCounter = goodImageCounter + 1;
                         end
                     end
                 end
@@ -396,18 +573,24 @@ classdef ImageImporter < handle
             this.masks{folder} = newMaskArray;
         end
         
-        function nameArray = removeIncompatibleImages(this, nameArray, secondaryNameArray, folder)
-            try
-                unwrappedNameArray = vertcat(nameArray{:});
-            catch
-                unwrappedNameArray = horzcat(nameArray{:});
+        function unwrappedNameArray = assureUnwrappedNameArray(this, nameArray)
+            [flatStyleCheck, nestedStyleCheck] = ImageImporter.flatAndNestedCheck(nameArray);
+            if nestedStyleCheck
+                try
+                    unwrappedNameArray = vertcat(nameArray{:});
+                catch
+                    unwrappedNameArray = horzcat(nameArray{:});
+                end
+            elseif flatStyleCheck
+                unwrappedNameArray = nameArray;
             end
-            
-            try
-                unwrappedSecondaryNameArray = vertcat(secondaryNameArray{:});
-            catch
-                unwrappedSecondaryNameArray = horzcat(secondaryNameArray{:});
-            end
+        end
+        
+        function nameArray = removeIncompatibleImages(this, nameArray, secondaryNameArray, folder, varargin)
+
+            unwrappedNameArray = this.assureUnwrappedNameArray(nameArray);          
+            unwrappedSecondaryNameArray = this.assureUnwrappedNameArray(secondaryNameArray);
+
             unwrappedNameArray = reshape(unwrappedNameArray, numel(unwrappedNameArray), 1);
             unwrappedSecondaryNameArray = reshape(unwrappedSecondaryNameArray, numel(unwrappedSecondaryNameArray), 1);
             
@@ -429,13 +612,81 @@ classdef ImageImporter < handle
 %                    end
 %                end
 %             end
-            nameArray = unwrappedNameArray(nameArrayIndices);
-            secondaryNameArray = unwrappedSecondaryNameArray(secondaryNameArrayIndices);
+            unwrappedNameArray = unwrappedNameArray(nameArrayIndices);
+            unwrappedSecondaryNameArray = unwrappedSecondaryNameArray(secondaryNameArrayIndices);
+            this.nameArray{folder} = this.sortImageNames(unwrappedNameArray);
+
             % sort according to names
-            
-            this.nameArray{folder} = this.sortImageNames(unwrappedNameArray(nameArrayIndices));
-            this.secondaryNameArray{folder} = this.sortImageNames(unwrappedSecondaryNameArray(secondaryNameArrayIndices));
-            nameArray = this.sortImageNames(unwrappedNameArray(nameArrayIndices));
+            if numel(varargin) > 1 && strcmp(varargin{1}, 'add')
+                index = varargin{2};
+                %% if isempty(this.secondaryNameArray) || isempty(this.secondaryNameArray{folder})
+                %% new
+                sortedNames = this.sortImageNames(unwrappedSecondaryNameArray);
+                for imageIndex = 1 : numel(sortedNames)
+                    this.secondaryNameArray{folder}{imageIndex}{index} = sortedNames{imageIndex};
+                end
+                
+                % Find the index of the last non-empty element
+                lastNonEmptyIdx = find(~cellfun('isempty', this.secondaryNameArray{folder}), 1, 'last');
+
+                % Truncate the cell array to remove trailing empty elements
+                this.secondaryNameArray{folder} = this.secondaryNameArray{folder}(1:lastNonEmptyIdx);
+                %% 
+                    
+                    %% old
+%                     sorted = this.sortImageNames(unwrappedSecondaryNameArray(secondaryNameArrayIndices));
+%                     for imageIndex = 1 : numel(sorted)
+%                         this.secondaryNameArray{folder}{imageIndex}{index} = sorted{imageIndex};
+%                     end
+                    
+
+%                 else
+%                     
+%                     sorted = this.sortImageNames(unwrappedSecondaryNameArray(secondaryNameArrayIndices));
+%                     for imageIndex = 1 : numel(this.secondaryNameArray{folder})
+%                         this.secondaryNameArray{folder}{imageIndex}{index} = sorted{imageIndex};
+%                     end
+%                 end
+                %% 
+                
+            elseif numel(varargin) > 1 && strcmp(varargin{1}, 'update')
+                index = varargin{2};
+                if isempty(this.secondaryNameArray{folder})
+                    this.secondaryNameArray{folder} = this.sortImageNames(unwrappedSecondaryNameArray);
+                else
+                    sortedNames = this.sortImageNames(unwrappedSecondaryNameArray);
+                    for imageIndex = numel(this.secondaryNameArray{folder}) : -1 : 1
+                        try
+                            this.secondaryNameArray{folder}{imageIndex}(index) = [];
+                        catch MExeption
+                            ''
+                        end
+                    end
+
+                    
+                    for imageIndex = 1 : numel(sortedNames)
+                        try
+                            this.secondaryNameArray{folder}{imageIndex}{index} = sortedNames{imageIndex};
+                        catch MExeption
+                            throw(MException);
+                        end
+                    end
+                    % Find the index of the last non-empty element
+                    lastNonEmptyIdx = find(~cellfun('isempty', this.secondaryNameArray{folder}), 1, 'last');
+
+                    % Truncate the cell array to remove trailing empty elements
+                    this.secondaryNameArray{folder} = this.secondaryNameArray{folder}(1:lastNonEmptyIdx);
+
+                end
+
+            elseif numel(varargin) > 0 
+                this.secondaryNameArray{folder} = this.sortImageNames(unwrappedSecondaryNameArray);
+                
+            else              
+                this.secondaryNameArray{folder} = this.sortImageNames(unwrappedSecondaryNameArray);
+                
+            end
+            nameArray = this.sortImageNames(unwrappedNameArray);
         end
         
         function nameArray = getNameArrayOfFolder(this, folder)
@@ -568,11 +819,113 @@ classdef ImageImporter < handle
     
     methods(Static)
         
+        
+        function [flatStyleCheck, nestedStyleCheck] = flatAndNestedCheck(nameArray)
+            flatStyleCheck = true;
+            nestedStyleCheck = true;
+            for nameIndex = 1 : numel(nameArray)
+                if ~ischar(nameArray{nameIndex})
+                    flatStyleCheck = false;
+                end
+                if ~iscell(nameArray{nameIndex})
+                    nestedStyleCheck = false;
+                end                 
+            end
+        end
+        
+        function detectionNameArray = removeImagesFromDetectionNameArray(detectionNameArray, suitableNameArray)
+            
+            [flatStyleCheck, nestedStyleCheck] = ImageImporter.flatAndNestedCheck(detectionNameArray);
+            
+            if flatStyleCheck
+                
+                suitableMatchEquivalent = ImageImporter.generateNameArrayMatchEquivalent(suitableNameArray);
+                suitableDetectionNameArray = cell(1, 0);
+                counter = 1;
+                for nameIndex = 1 : numel(detectionNameArray)
+                    matchEquivalentCell = ImageImporter.generateNameArrayMatchEquivalent({detectionNameArray{nameIndex}});
+                    if ~isempty(intersect(suitableMatchEquivalent, matchEquivalentCell))
+                        suitableDetectionNameArray{1, counter} = detectionNameArray{nameIndex};
+                        counter = counter + 1;
+                    end
+                end
+                detectionNameArray = suitableDetectionNameArray;
+            elseif nestedStyleCheck
+                for nameIndex = 1 : numel(detectionNameArray)
+                    for imageInWellIndices = 1 : numel(detectionNameArray{nameIndex})
+                        safe = false;
+                        for name = suitableNameArray
+                            if isequal(detectionNameArray{nameIndex}{imageInWellIndices}, name{1})
+                               safe = true;
+                            end
+                        end
+                        if ~safe
+                            detectionNameArray{nameIndex}{imageInWellIndices} = [];
+                        end
+                    end
+                end
+            end
+        end
+        
+        
+        function [patternMatrix, pattern] = generatePatternMatrix(nameArray, secondaryChannelName)
+            pattern = '^(';
+            patternMatrix = cell(0, 3);
+            
+            flatStyleCheck = true;
+            nestedStyleCheck = true;
+            for nameIndex = 1 : numel(nameArray)
+                if ~ischar(nameArray{nameIndex})
+                    flatStyleCheck = false;
+                end
+                if ~iscell(nameArray{nameIndex})
+                    nestedStyleCheck = false;
+                end                 
+            end
+            if flatStyleCheck
+                nameArray = {nameArray};
+                nestedStyleCheck = true
+            end
+            if nestedStyleCheck
+                for nameIndex = 1 : numel(nameArray)
+                    for imageInWellIndices = 1 : numel(nameArray{nameIndex})
+                        if ~isempty(nameArray{nameIndex}{imageInWellIndices})
+                            wellID = ImageImporter.findWellIDOfString(nameArray{nameIndex}{imageInWellIndices});
+                            imageInWellIndex = num2str(ImageImporter.getImageInWellIndexOfString(nameArray{nameIndex}{imageInWellIndices}));
+                            %pat = [pat, wellID, '_\d{1,2}_\d{1}_', imageInWellIndex, '(Z|_)|'];
+                            pattern = [pattern, wellID, '_\d{1,2}_\d{1}_', imageInWellIndex, '|'];
+                            patternMatrix{end+1, 1} = wellID;
+                            patternMatrix{end, 2} = imageInWellIndex;
+                            patternMatrix{end, 3} = secondaryChannelName;
+                        end                           
+                    end
+                end
+
+                pattern(end) = [];
+                pattern = [pattern,')(\w*)', secondaryChannelName];
+            end
+        end
+        
         function nameArrayMatchEquivalent = generateNameArrayMatchEquivalent(nameArray)
-            try
-                unwrappedNameArray = vertcat(nameArray{:});
-            catch
-                unwrappedNameArray = horzcat(nameArray{:});
+            
+            flatStyleCheck = true;
+            nestedStyleCheck = true;
+            for nameIndex = 1 : numel(nameArray)
+                if ~ischar(nameArray{nameIndex})
+                    flatStyleCheck = false;
+                end
+                if ~iscell(nameArray{nameIndex})
+                    nestedStyleCheck = false;
+                end                 
+            end
+            if nestedStyleCheck
+                try
+                    unwrappedNameArray = vertcat(nameArray{:});
+                catch
+                    unwrappedNameArray = horzcat(nameArray{:});
+                end
+            elseif flatStyleCheck
+                unwrappedNameArray = nameArray;
             end
             unwrappedNameArray = reshape(unwrappedNameArray, numel(unwrappedNameArray), 1);
             nameArrayMatchEquivalent = cell(numel(unwrappedNameArray), 1);         
@@ -833,4 +1186,3 @@ classdef ImageImporter < handle
         end
     end  
 end
-
