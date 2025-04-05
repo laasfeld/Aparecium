@@ -609,7 +609,10 @@ classdef ImageAnalyzer < handle
                             measurementParams = IlastikAnalysis(measurementParams); 
                         elseif strcmp(this.imageProcessingParameters.detectionModel, this.imageProcessingParameters.KerasModel)
                             KerasAnalysis = str2func([class(this), '.performKerasAnalysis']);
-                            measurementParams = KerasAnalysis(measurementParams);                                 
+                            measurementParams = KerasAnalysis(measurementParams);
+                        elseif strcmp(this.imageProcessingParameters.detectionModel, this.imageProcessingParameters.PrecalculatedProbabilityMaps)
+                            PrecalculatedProbabilityMapsAnalysis = str2func([class(this), '.performPrecalculatedProbabilitymapsAnalysis']);
+                            measurementParams = PrecalculatedProbabilityMapsAnalysis(measurementParams);
                         else
                             for imageIndex = 1 : numel(measurementParams)% parfor should be here                            
                                 measurementParams(imageIndex).results = functionName(...
@@ -687,7 +690,10 @@ classdef ImageAnalyzer < handle
                                 measurementParams = IlastikAnalysis(measurementParams); 
                             elseif strcmp(this.imageProcessingParameters.detectionModel, this.imageProcessingParameters.KerasModel)
                                 KerasAnalysis = str2func([class(this), '.performKerasAnalysis']);
-                                measurementParams = KerasAnalysis(measurementParams);                                 
+                                measurementParams = KerasAnalysis(measurementParams);
+                            elseif strcmp(this.imageProcessingParameters.detectionModel, this.imageProcessingParameters.PrecalculatedProbabilityMaps)
+                                PrecalculatedProbabilityMapsAnalysis = str2func([class(this), '.performPrecalculatedProbabilitymapsAnalysis']);
+                                measurementParams = PrecalculatedProbabilityMapsAnalysis(measurementParams);
                             else
                                 for imageIndex = 1 : numel(measurementParams)% parfor should be here                            
                                     measurementParams(imageIndex).results = functionName(...

@@ -172,7 +172,7 @@ if ischar(varargin{1})
     if handles.focusAndQualityAnalyzerHandle.isFocusImageNamePreferenceSet()
         handles = chooseFocusResultsFromFocusPreference(handles);
     end
-    
+    handles.loadedMaskMode = 'binary';
 else
     handle_fields = fields(handles);
     needed_fields = fields(varargin{1}{1}.handle);
@@ -187,8 +187,9 @@ else
     %handles = varargin{1}{1}.handle;
     set(handles.done, 'enable', 'on');
     set(handles.previousImage, 'enable', 'on');
+    
+
 end
-handles.loadedMaskMode = 'binary';
 guidata(hObject, handles);
 
 uiwait(handles.figure1);
@@ -324,10 +325,17 @@ try
         image = cat(3, cat(3, image, masked), masked);
         %image = zeros(904, 1224, 3);
         if get(handles.displayProbabilityMap, 'Value') && strcmp(handles.loadedMaskMode, 'probability')
-            image(:,:,1) = image(:,:,1) + uint16(log2(double(handles.probabilityMaps{handles.wellIndex}{handles.imageInWellIndex}))*(2^12)*0.5);
-            image(:,:,3) = image(:,:,3) - uint16(log2(double(handles.probabilityMaps{handles.wellIndex}{handles.imageInWellIndex}))*(2^12)*0.5);
+            probability_component = uint16(log2(double(handles.imageMap.(mapKey).probabilityMaps))*(2^12)*0.5);
+            image(:,:,1) = image(:,:,1) + probability_component;
+            image(:,:,3) = image(:,:,3) - probability_component;
         end
         imshow(image, 'Parent', handles.axes1);
+        hold on 
+        if get(handles.displayProbabilityMap, 'Value') && strcmp(handles.loadedMaskMode, 'probability')
+            contour(probability_component, 'Parent', handles.axes1);
+        end
+        hold off
+        show(handles.axes1);
     end
 catch 
     
@@ -373,6 +381,11 @@ end
 % end
 
 %%
+
+function handles = setProbabilityMap(probabilityMap, mapKey, handles)%(mask, wellIndex, wellImageLocation, handles)
+
+handles.imageMap.(mapKey).probabilityMaps = probabilityMap;
+guidata(handles.figure1, handles);
 
 function handles = setMask(mask, mapKey, handles)%(mask, wellIndex, wellImageLocation, handles)
 
@@ -947,7 +960,7 @@ end
 %nameArray = ImageImporter.sortWellID(nameArray);
 masks = cell(numel(nameArray), 1);
 for index = 1 : numel(nameArray)
-    masks{index} = imread([imageDir, '\', nameArray{index}]);
+    masks{index} = imread(fullfile(imageDir, nameArray{index}));
 end
 handles.focusAndQualityAnalyzerHandle.updateHandles(handles);
 guidata(hObject, handles);
@@ -1267,21 +1280,28 @@ end
 %handles.imageIndex = handles.imageIndex(indices);
 %handles.masks = handles.masks(indices);
 %handles.focusImageNames = handles.focusImageNames(indices);
-for wellIndex = 1 : numel(handles.wellID)
-    for imagingLocation = 1 : numel(handles.imagesOfWell{wellIndex})
-        for imIndex = 1 : numel(handles.imagesOfWell{wellIndex}{imagingLocation})
-            imageName = handles.nameArray{handles.imagesOfWell{wellIndex}{imagingLocation}(imIndex)};
-            if ~isempty(find(strcmp(nameArray, imageName)))
-                handles.imageIndex{wellIndex}(imagingLocation) = imIndex;
-                handles.focusImageNames{wellIndex}{imagingLocation} = imageName;
-                break;
-            end
-            handles.focusImageNames{wellIndex}{imagingLocation} = [];
-        end
-    end
-    handles.wellIndex = wellIndex;
-    handles.imageInWellIndex = imagingLocation;
+
+for pic = 1 : numel(nameArray)
+    wellIDName = ImageImporter.findWellIDOfString(nameArray{pic});
+    imagingLocation = ImageImporter.getImageInWellIndexOfString(nameArray{pic});
+    handles = setProbabilityMap(probabilityMaps{pic}, [wellIDName, '_', num2str(imagingLocation)], handles);
 end
+
+% for wellIndex = 1 : numel(handles.wellID)
+%     for imagingLocation = 1 : numel(handles.imagesOfWell{wellIndex})
+%         for imIndex = 1 : numel(handles.imagesOfWell{wellIndex}{imagingLocation})
+%             imageName = handles.nameArray{handles.imagesOfWell{wellIndex}{imagingLocation}(imIndex)};
+%             if ~isempty(find(strcmp(nameArray, imageName)))
+%                 handles.imageIndex{wellIndex}(imagingLocation) = imIndex;
+%                 handles.focusImageNames{wellIndex}{imagingLocation} = imageName;
+%                 break;
+%             end
+%             handles.focusImageNames{wellIndex}{imagingLocation} = [];
+%         end
+%     end
+%     handles.wellIndex = wellIndex;
+%     handles.imageInWellIndex = imagingLocation;
+% end
 %elseif strcmp(answer, 'No')
     
 %else
@@ -1306,24 +1326,19 @@ while true
         break
     end
     position = round(h.Position);
-    probabilityValue = handles.probabilityMaps{handles.wellIndex}{handles.imageInWellIndex}(position(2), position(1));
+    
+    % new
+    
+    probabilityValue = handles.imageMap.(handles.imageKeys{handles.currentImageIndex}).probabilityMaps(position(2), position(1));
     probabilityValue
-    maskedProbability = handles.probabilityMaps{handles.wellIndex}{handles.imageInWellIndex} >= probabilityValue;
-    cc = bwconncomp(maskedProbability);
-    ind = sub2ind(size(maskedProbability), position(2), position(1)); 
-    for ccindex = 1 : numel(cc.PixelIdxList)
-        if find(cc.PixelIdxList{ccindex} == ind)
-            object_index = ccindex;
-            break
-        end
-    end
+    maskedProbability = handles.imageMap.(handles.imageKeys{handles.currentImageIndex}).probabilityMaps >= probabilityValue;
+    
     %figure
-    mask = zeros(size(maskedProbability));
-    mask(cc.PixelIdxList{object_index}) = 1;
+    mask = maskedProbability;
     %mask = mask';
     %imshow(mask);
-    addedMask = logical(handles.masks{handles.wellIndex}{handles.imageInWellIndex} + logical(maskedProbability));
-    handles = setMask(addedMask,handles.wellIndex,handles.imageInWellIndex, handles);
+    addedMask = logical(handles.imageMap.(handles.imageKeys{handles.currentImageIndex}).mask + logical(mask));
+    handles = setMask(addedMask, handles.imageKeys{handles.currentImageIndex}, handles);
     guidata(hObject, handles);
     displayImages(handles);
 end

@@ -39,7 +39,7 @@ function varargout = MembraneTools(varargin)
 
 % Edit the above text to modify the response to help MembraneTools
 
-% Last Modified by GUIDE v2.5 13-Aug-2024 14:25:28
+% Last Modified by GUIDE v2.5 09-Mar-2025 17:00:10
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -90,6 +90,8 @@ handles.cameraAndLensParameters = CameraAndLensParameters(); % Create a new obje
 handles.cameraAndLensParameters.pixelSize = str2double(get(handles.pixelLength,'String'));
 handles.cameraAndLensParameters.magnification = str2double(get(handles.magnification,'String'));
 handles.cameraAndLensParameters.fromImage = get(handles.fromImageTickBox, 'Value');
+set(handles.anomalyBinarizationThreshold, 'String', handles.imageProcessingParameters.getAnomalyMapsThreshold());
+set(handles.foregroundProbabilityThreshold, 'String', handles.imageProcessingParameters.getForegroundMapsThreshold());
 handles.simPlateHandle = []; % a handle to the PlateSimulator
 handles.analysisMode = 'Completed'; % A standard parameter
 handles.observationStarted = 0; % No observation is started when the program is launched
@@ -929,17 +931,40 @@ function pushbutton16_Callback(hObject, eventdata, handles)
 
 % this function deals with importing binary images. Sti
 
-handles.imageImporter = ImageImporter(); % Create a new ImageImporter obejct
-handles.imageImporter.setDetectionChannelRegex(get(handles.detectionChannelRegex, 'String'));
-handles.imageImporter.setQuantificationChannelRegex(get(handles.quantificationChannelRegex, 'String'));
-handles.imageImporter.analyzeQuality = 1;
+if isempty(handles.imageImporter)
+    handles.imageImporter = ImageImporter(); % Create a new object that can import the images correctly
+    guidata(hObject, handles);
+    answer = 'Load new';
+else
+    answer = questdlg('Images already loaded. Would you like to edit data loading or load new data?', 'question', 'Edit', 'Load new', 'Edit');
+    if strcmp(answer, 'Load new')
+        handles.imageImporter = ImageImporter();
+        guidata(hObject, handles);
+    elseif strcmp(answer, 'Edit')
+        % pass
+    end
+end
+
+% set the image name filter options
+regexString = get(handles.quantificationChannelRegex,'String');
+handles.imageImporter.setQuantificationChannelRegex(regexString);
+regexString = get(handles.detectionChannelRegex,'String');
+handles.imageImporter.setDetectionChannelRegex(regexString);
 lowerStackBound = str2num(get(handles.lowerStackBound,'String'));
 handles.imageImporter.setLowerBound(lowerStackBound);
 higherStackBound = str2num(get(handles.higherStackBound,'String'));
 handles.imageImporter.setHigherBound(higherStackBound);
+
+
+
+handles.imageImporter.analyzeQuality = 1;
 fileChooser = FileChooser();
-startingPath = fileChooser.chooseMembraneToolsFolder(); % get the preferred starting folder
-handles.imageImporter.userChooseImageFolders(startingPath); % note that user must still choose the regular images, timing is still read from there but binary image is taken from elsewhere
+if strcmp(answer, 'Load new')
+    startingPath = fileChooser.chooseMembraneToolsFolder(); % get the preferred starting folder
+    handles.imageImporter.userChooseImageFolders(startingPath); % note that user must still choose the regular images, timing is still read from there but binary image is taken from elsewhere
+elseif strcmp(answer, 'Edit')
+    handles.imageImporter.editImport();
+end
 
 
 handles.experimentDataStructure = handles.imageImporter.experimentDataStructure; 
@@ -972,6 +997,9 @@ set(handles.completedMeasurement, 'Value', 1);
 handles.analysisMode = 'Completed';   
 set(handles.startAnalysis, 'String', 'Start analysis');
 handles = generateApareciumExperimentInput(handles, handles.experimentDataStructure);
+set(handles.saveQualityMaskNow, 'enable', 'off');
+set(handles.saveBrightFieldFocusNow, 'enable', 'off');
+set(handles.saveFluorescenceFocusNow, 'enable', 'on');
 guidata(hObject, handles);
 % --------------------------------------------------------------------
 function help_Callback(hObject, eventdata, handles)
@@ -1204,21 +1232,28 @@ function detectionModel_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns detectionModel contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from detectionModel
 contents = cellstr(get(hObject,'String'));
-if strcmp(contents{get(hObject,'Value')}, 'Sobel')
-    set(handles.ilastikParametersPanel, 'Visible', 'off')
-    set(handles.analysisParameters, 'Visible', 'on')
-    set(handles.kerasParametersPanel, 'Visible', 'off')
-    handles.imageProcessingParameters.detectionModel = handles.imageProcessingParameters.SobelModel;
-elseif strcmp(contents{get(hObject,'Value')}, 'Ilastik')
-    set(handles.ilastikParametersPanel, 'Visible', 'on')
-    set(handles.analysisParameters, 'Visible', 'off')
-    set(handles.kerasParametersPanel, 'Visible', 'off')
-    handles.imageProcessingParameters.detectionModel = handles.imageProcessingParameters.IlastikModel;
-elseif strcmp(contents{get(hObject,'Value')}, 'Keras')
-    set(handles.ilastikParametersPanel, 'Visible', 'off')
-    set(handles.analysisParameters, 'Visible', 'off')
-    set(handles.kerasParametersPanel, 'Visible', 'on')
-    handles.imageProcessingParameters.detectionModel = handles.imageProcessingParameters.KerasModel;
+
+panels = containers.Map;
+panels('Ilastik')= handles.ilastikParametersPanel;
+panels('Sobel') = handles.analysisParameters;
+panels('Keras') = handles.kerasParametersPanel;
+panels('Precalculated') = handles.precalculatedProbabilityMapsPanel;
+
+analysisModes = containers.Map;
+analysisModes('Ilastik')= handles.imageProcessingParameters.IlastikModel;
+analysisModes('Sobel') = handles.imageProcessingParameters.SobelModel;
+analysisModes('Keras') = handles.imageProcessingParameters.KerasModel;
+analysisModes('Precalculated') = handles.imageProcessingParameters.PrecalculatedProbabilityMaps;
+
+for key = keys(panels)
+    keyAsString = key{1};
+    panel = panels(keyAsString);
+    if strcmp(contents{get(hObject,'Value')}, keyAsString)
+        set(panel, 'Visible', 'on')
+        handles.imageProcessingParameters.detectionModel = analysisModes(keyAsString);
+    else
+        set(panel, 'Visible', 'off')
+    end
 end
 guidata(hObject, handles)
 
@@ -1381,7 +1416,7 @@ function saveQualityMaskNow_Callback(hObject, eventdata, handles)
 % hObject    handle to saveQualityMaskNow (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-maskdir = uigetdir([handles.imageImporter.mainDirectory, '\','Mask'], 'Select directory for saving the masks');
+maskdir = uigetdir(fullfile(handles.imageImporter.mainDirectory,'Mask'), 'Select directory for saving the masks');
 for folder = 1 : handles.imageImporter.getNumberOfUsedDirectories()
     mkdir(fullfile(maskdir, handles.imageImporter.getUsedDirectoryWithIndex(folder)));
     matchEquivalents = fields(handles.imageImporter.imageNameStructure{folder});
@@ -1803,7 +1838,7 @@ switch get(hObject,'Value')
     case 1
         handles.imageProcessingParameters.setSubtractBackground(true); % Subtract quantification channel background
     case 0
-        handles.imageProcessingParameters.setAutoSaveMidas(false); % Do not subtract quantification channel background
+        handles.imageProcessingParameters.setSubtractBackground(false); % Do not subtract quantification channel background
 end
 
 
@@ -1955,3 +1990,218 @@ function pushbutton40_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton40 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+
+
+function anomalyProbailityMapFolderPath_Callback(hObject, eventdata, handles)
+% hObject    handle to anomalyProbailityMapFolderPath (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of anomalyProbailityMapFolderPath as text
+%        str2double(get(hObject,'String')) returns contents of anomalyProbailityMapFolderPath as a double
+handles.imageProcessingParameters.setAnomalyMapsMainPath(get(hObject,'String'));
+guidata(hObject, handles)
+
+% --- Executes during object creation, after setting all properties.
+function anomalyProbailityMapFolderPath_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to anomalyProbailityMapFolderPath (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in chooseAnomalyProbabMapFolder.
+function chooseAnomalyProbabMapFolder_Callback(hObject, eventdata, handles)
+% hObject    handle to chooseAnomalyProbabMapFolder (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if isempty(handles.imageImporter)
+    probMapDir = uigetdir('', 'Select the master directory containing the subfolders with probability maps.');
+else
+    probMapDir = uigetdir(fullfile(handles.imageImporter.mainDirectory), 'Select the master directory containing the subfolders with probability maps.');
+end
+handles.imageProcessingParameters.setAnomalyMapsMainPath(probMapDir);
+
+function precalculatedAnomalyChannelIndex_Callback(hObject, eventdata, handles)
+% hObject    handle to precalculatedAnomalyChannelIndex (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of precalculatedAnomalyChannelIndex as text
+%        str2double(get(hObject,'String')) returns contents of precalculatedAnomalyChannelIndex as a double
+handles.imageProcessingParameters.setAnomalyMapsChannelIndex(str2double(get(hObject,'String')));
+guidata(hObject, handles);
+
+% --- Executes during object creation, after setting all properties.
+function precalculatedAnomalyChannelIndex_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to precalculatedAnomalyChannelIndex (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function foregroundProbabilityThreshold_Callback(hObject, eventdata, handles)
+% hObject    handle to foregroundProbabilityThreshold (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of foregroundProbabilityThreshold as text
+%        str2double(get(hObject,'String')) returns contents of foregroundProbabilityThreshold as a double
+handles.imageProcessingParameters.setForegroundMapsThreshold(str2double(get(hObject,'String')));
+guidata(hObject, handles);
+
+% --- Executes during object creation, after setting all properties.
+function foregroundProbabilityThreshold_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to foregroundProbabilityThreshold (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function detectionProbailityMapFolderPath_Callback(hObject, eventdata, handles)
+% hObject    handle to detectionProbailityMapFolderPath (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of detectionProbailityMapFolderPath as text
+%        str2double(get(hObject,'String')) returns contents of detectionProbailityMapFolderPath as a double
+handles.imageProcessingParameters.setForegroundMapsMainPath(get(hObject,'String'));
+guidata(hObject, handles)
+
+% --- Executes during object creation, after setting all properties.
+function detectionProbailityMapFolderPath_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to detectionProbailityMapFolderPath (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in chooseDetectionProbabilityMapFolder.
+function chooseDetectionProbabilityMapFolder_Callback(hObject, eventdata, handles)
+% hObject    handle to chooseDetectionProbabilityMapFolder (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if isempty(handles.imageImporter)
+    probMapDir = uigetdir('', 'Select the master directory containing the subfolders with probability maps.');
+else
+    probMapDir = uigetdir(fullfile(handles.imageImporter.mainDirectory), 'Select the master directory containing the subfolders with probability maps.');
+end
+handles.imageProcessingParameters.setForegroundMapsMainPath(probMapDir);
+
+
+
+function precalculatedForegroundChannelIndex_Callback(hObject, eventdata, handles)
+% hObject    handle to precalculatedForegroundChannelIndex (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of precalculatedForegroundChannelIndex as text
+%        str2double(get(hObject,'String')) returns contents of precalculatedForegroundChannelIndex as a double
+handles.imageProcessingParameters.setForegroundMapsChannelIndex(str2double(get(hObject,'String')));
+guidata(hObject, handles);
+
+% --- Executes during object creation, after setting all properties.
+function precalculatedForegroundChannelIndex_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to precalculatedForegroundChannelIndex (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function anomalyBinarizationThreshold_Callback(hObject, eventdata, handles)
+% hObject    handle to anomalyBinarizationThreshold (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of anomalyBinarizationThreshold as text
+%        str2double(get(hObject,'String')) returns contents of anomalyBinarizationThreshold as a double
+handles.imageProcessingParameters.setAnomalyMapsThreshold(str2double(get(hObject,'String')));
+guidata(hObject, handles);
+
+% --- Executes during object creation, after setting all properties.
+function anomalyBinarizationThreshold_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to anomalyBinarizationThreshold (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function anomalyMapsPrefix_Callback(hObject, eventdata, handles)
+% hObject    handle to anomalyMapsPrefix (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of anomalyMapsPrefix as text
+%        str2double(get(hObject,'String')) returns contents of anomalyMapsPrefix as a double
+handles.imageProcessingParameters.setAnomalyMapsPrefix(get(hObject,'String'));
+guidata(hObject, handles);
+
+% --- Executes during object creation, after setting all properties.
+function anomalyMapsPrefix_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to anomalyMapsPrefix (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function foregroundMapsPrefix_Callback(hObject, eventdata, handles)
+% hObject    handle to foregroundMapsPrefix (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of foregroundMapsPrefix as text
+%        str2double(get(hObject,'String')) returns contents of foregroundMapsPrefix as a double
+handles.imageProcessingParameters.setForegroundMapsPrefix(get(hObject,'String'));
+guidata(hObject, handles);
+
+% --- Executes during object creation, after setting all properties.
+function foregroundMapsPrefix_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to foregroundMapsPrefix (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
