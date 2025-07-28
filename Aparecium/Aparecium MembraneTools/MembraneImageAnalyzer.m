@@ -391,7 +391,27 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                 mainPath = imageMeasurementParams.mainDirectory;
                 foregroundPrefix = imageProcessingParameters.getForegroundMapsPrefix();
                 [~, originalImageFolder] = fileparts(imageMeasurementParams.directoryPath);
-                probabilityImage = imread(fullfile(mainPath, [foregroundPrefix, originalImageFolder], imageMeasurementParams.imageName));
+                try
+                    probabilityImage = imread(fullfile(mainPath, [foregroundPrefix, originalImageFolder], imageMeasurementParams.imageName));
+                catch
+                    pattern = '(?<WellID>\w+)_(?<ReadIndex>\d+)_(?<ChannelIndex>\d+)_(?<FOV>\d+)(?<ZIndex>Z\d+)_(?<ChannelName>[\w\s]+)_(?<CycleIndex>\d+)\.(?<Extension>\w+)$';
+                    % in case focus was chosen but prediction file name was
+                    % done with Z0 then error occures but is can be solved
+                    % by using the likely corresponding match instead
+                    tokens = regexp(imageMeasurementParams.imageName, pattern, 'names');
+                    tokens.ZIndex = 'Z0';
+                    fixedFileName = sprintf('%s_%s_%s_%s%s_%s_%s.%s', ...
+                    tokens.WellID, ...
+                    tokens.ReadIndex, ...
+                    tokens.ChannelIndex, ...
+                    tokens.FOV, ...
+                    tokens.ZIndex, ...
+                    tokens.ChannelName, ...
+                    tokens.CycleIndex, ...
+                    tokens.Extension);
+                    probabilityImage = imread(fullfile(mainPath, [foregroundPrefix, originalImageFolder], fixedFileName));
+
+                end
                 
                 %probabilityImage = [probabilityImage, zeros(size(probabilityImage,1), 1); zeros(1, size(probabilityImage,2) + 1)];
                 
@@ -405,7 +425,28 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                 if imageProcessingParameters.getUseAnomalyMaps()
                     anomalyPrefix = imageProcessingParameters.getAnomalyMapsPrefix();
                     [~, originalImageFolder] = fileparts(imageMeasurementParams.directoryPath);
-                    anomalyProbabilityImage = imread(fullfile(mainPath, [anomalyPrefix, originalImageFolder], imageMeasurementParams.imageName));
+                    try
+                        anomalyProbabilityImage = imread(fullfile(mainPath, [anomalyPrefix, originalImageFolder], imageMeasurementParams.imageName));
+                    catch
+                        pattern = '(?<WellID>\w+)_(?<ReadIndex>\d+)_(?<ChannelIndex>\d+)_(?<FOV>\d+)(?<ZIndex>Z\d+)_(?<ChannelName>[\w\s]+)_(?<CycleIndex>\d+)\.(?<Extension>\w+)$';
+                        % in case focus was chosen but prediction file name was
+                        % done with Z0 then error occures but is can be solved
+                        % by using the likely corresponding match instead
+                        tokens = regexp(imageMeasurementParams.imageName, pattern, 'names');
+                        tokens.ZIndex = 'Z0';
+                        fixedFileName = sprintf('%s_%s_%s_%s%s_%s_%s.%s', ...
+                        tokens.WellID, ...
+                        tokens.ReadIndex, ...
+                        tokens.ChannelIndex, ...
+                        tokens.FOV, ...
+                        tokens.ZIndex, ...
+                        tokens.ChannelName, ...
+                        tokens.CycleIndex, ...
+                        tokens.Extension);
+                        anomalyProbabilityImage = imread(fullfile(mainPath, [anomalyPrefix, originalImageFolder], fixedFileName));
+
+                    end
+                    
                     %anomalyProbabilityImage = [anomalyProbabilityImage, zeros(size(anomalyProbabilityImage,1), 1); zeros(1, size(anomalyProbabilityImage,2) + 1)];
                     if isa(anomalyProbabilityImage, 'uint8')
                         anomalyProbabilityImage = double(anomalyProbabilityImage)/255;
