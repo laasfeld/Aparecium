@@ -446,7 +446,7 @@ classdef GraphicalPreviewController < ExportPanelController
                     try
                         plot3(xAxis, yAxis, zAxis, 'Marker', marker, 'Line', 'none', 'MarkerEdgeColor', [red green blue]);
                     catch MException
-                        if strcmp(MException.message, 'There is no Line property on the Line class.') 
+                        if strcmp(MException.message, 'There is no Line property on the Line class.') || strcmp(MException.message, 'Unrecognized property Line for class Line.')
                             plot3(xAxis, yAxis, zAxis, marker, 'MarkerEdgeColor', [red green blue]);
                         end 
                     end
