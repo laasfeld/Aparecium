@@ -268,6 +268,182 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                 end
             end
         end
+        
+        function measurementParams = performONNXAnalysis(measurementParams)
+            
+            fromBinary = strcmp(measurementParams(1).imageProcessingParams.imageSegmentationMode, measurementParams(1).imageProcessingParams.FromBinary);
+            emptyRun = strcmp(measurementParams(1).imageProcessingParams.imageSegmentationMode, measurementParams(1).imageProcessingParams.emptyRun);
+            packedBinaryImages = cell(numel(measurementParams), 1);
+            imageSizes = cell(numel(measurementParams), 1);
+            
+            if emptyRun
+                sectionSize = 10;
+                nrOfSections = ceil(numel(measurementParams)/sectionSize);
+                
+                for startIndex = 1 : sectionSize : nrOfSections * sectionSize
+                    imagesForBinaryGeneration = [];
+                    endIndex = startIndex + sectionSize - 1;
+                    if endIndex > numel(measurementParams)
+                        endIndex = numel(measurementParams);
+                    end
+
+                    counter = 1;
+
+                    for imageIndex = startIndex : endIndex % parfor should be here
+                        disp(['Image index = ', num2str(imageIndex)]);
+                        if strcmp(measurementParams(1).imageProcessingParams.detectionFocusOrSlopes, 'Slopes')
+                            imagesForBinaryGeneration{counter} = MembraneImageAnalyzer.createSlopeImage(measurementParams(imageIndex));
+                        elseif strcmp(measurementParams(1).imageProcessingParams.detectionFocusOrSlopes, 'Focus')
+                            imagesForBinaryGeneration{counter} = MembraneImageAnalyzer.createFocusImageNoNorm(measurementParams(imageIndex));
+                        end
+                        counter = counter + 1;
+                    end
+
+                    % introduce the pixel shifts to images
+                    counter = 1;
+                    for imageIndex = startIndex : endIndex
+                        pixelShiftVertical = measurementParams(imageIndex).imageProcessingParams.getPixelShiftVertical();
+                        pixelShiftHorizontal = measurementParams(imageIndex).imageProcessingParams.getPixelShiftHorizontal();
+                        imagesForBinaryGeneration{counter} = imagesForBinaryGeneration{counter}(pixelShiftVertical+1:end, pixelShiftHorizontal+1:end);
+                        imageSizes{imageIndex} = size(imagesForBinaryGeneration{counter});
+                        counter = counter + 1;
+                    end
+                    try
+                        if strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'off')
+                            binaryImages = cell(endIndex - startIndex + 1, 1);
+                            for index = 1 : endIndex - startIndex + 1
+                                binaryImages{index} = zeros(904, 1224);    
+                            end
+                        end
+                    catch MException
+                        rethrow(MException)
+                    end
+                    
+                    counter = 1;
+                    for imageIndex = endIndex : -1 : startIndex
+                        if strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'on')
+                            measurementParams(imageIndex).results = MembraneImageAnalyzer.analyzeMembranesStatic(...
+                            measurementParams(imageIndex).wellName, measurementParams(imageIndex).secondaryPicOfWell, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).imageProcessingParams,...
+                            measurementParams(imageIndex).timeParameters, measurementParams(imageIndex).thresholdFunctionHandle, measurementParams(imageIndex).calculationMethod, measurementParams(imageIndex).qualityMask, ...
+                            measurementParams(imageIndex).parametersToCalculate, binaryImages{numel(imagesForBinaryGeneration) - counter + 1}, measurementParams(imageIndex).mainDirectory, measurementParams(imageIndex).usedDirectory, probabilityMaps{numel(imagesForBinaryGeneration) - counter + 1});
+                        elseif strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'off')
+                            measurementParams(imageIndex).results = MembraneImageAnalyzer.analyzeMembranesStatic(...
+                            measurementParams(imageIndex).wellName, measurementParams(imageIndex).secondaryPicOfWell, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).imageProcessingParams,...
+                            measurementParams(imageIndex).timeParameters, measurementParams(imageIndex).thresholdFunctionHandle, measurementParams(imageIndex).calculationMethod, measurementParams(imageIndex).qualityMask, ...
+                            measurementParams(imageIndex).parametersToCalculate, binaryImages{numel(imagesForBinaryGeneration) - counter + 1}, measurementParams(imageIndex).mainDirectory, measurementParams(imageIndex).usedDirectory);
+                        end
+                        
+                        binaryImages(numel(imagesForBinaryGeneration) - counter + 1) = [];
+                        
+                        if strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'on')
+                            probabilityMaps(numel(imagesForBinaryGeneration) - counter + 1) = [];
+                        end
+                        counter = counter + 1;
+                    end
+                end
+            elseif fromBinary
+                for imageIndex = 1 : numel(measurementParams)
+                    %%% NB! generalize this (Binary_unmasked is not regular binary folder name)!!!
+                    bw = getBinaryOfImage(fullfile(measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).wellName), 'Binary');
+                    
+                    measurementParams(imageIndex).results = MembraneImageAnalyzer.analyzeMembranesStatic(...
+            measurementParams(imageIndex).wellName, measurementParams(imageIndex).secondaryPicOfWell, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).imageProcessingParams,...
+            measurementParams(imageIndex).timeParameters, measurementParams(imageIndex).thresholdFunctionHandle, measurementParams(imageIndex).calculationMethod, measurementParams(imageIndex).qualityMask, ...
+            measurementParams(imageIndex).parametersToCalculate, bw, measurementParams(imageIndex).mainDirectory, measurementParams(imageIndex).usedDirectory);
+                end
+            else
+                
+                sectionSize = 10;
+                nrOfSections = ceil(numel(measurementParams)/sectionSize);
+                
+                for startIndex = 1 : sectionSize : nrOfSections * sectionSize
+                    imagesForBinaryGeneration = [];
+                    endIndex = startIndex + sectionSize - 1;
+                    if endIndex > numel(measurementParams)
+                        endIndex = numel(measurementParams);
+                    end
+
+                    counter = 1;
+
+                    for imageIndex = startIndex : endIndex % parfor should be here
+                        disp(['Image index = ', num2str(imageIndex)]);
+                        if strcmp(measurementParams(1).imageProcessingParams.detectionFocusOrSlopes, 'Slopes')
+                            imagesForBinaryGeneration{counter} = MembraneImageAnalyzer.createSlopeImage(measurementParams(imageIndex));
+                        elseif strcmp(measurementParams(1).imageProcessingParams.detectionFocusOrSlopes, 'Focus')
+                            imagesForBinaryGeneration{counter} = MembraneImageAnalyzer.createFocusImageNoNorm(measurementParams(imageIndex));
+                        end
+                        counter = counter + 1;
+                    end
+
+                    % introduce the pixel shifts to images
+                    counter = 1;
+                    for imageIndex = startIndex : endIndex
+                        pixelShiftVertical = measurementParams(imageIndex).imageProcessingParams.getPixelShiftVertical();
+                        pixelShiftHorizontal = measurementParams(imageIndex).imageProcessingParams.getPixelShiftHorizontal();
+                        imagesForBinaryGeneration{counter} = imagesForBinaryGeneration{counter}(pixelShiftVertical+1:end, pixelShiftHorizontal+1:end);
+                        imageSizes{imageIndex} = size(imagesForBinaryGeneration{counter});
+                        counter = counter + 1;
+                    end
+                    try
+                        if strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'off')
+                            binaryImages = MembraneImageAnalyzer.createBinaryImagesWithKeras(imagesForBinaryGeneration, measurementParams(startIndex : endIndex));
+                        elseif strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'on')
+                            [binaryImages, probabilityMaps] = MembraneImageAnalyzer.createBinaryImagesWithKeras(imagesForBinaryGeneration, measurementParams(startIndex : endIndex));                            
+                        end
+                    catch MException
+                        rethrow(MException)
+                    end
+                    
+                    counter = 1;
+                    for imageIndex = endIndex : -1 : startIndex
+                        if strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'on')
+                            measurementParams(imageIndex).results = MembraneImageAnalyzer.analyzeMembranesStatic(...
+                            measurementParams(imageIndex).wellName, measurementParams(imageIndex).secondaryPicOfWell, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).imageProcessingParams,...
+                            measurementParams(imageIndex).timeParameters, measurementParams(imageIndex).thresholdFunctionHandle, measurementParams(imageIndex).calculationMethod, measurementParams(imageIndex).qualityMask, ...
+                            measurementParams(imageIndex).parametersToCalculate, binaryImages{numel(imagesForBinaryGeneration) - counter + 1}, measurementParams(imageIndex).mainDirectory, measurementParams(imageIndex).usedDirectory, probabilityMaps{numel(imagesForBinaryGeneration) - counter + 1});
+                        elseif strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'off')
+                            measurementParams(imageIndex).results = MembraneImageAnalyzer.analyzeMembranesStatic(...
+                            measurementParams(imageIndex).wellName, measurementParams(imageIndex).secondaryPicOfWell, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).imageProcessingParams,...
+                            measurementParams(imageIndex).timeParameters, measurementParams(imageIndex).thresholdFunctionHandle, measurementParams(imageIndex).calculationMethod, measurementParams(imageIndex).qualityMask, ...
+                            measurementParams(imageIndex).parametersToCalculate, binaryImages{numel(imagesForBinaryGeneration) - counter + 1}, measurementParams(imageIndex).mainDirectory, measurementParams(imageIndex).usedDirectory);
+                        end
+                        
+                        binaryImages(numel(imagesForBinaryGeneration) - counter + 1) = [];
+                        
+                        if strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'on')
+                            probabilityMaps(numel(imagesForBinaryGeneration) - counter + 1) = [];
+                        end
+                        counter = counter + 1;
+                    end
+%                 for i = 1 : numel(measurementParams) % parfor should be here
+%                     if strcmp(measurementParams(1).imageProcessingParams.detectionFocusOrSlopes, 'Slopes')
+%                         imagesForBinaryGeneration{i} = MembraneImageAnalyzer.createSlopeImage(measurementParams(i));
+%                     elseif strcmp(measurementParams(1).imageProcessingParams.detectionFocusOrSlopes, 'Focus')
+%                         imagesForBinaryGeneration{i} = MembraneImageAnalyzer.createFocusImageNoNorm(measurementParams(i));
+%                     end
+%                 end
+% 
+%                 % intoduce the pixel shifts to images
+%                 for i = 1 : numel(measurementParams)
+%                     pixelShiftVertical = measurementParams(i).imageProcessingParams.getPixelShiftVertical();
+%                     pixelShiftHorizontal = measurementParams(i).imageProcessingParams.getPixelShiftHorizontal();
+%                     imagesForBinaryGeneration{i} = imagesForBinaryGeneration{i}(pixelShiftVertical+1:end, pixelShiftHorizontal+1:end);
+%                 end
+%                 
+%                 if strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'off')
+%                     [binaryImages, probabilityMaps] = MembraneImageAnalyzer.createBinaryImagesWithKeras(imagesForBinaryGeneration, measurementParams);
+%                     for imageIndex = 1 : numel(measurementParams)
+%                         measurementParams(imageIndex).results = MembraneImageAnalyzer.analyzeMembranesStatic(...
+%                     measurementParams(imageIndex).wellName, measurementParams(imageIndex).secondaryPicOfWell, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).imageProcessingParams,...
+%                     measurementParams(imageIndex).timeParameters, measurementParams(imageIndex).thresholdFunctionHandle, measurementParams(imageIndex).calculationMethod, measurementParams(imageIndex).qualityMask, ...
+%                     measurementParams(imageIndex).parametersToCalculate, binaryImages{imageIndex}, measurementParams(imageIndex).mainDirectory, measurementParams(imageIndex).usedDirectory);
+%                     end
+%                 elseif strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'on')
+
+
+                end
+            end
+        end
             
             
         function measurementParams = performIlastikAnalysis(measurementParams)
@@ -366,10 +542,35 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             for imageIndex = 1 : numel(slopeImages)
                 if strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'off')
                     binaryImages{imageIndex} = MembraneImageAnalyzer.predictSingleImage(net, slopeImages{imageIndex},...
-                        measurementParams(imageIndex).imageProcessingParams.tileOrResizePreprocessing, measurementParams(imageIndex).imageProcessingParams.binarisationThreshold);
+                        measurementParams(imageIndex).imageProcessingParams.preprocessingStyle, measurementParams(imageIndex).imageProcessingParams.binarisationThreshold);
                 elseif strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'on')
                     [binaryImages{imageIndex}, probabilityMaps{imageIndex}] = MembraneImageAnalyzer.predictSingleImage(net, slopeImages{imageIndex},...
-                        measurementParams(imageIndex).imageProcessingParams.tileOrResizePreprocessing, measurementParams(imageIndex).imageProcessingParams.binarisationThreshold);                    
+                        measurementParams(imageIndex).imageProcessingParams.preprocessingStyle, measurementParams(imageIndex).imageProcessingParams.binarisationThreshold);                    
+                end
+                
+                if measurementParams(1).imageProcessingParams.useMorphologicalOperations
+                    binaryImages{imageIndex} = MembraneImageAnalyzer.morphologicalOperations(binaryImages{imageIndex});
+                end
+
+            end
+        end
+        
+        function [binaryImages, probabilityMaps] = createBinaryImagesWithONNX(slopeImages, measurementParams)
+            
+            binaryImages = cell(size(slopeImages));
+            if strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'on')
+                probabilityMaps = cell(size(slopeImages));
+            end
+      
+            ONNXModelPath = measurementParams(1).imageProcessingParams.ONNXModelPath;
+            sess = MembraneImageAnalyzer.createONNXsession(ONNXModelPath);
+            for imageIndex = 1 : numel(slopeImages)
+                if strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'off')
+                    binaryImages{imageIndex} = MembraneImageAnalyzer.predictSingleImageONNX(sess, slopeImages{imageIndex},...
+                        measurementParams(imageIndex).imageProcessingParams.preprocessingStyle, measurementParams(imageIndex).imageProcessingParams.binarisationThreshold);
+                elseif strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'on')
+                    [binaryImages{imageIndex}, probabilityMaps{imageIndex}] = MembraneImageAnalyzer.predictSingleImageONNX(sess, slopeImages{imageIndex},...
+                        measurementParams(imageIndex).imageProcessingParams.preprocessingStyle, measurementParams(imageIndex).imageProcessingParams.binarisationThreshold);                    
                 end
                 
                 if measurementParams(1).imageProcessingParams.useMorphologicalOperations
@@ -391,7 +592,28 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                 mainPath = imageMeasurementParams.mainDirectory;
                 foregroundPrefix = imageProcessingParameters.getForegroundMapsPrefix();
                 [~, originalImageFolder] = fileparts(imageMeasurementParams.directoryPath);
-                probabilityImage = imread(fullfile(mainPath, [foregroundPrefix, originalImageFolder], imageMeasurementParams.imageName));
+                fixed_image_name = imageMeasurementParams.imageName;
+                try
+                    probabilityImage = imread(fullfile(mainPath, [foregroundPrefix, originalImageFolder], imageMeasurementParams.imageName));
+                catch
+                    pattern = '(?<WellID>\w+)_(?<ReadIndex>\d+)_(?<ChannelIndex>\d+)_(?<FOV>\d+)(?<ZIndex>Z\d+)_(?<ChannelName>[\w\s]+)_(?<CycleIndex>\d+)\.(?<Extension>\w+)$';
+                    % in case focus was chosen but prediction file name was
+                    % done with Z0 then error occures but is can be solved
+                    % by using the likely corresponding match instead
+                    tokens = regexp(imageMeasurementParams.imageName, pattern, 'names');
+                    tokens.ZIndex = 'Z0';
+                    fixedFileName = sprintf('%s_%s_%s_%s%s_%s_%s.%s', ...
+                    tokens.WellID, ...
+                    tokens.ReadIndex, ...
+                    tokens.ChannelIndex, ...
+                    tokens.FOV, ...
+                    tokens.ZIndex, ...
+                    tokens.ChannelName, ...
+                    tokens.CycleIndex, ...
+                    tokens.Extension);
+                    probabilityImage = imread(fullfile(mainPath, [foregroundPrefix, originalImageFolder], fixedFileName));
+
+                end
                 
                 %probabilityImage = [probabilityImage, zeros(size(probabilityImage,1), 1); zeros(1, size(probabilityImage,2) + 1)];
                 
@@ -405,7 +627,27 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                 if imageProcessingParameters.getUseAnomalyMaps()
                     anomalyPrefix = imageProcessingParameters.getAnomalyMapsPrefix();
                     [~, originalImageFolder] = fileparts(imageMeasurementParams.directoryPath);
-                    anomalyProbabilityImage = imread(fullfile(mainPath, [anomalyPrefix, originalImageFolder], imageMeasurementParams.imageName));
+                    try
+                        anomalyProbabilityImage = imread(fullfile(mainPath, [anomalyPrefix, originalImageFolder], imageMeasurementParams.imageName));
+                    catch
+                        pattern = '(?<WellID>\w+)_(?<ReadIndex>\d+)_(?<ChannelIndex>\d+)_(?<FOV>\d+)(?<ZIndex>Z\d+)_(?<ChannelName>[\w\s]+)_(?<CycleIndex>\d+)\.(?<Extension>\w+)$';
+                        % in case focus was chosen but prediction file name was
+                        % done with Z0 then error occures but is can be solved
+                        % by using the likely corresponding match instead
+                        tokens = regexp(imageMeasurementParams.imageName, pattern, 'names');
+                        tokens.ZIndex = 'Z0';
+                        fixedFileName = sprintf('%s_%s_%s_%s%s_%s_%s.%s', ...
+                        tokens.WellID, ...
+                        tokens.ReadIndex, ...
+                        tokens.ChannelIndex, ...
+                        tokens.FOV, ...
+                        tokens.ZIndex, ...
+                        tokens.ChannelName, ...
+                        tokens.CycleIndex, ...
+                        tokens.Extension);
+                        anomalyProbabilityImage = imread(fullfile(mainPath, [foregroundPrefix, originalImageFolder], fixedFileName));
+
+                    end
                     %anomalyProbabilityImage = [anomalyProbabilityImage, zeros(size(anomalyProbabilityImage,1), 1); zeros(1, size(anomalyProbabilityImage,2) + 1)];
                     if isa(anomalyProbabilityImage, 'uint8')
                         anomalyProbabilityImage = double(anomalyProbabilityImage)/255;
@@ -414,6 +656,29 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
 
                 end
             end
+        end
+        
+        function [prediction, prediction_raw] = predictSingleImageONNX(sess, inputImage, useGPU)
+            % Prepare NHWC batch, run model via onnxruntime, return first output
+            [paddedInputImage, meta] = pad_stack_mean(inputImage, 1248, 1248);
+
+            if nargin < 3, useGPU = false; end
+
+            % Expect HxWxC -> 1xHxWxC (NHWC) and normalize like your python (/256)
+            x = permute(paddedInputImage, [4 1 2 3]);      % 1 x H x W x C
+            x = single(x) / 256;
+
+            yStruct = onnx_predict_python(sess, struct('x', x), "UseGPU", useGPU);
+            
+            % Take the first output (or change the name if you know it)
+            outNames = fieldnames(yStruct);
+            prediction = yStruct.(outNames{1});               % H x W x (…)
+            out = unpad_stack_center(prediction, meta);
+        end
+        
+        function sess = createONNXsession(modelPath)
+            so = py.onnxruntime.SessionOptions();
+            sess = ort.InferenceSession(modelPath, so, pyargs('providers', providers));
         end
         
         function [prediction, prediction_raw] = predictSingleImage(kerasModel, inputImage, varargin)

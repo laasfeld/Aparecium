@@ -39,7 +39,7 @@ function varargout = MembraneTools(varargin)
 
 % Edit the above text to modify the response to help MembraneTools
 
-% Last Modified by GUIDE v2.5 09-Mar-2025 17:00:10
+% Last Modified by GUIDE v2.5 15-Oct-2025 13:48:32
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1238,12 +1238,15 @@ panels('Ilastik')= handles.ilastikParametersPanel;
 panels('Sobel') = handles.analysisParameters;
 panels('Keras') = handles.kerasParametersPanel;
 panels('Precalculated') = handles.precalculatedProbabilityMapsPanel;
+panels('ONNX') = handles.ONNXParametersPanel;
 
 analysisModes = containers.Map;
 analysisModes('Ilastik')= handles.imageProcessingParameters.IlastikModel;
 analysisModes('Sobel') = handles.imageProcessingParameters.SobelModel;
 analysisModes('Keras') = handles.imageProcessingParameters.KerasModel;
 analysisModes('Precalculated') = handles.imageProcessingParameters.PrecalculatedProbabilityMaps;
+analysisModes('ONNX') = handles.imageProcessingParameters.ONNXModel;
+
 
 for key = keys(panels)
     keyAsString = key{1};
@@ -1251,12 +1254,34 @@ for key = keys(panels)
     if strcmp(contents{get(hObject,'Value')}, keyAsString)
         set(panel, 'Visible', 'on')
         handles.imageProcessingParameters.detectionModel = analysisModes(keyAsString);
+        handles = resetImageAnalyzerSettings(keyAsString, handles);
+
     else
         set(panel, 'Visible', 'off')
     end
 end
 guidata(hObject, handles)
 
+function handles = resetImageAnalyzerSettings(keyAsString, handles)
+
+if strcmp(keyAsString, 'Keras')
+    kerasModelPath_Callback(handles.kerasModelPath, [], handles)
+    edit31_Callback(handles.edit31, [], handles)
+    inputNormalizationMin_Callback(handles.inputNormalizationMin, [], handles)
+    inputNormalizationMax_Callback(handles.inputNormalizationMax, [], handles)
+    binarisationThreshold_Callback(handles.binarisationThreshold, [], handles)
+    uibuttongroup6_SelectionChangedFcn(handles.uibuttongroup6, [], handles)
+
+elseif strcmp(keyAsString, 'ONNX')
+    ONNXModelPath_Callback(handles.ONNXModelPath, [], handles)
+    ONNXinputNormalizationMin_Callback(handles.ONNXinputNormalizationMin, [], handles)
+    ONNXinputNormalizationMax_Callback(handles.ONNXinputNormalizationMax, [], handles)
+    uibuttongroup8_SelectionChangedFcn(handles.uibuttongroup8, [], handles)
+    ONNXbinarisationThreshold_Callback(handles.ONNXbinarisationThreshold, [], handles)
+    edit47_Callback(handles.edit47, [], handles)
+else
+        
+end
 % --- Executes during object creation, after setting all properties.
 function detectionModel_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to detectionModel (see GCBO)
@@ -1921,7 +1946,7 @@ function tileImage_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 if get(hObject,'Value')
-    handles.imageProcessingParameters.setTileOrResizePreprocessing('Tile');
+    handles.imageProcessingParameters.setPreprocessingStyle('Tile');
 end
 guidata(hObject, handles);
 
@@ -1949,7 +1974,7 @@ function resizeImage_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of resizeImage
 
 if get(hObject,'Value')
-    handles.imageProcessingParameters.setTileOrResizePreprocessing('Resize');
+    handles.imageProcessingParameters.setPreprocessingStyle('Resize');
 end
 guidata(hObject, handles);
 
@@ -2205,3 +2230,200 @@ function foregroundMapsPrefix_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+
+function ONNXModelPath_Callback(hObject, eventdata, handles)
+% hObject    handle to ONNXmodelPathLabel (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of ONNXmodelPathLabel as text
+%        str2double(get(hObject,'String')) returns contents of ONNXmodelPathLabel as a double
+handles.imageProcessingParameters.ONNXModelPath = get(hObject,'String');
+guidata(hObject, handles)
+
+% --- Executes during object creation, after setting all properties.
+function ONNXmodelPathLabel_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to ONNXmodelPathLabel (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in chooseONNXModelButton.
+function chooseONNXModelButton_Callback(hObject, eventdata, handles)
+% hObject    handle to chooseONNXModelButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+fileChooser = FileChooser();
+fullPath = fileChooser.chooseONNXModelFile();
+handles.imageProcessingParameters.ONNXModelPath = fullPath;
+set(handles.ONNXModelPath, 'String', fullPath);
+guidata(hObject, handles)
+
+
+function edit47_Callback(hObject, eventdata, handles)
+% hObject    handle to edit47 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit47 as text
+%        str2double(get(hObject,'String')) returns contents of edit47 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit47_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit47 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function ONNXbinarisationThreshold_Callback(hObject, eventdata, handles)
+% hObject    handle to ONNXbinarisationThreshold (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of ONNXbinarisationThreshold as text
+%        str2double(get(hObject,'String')) returns contents of ONNXbinarisationThreshold as a double
+handles.imageProcessingParameters.setBinarisationThreshold(str2double(get(hObject,'String')));
+guidata(hObject, handles);
+
+% --- Executes during object creation, after setting all properties.
+function ONNXbinarisationThreshold_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to ONNXbinarisationThreshold (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function ONNXinputNormalizationMin_Callback(hObject, eventdata, handles)
+% hObject    handle to ONNXinputNormalizationMin (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of ONNXinputNormalizationMin as text
+%        str2double(get(hObject,'String')) returns contents of ONNXinputNormalizationMin as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function ONNXinputNormalizationMin_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to ONNXinputNormalizationMin (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function ONNXinputNormalizationMax_Callback(hObject, eventdata, handles)
+% hObject    handle to ONNXinputNormalizationMax (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of ONNXinputNormalizationMax as text
+%        str2double(get(hObject,'String')) returns contents of ONNXinputNormalizationMax as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function ONNXinputNormalizationMax_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to ONNXinputNormalizationMax (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in ONNXtileImage.
+function ONNXtileImage_Callback(hObject, eventdata, handles)
+% hObject    handle to ONNXtileImage (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of ONNXtileImage
+
+if get(hObject,'Value')
+    handles.imageProcessingParameters.setPreprocessingStyle('Tile');
+end
+guidata(hObject, handles);
+
+% --- Executes on button press in ONNXresizeImage.
+function ONNXresizeImage_Callback(hObject, eventdata, handles)
+% hObject    handle to ONNXresizeImage (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of ONNXresizeImage
+if get(hObject,'Value')
+    handles.imageProcessingParameters.setPreprocessingStyle('Resize');
+end
+guidata(hObject, handles);
+
+% --- Executes on button press in padImageONNX.
+function padImageONNX_Callback(hObject, eventdata, handles)
+% hObject    handle to padImageONNX (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of padImageONNX
+if get(hObject,'Value')
+    handles.imageProcessingParameters.setPreprocessingStyle('Pad');
+end
+guidata(hObject, handles);
+
+
+% --- Executes on button press in padImage.
+function padImage_Callback(hObject, eventdata, handles)
+% hObject    handle to padImage (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of padImage
+if get(hObject,'Value')
+    handles.imageProcessingParameters.setPreprocessingStyle('Pad');
+end
+guidata(hObject, handles);
+
+
+% --- Executes when selected object is changed in uibuttongroup8.
+function uibuttongroup8_SelectionChangedFcn(hObject, eventdata, handles)
+% hObject    handle to the selected object in uibuttongroup8 
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.uibuttongroup8.SelectedObject.Callback(handles.uibuttongroup8.SelectedObject, [])
+
+
+
+% --- Executes when selected object is changed in uibuttongroup6.
+function uibuttongroup6_SelectionChangedFcn(hObject, eventdata, handles)
+% hObject    handle to the selected object in uibuttongroup6 
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+%selectedObj = 
+handles.uibuttongroup6.SelectedObject.Callback(handles.uibuttongroup6.SelectedObject, [])

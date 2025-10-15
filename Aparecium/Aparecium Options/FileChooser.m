@@ -569,6 +569,22 @@ classdef FileChooser < handle
             this.registerKerasModelPath(filePath);
         end
         
+        function fullFilePath = chooseONNXModelFile(this)
+            if isfield(this.settings, 'defaultONNXModelPath')
+                startingPath = this.settings.defaultKerasModelPath;
+            else
+                startingPath = '';
+            end
+            
+            [fileName, filePath] = uigetfile('*.onnx', 'Choose ONNX model', startingPath);
+            fullFilePath = fullfile(filePath, fileName);
+
+            if isequal(fullFilePath(1,1),0)
+               error('User selected Cancel')
+            end
+            this.registerONNXModelPath(filePath);
+        end
+        
         function registerIlastikModelPath(this, path)
            if isfield(this.settings, 'defaultIlastikModel_useLast')
                if isequal(this.settings.defaultIlastikModel_useLast, true)
@@ -587,6 +603,20 @@ classdef FileChooser < handle
            if isfield(this.settings, 'defaultKerasModel_useLast')
                if isequal(this.settings.defaultKerasModel_useLast, true)
                    this.settings.defaultKerasModelPath = path;
+                   settings = this.settings; % ignore warning, it is used in the save
+                   if isdeployed
+                        save(fullfile(pwd, 'settings.mat'), 'settings');
+                   else
+                        save(fullfile(this.settingsPath, 'settings.mat'), 'settings');
+                   end
+               end
+           end
+        end
+        
+        function registerONNXModelPath(this, path)
+           if isfield(this.settings, 'defaultONNXModel_useLast')
+               if isequal(this.settings.defaultONNXModel_useLast, true)
+                   this.settings.defaultONNXModelPath = path;
                    settings = this.settings; % ignore warning, it is used in the save
                    if isdeployed
                         save(fullfile(pwd, 'settings.mat'), 'settings');

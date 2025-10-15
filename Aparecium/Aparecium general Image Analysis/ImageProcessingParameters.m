@@ -40,12 +40,14 @@ classdef ImageProcessingParameters < handle
         IlastikModel = 'IlastikModel';
         SobelModel = 'SobelModel';
         KerasModel = 'KerasModel';
+        ONNXModel = 'ONNXModel';
         PrecalculatedProbabilityMaps = 'PrecalculatedProbabilityMaps';
         
         detectionModel = 'SobelModel';
         membraneLabelIndex = 3;
         ilastikModelPath = [];
         kerasModelPath = [];
+        ONNXModelPath = [];
         
         automaticallySaveMidasFile = 'on';
         midasFileSaveFormat = 'complete';
@@ -78,9 +80,11 @@ classdef ImageProcessingParameters < handle
         binarisationThreshold = 0.5;
         normalizationMin = 0;
         normalizationMax = 1;
-        % options are Tile or Resize. In case of Tile, the image is cropped into tiles and predictions are done on tiles. In case of resize,
-        % the image is resized to the input size of the model
-        tileOrResizePreprocessing = 'Tile'; 
+        % options are Tile, Resize or Pad. In case of Tile, the image is cropped into tiles and predictions are done on tiles. In case of resize,
+        % the image is resized to the input size of the model. In case of
+        % Pad, the image is padded with mirroring to input size of the
+        % model
+        preprocessingStyle = 'Tile'; 
         
         % Precalculated probability maps processing
         useAnomalyMaps = 1; % 0 - use anomaly maps that were done using the Focus and Quality Analyzer, 1 - use the precalculated probability maps
@@ -404,12 +408,12 @@ classdef ImageProcessingParameters < handle
             normalizationMax = this.normalizationMax;
         end
         
-        function setTileOrResizePreprocessing(this, tileOrResizePreprocessing)
-            this.tileOrResizePreprocessing = tileOrResizePreprocessing;
+        function setPreprocessingStyle(this, preprocessingStyle)
+            this.preprocessingStyle = preprocessingStyle;
         end
         
-        function tileOrResizePreprocessing = getTileOrResizePreprocessing(this)
-            tileOrResizePreprocessing = this.tileOrResizePreprocessing;
+        function preprocessingStyle = getPreprocessingStyle(this)
+            preprocessingStyle = this.preprocessingStyle;
         end
         
         % Getter and Setter for useAnomalyMaps

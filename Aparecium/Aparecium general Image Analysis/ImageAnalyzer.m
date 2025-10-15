@@ -610,6 +610,9 @@ classdef ImageAnalyzer < handle
                         elseif strcmp(this.imageProcessingParameters.detectionModel, this.imageProcessingParameters.KerasModel)
                             KerasAnalysis = str2func([class(this), '.performKerasAnalysis']);
                             measurementParams = KerasAnalysis(measurementParams);
+                        elseif strcmp(this.imageProcessingParameters.detectionModel, this.imageProcessingParameters.ONNXModel)
+                            ONNXAnalysis = str2func([class(this), '.performONNXAnalysis']);
+                            measurementParams = ONNXAnalysis(measurementParams);
                         elseif strcmp(this.imageProcessingParameters.detectionModel, this.imageProcessingParameters.PrecalculatedProbabilityMaps)
                             PrecalculatedProbabilityMapsAnalysis = str2func([class(this), '.performPrecalculatedProbabilitymapsAnalysis']);
                             measurementParams = PrecalculatedProbabilityMapsAnalysis(measurementParams);
@@ -691,6 +694,9 @@ classdef ImageAnalyzer < handle
                             elseif strcmp(this.imageProcessingParameters.detectionModel, this.imageProcessingParameters.KerasModel)
                                 KerasAnalysis = str2func([class(this), '.performKerasAnalysis']);
                                 measurementParams = KerasAnalysis(measurementParams);
+                            elseif strcmp(this.imageProcessingParameters.detectionModel, this.imageProcessingParameters.ONNXModel)
+                                ONNXAnalysis = str2func([class(this), '.performONNXAnalysis']);
+                                measurementParams = ONNXAnalysis(measurementParams);
                             elseif strcmp(this.imageProcessingParameters.detectionModel, this.imageProcessingParameters.PrecalculatedProbabilityMaps)
                                 PrecalculatedProbabilityMapsAnalysis = str2func([class(this), '.performPrecalculatedProbabilitymapsAnalysis']);
                                 measurementParams = PrecalculatedProbabilityMapsAnalysis(measurementParams);
