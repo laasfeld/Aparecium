@@ -150,6 +150,7 @@ classdef FileChooser < handle
             emissionFilter = cell(0,0);
             emissionFilterChannel = cell(0,0);
             filterSetupName = cell(0,0);
+            multichromaticIndex = cell(0,0);
             alphabet = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
 %             OLDER VERSION OF CODE
 %             try
@@ -193,20 +194,40 @@ classdef FileChooser < handle
                     readingDirection{recordIndex}=record.getNumberValue(String('READINGDIR'));
                     kinTime{recordIndex}=record.getNumberValue(String('KINTIME'));
                     % get the channel names
-                    extFilter{recordIndex} = regexprep(char(record.getStringValue(String('EXFILT'))),' ','');
+                    exitationFilters = split(regexprep(char(record.getStringValue(String('EXFILT'))),' ',''), char(9));
+                    extFilter{recordIndex} = exitationFilters(1 : end-1);
                     emissionFilter{recordIndex} = cell(0,0);
                     emissionFilterChannel{recordIndex} = cell(0,0);
+                    multichromaticIndex{recordIndex} = cell(0,0);
                     if ~isequal(char(record.getStringValue(String('EMFILT'))),'')
-                        emissionFilter{recordIndex}{end+1} = regexprep(char(record.getStringValue(String('EMFILT'))),' ','');
-                        emissionFilterChannel{recordIndex}{end + 1} = '';
+                        
+                        emfiltStr = char(record.getStringValue(String('EMFILT')));
+                        % split it to parts, there could be multiple if its
+                        % dual emission measurement
+                        emFilters = split(emfiltStr, char(9));
+                        for emFilterCellIndex = 1 : numel(emFilters) - 1 % minus one as the string ends with tab resulting in the last element being empty
+                            emissionFilter{recordIndex}{end+1} = regexprep(emFilters{emFilterCellIndex}, ' ', '');
+                            emissionFilterChannel{recordIndex}{end + 1} = 'A';%alphabet(emFilterCellIndex);
+                            multichromaticIndex{recordIndex}{end + 1} = emFilterCellIndex;
+                        end
+                        
+                        %emissionFilter{recordIndex}{end+1} = regexprep(char(record.getStringValue(String('EMFILT'))),' ','');
+                        %emissionFilterChannel{recordIndex}{end + 1} = '';
                     end
-                    for letter = alphabet
-                        if ~isequal(char(record.getStringValue(String(['EMFILT',letter]))),'')
-                            emissionFilter{recordIndex}{end+1} = regexprep(char(record.getStringValue(String(['EMFILT',letter]))),' ','');
-                            emissionFilterChannel{recordIndex}{end + 1} = letter;
+
+                    if ~isequal(char(record.getStringValue(String('EMFILTB'))),'')
+                        emfiltStrB = char(record.getStringValue(String('EMFILTB')));
+                        emFiltersB = split(emfiltStrB, char(9));
+                        for emFilterCellIndex = 1 : numel(emFiltersB) - 1 % minus one as the string ends with tab resulting in the last element being empty
+
+                            emissionFilter{recordIndex}{end + 1} = regexprep(emFiltersB{emFilterCellIndex}, ' ', '');
+                            emissionFilterChannel{recordIndex}{end + 1} = 'B';%alphabet(emFilterCellIndex);
+                            multichromaticIndex{recordIndex}{end + 1} = emFilterCellIndex;
+
                         end
                     end
-                    filterSetupName{recordIndex} = strtrim(char(record.getStringValue(String('OM')))); 
+
+                    filterSetupName{recordIndex} = split(strtrim(char(record.getStringValue(String('OM')))), char(9)); 
                     loading.setLoadingBarPercent((recordIndex/numberOfRecords)*100);
                 end
             catch
@@ -224,10 +245,13 @@ classdef FileChooser < handle
             parameterStructure.exitationFilter = extFilter(selection);
             parameterStructure.kineticTime = double(kinTime{selection});
             parameterStructure.readingDirection = double(readingDirection{selection});
+            parameterStructure.multichromaticIndex = multichromaticIndex{selection};
             measureTable.close();
             pause(0.5);
             this.registerPheraStarDatabasePath(filePath);
         end
+        
+        
         
         function registerPheraStarDatabasePath(this, path)
             if isfield(this.settings, 'PHERAStarDatabase_useLast')

@@ -592,7 +592,7 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                 mainPath = imageMeasurementParams.mainDirectory;
                 foregroundPrefix = imageProcessingParameters.getForegroundMapsPrefix();
                 [~, originalImageFolder] = fileparts(imageMeasurementParams.directoryPath);
-                fixed_image_name = imageMeasurementParams.imageName;
+
                 try
                     probabilityImage = imread(fullfile(mainPath, [foregroundPrefix, originalImageFolder], imageMeasurementParams.imageName));
                 catch
@@ -645,7 +645,8 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                         tokens.ChannelName, ...
                         tokens.CycleIndex, ...
                         tokens.Extension);
-                        anomalyProbabilityImage = imread(fullfile(mainPath, [foregroundPrefix, originalImageFolder], fixedFileName));
+
+                        anomalyProbabilityImage = imread(fullfile(mainPath, [anomalyPrefix, originalImageFolder], fixedFileName));
 
                     end
                     %anomalyProbabilityImage = [anomalyProbabilityImage, zeros(size(anomalyProbabilityImage,1), 1); zeros(1, size(anomalyProbabilityImage,2) + 1)];

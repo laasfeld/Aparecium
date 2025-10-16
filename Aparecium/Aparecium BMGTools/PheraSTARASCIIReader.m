@@ -119,10 +119,16 @@ classdef PheraSTARASCIIReader < handle
         function line = findFirstLineWithString(fileHandle, string)
              indexOfScannedLine = 0;
              line = '';
-             while strcmp(line, string)~=1 %"Time [s]:" indicates, that next line will contain measurement time moments
+             while strcmp(line, string)~=1 && ~feof(fileHandle) %"Time [s]:" indicates, that next line will contain measurement time moments
                 line = fgetl(fileHandle);
                 indexOfScannedLine = indexOfScannedLine + 1;
-             end                  
+             end
+             if feof(fileHandle)
+                 disp('File Format exception: No temperature line')
+                 disp('Defaulting to no temperature line logic')
+
+                 line = 'File Format exception: No temperature line'
+             end
         end
         
         function line = findFirstLineWithBeginning(fileHandle, string, firstNCharacters)
@@ -196,20 +202,32 @@ classdef PheraSTARASCIIReader < handle
             line = '';
             channelNames = cell(1,numberOfChannels);
             channelIndex = 1;
-            while isequal(strfind(line,'Used optic modules'),[])
+            pherastar_or_clariostar_style = ''
+            while isequal(strfind(line,'Used optic modules'),[]) && isequal(strfind(line,'Used filter settings and gain values'),[])
                 line = fgetl(fileHandle);
                 indexOfScannedLine = indexOfScannedLine + 1;
             end
+            
+            if ~isequal(strfind(line,'Used optic modules'),[])
+                pherastar_or_clariostar_style = 'Pherastar';
+            elseif ~isequal(strfind(line,'Used filter settings and gain values'),[])
+                pherastar_or_clariostar_style = 'Clariostar';
+            end
+            
             while isequal(strfind(line,'Basic Parameters'),[])
                 line = fgetl(fileHandle);
                 indexOfScannedLine = indexOfScannedLine + 1;
                 if isequal(strfind(line,' - '),[])&&~isequal(strfind(line,'Channel'),[])
                     channelNames{channelIndex} = line;
                     % remove the channel beginning
-                    channelNames{channelIndex} = regexprep(channelNames{channelIndex},'  \w:','');
-                    % search for the beginning of not used information
-                    uselessIndex = strfind(channelNames{channelIndex}, ':');
-                    channelNames{channelIndex} = channelNames{channelIndex}(1:uselessIndex-1);
+                    if isequal(pherastar_or_clariostar_style, 'Pherastar')
+                        channelNames{channelIndex} = regexprep(channelNames{channelIndex},'  \w:','');                   
+                        % search for the beginning of not used information
+                        uselessIndex = strfind(channelNames{channelIndex}, ':');
+                        channelNames{channelIndex} = channelNames{channelIndex}(1:uselessIndex-1);
+                    elseif isequal(pherastar_or_clariostar_style, 'Clariostar')
+                        channelNames{channelIndex} = regexprep(channelNames{channelIndex},'  \w:','');                   
+                    end
                     channelIndex = channelIndex + 1;
                 end
             end

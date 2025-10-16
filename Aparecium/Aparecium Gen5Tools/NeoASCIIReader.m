@@ -208,7 +208,7 @@ classdef NeoASCIIReader < handle
                         currentRead.interval = 0;  
                     end
                     %line = this.getNextLine();
-                    acceptedReadTypes = {'Fluorescence Spectrum', 'Image Endpoint', 'Fluorescence Endpoint', 'Image Montage'};
+                    acceptedReadTypes = {'Fluorescence Spectrum', 'Image Endpoint', 'Fluorescence Endpoint', 'Image Montage', 'Luminescence Endpoint'};
                     for readTypeCounter = 1 : numel(acceptedReadTypes)
                        if strfind(line, acceptedReadTypes{readTypeCounter})
                            currentRead.setReadType(line);
@@ -236,6 +236,14 @@ classdef NeoASCIIReader < handle
                 elseif strfind(line, 'Filter Set 2')
                     expectingFilterSet2 = 1;
                 elseif strfind(line, 'Excitation') 
+                    if expectingFilterSet1
+                        currentRead.setChannel1(line);
+                        expectingFilterSet1 = 0;
+                    elseif expectingFilterSet2
+                        currentRead.setChannel2(line);
+                        expectingFilterSet2 = 0;
+                    end
+               elseif strfind(line, 'Emission') 
                     if expectingFilterSet1
                         currentRead.setChannel1(line);
                         expectingFilterSet1 = 0;
@@ -624,7 +632,7 @@ classdef NeoASCIIReader < handle
                 if(activeReadIndex > numel(sortedListOfReads))
                    break;  % currently, number of reads may change upon user input so this is a quick failsafe
                 end
-                if(~strcmp(sortedListOfReads{activeReadIndex}.readType, 'Fluorescence Spectrum')) % the reader can´t read fluorescence spectrum type of tables yet
+                if(~strcmp(sortedListOfReads{activeReadIndex}.readType, 'Fluorescence Spectrum') && ~strcmp(sortedListOfReads{activeReadIndex}.readType, 'Luminescence Spectrum')) % the reader can´t read fluorescence spectrum type of tables yet
                     startStringNotFound = 1;
                     endStringNotFound = 1;
                     if activeReadIndex > 1
@@ -661,7 +669,7 @@ classdef NeoASCIIReader < handle
                             line = this.getNextLine();
                             currentLine = currentLine + 1;
                             if activeReadIndex < numel(sortedListOfReads) && ~isequal(line, -1)
-                                if sortedListOfReads{activeReadIndex + 1}.isKineticRead || strcmp(sortedListOfReads{activeReadIndex + 1}.readType, 'Fluorescence Spectrum')
+                                if sortedListOfReads{activeReadIndex + 1}.isKineticRead || strcmp(sortedListOfReads{activeReadIndex + 1}.readType, 'Fluorescence Spectrum') || strcmp(sortedListOfReads{activeReadIndex + 1}.readType, 'Luminescence Spectrum')
                                     if strfind(line, sortedListOfReads{activeReadIndex + 1}.getReadName()) % old comparator ['Read ', num2str(activeReadIndex + 1), ':']
                                         
                                         this.goToBeginningOfTheFile();
@@ -677,7 +685,7 @@ classdef NeoASCIIReader < handle
                                         end
                                     end
                                 else
-                                    if contains(line, sortedListOfReads{activeReadIndex + 1}.getReadName()) || contains(line, ['Read ', num2str(nrOfFinalizedReads + 2), ':']) % old comparator ['Read ', num2str(activeReadIndex + 1), ':']
+                                    if contains(line, sortedListOfReads{activeReadIndex + 1}.getReadName()) || contains(line, ['Read ', num2str(nrOfFinalizedReads + 2), ':']) && ~contains(line, "EM Spectrum") % old comparator ['Read ', num2str(activeReadIndex + 1), ':']
                                         endStringNotFound = 0;
                                         sortedListOfReads{activeReadIndex}.lastLineOfMeasurements = currentLine - 6;
                                     end
@@ -711,7 +719,7 @@ classdef NeoASCIIReader < handle
                                 line = this.getNextLine();
                                 currentLine = currentLine + 1;
                                 if activeReadIndex < numel(sortedListOfReads) && ~isequal(line, -1)
-                                    if sortedListOfReads{activeReadIndex + 1}.isKineticRead || strcmp(sortedListOfReads{activeReadIndex + 1}.readType, 'Fluorescence Spectrum')
+                                    if sortedListOfReads{activeReadIndex + 1}.isKineticRead || strcmp(sortedListOfReads{activeReadIndex + 1}.readType, 'Fluorescence Spectrum') || strcmp(sortedListOfReads{activeReadIndex + 1}.readType, 'Luminescence Spectrum')
                                         if contains(line, sortedListOfReads{activeReadIndex + 1}.getReadName()) || contains(line, ['Read ', num2str(nrOfFinalizedReads + 2), ':'])% old comparator ['Read ', num2str(activeReadIndex + 1), ':']
                                             endStringNotFound = 0;
                                             sortedListOfReads{activeReadIndex}.lastLineOfMeasurements = currentLine - 2;
@@ -778,7 +786,7 @@ classdef NeoASCIIReader < handle
                         line = this.getNextLine();
                         currentLine = currentLine + 1;
                         if activeReadIndex < numel(sortedListOfReads) && ~isequal(line, -1)
-                            if sortedListOfReads{activeReadIndex + 1}.isKineticRead || strcmp(sortedListOfReads{activeReadIndex + 1}.readType, 'Fluorescence Spectrum')
+                            if sortedListOfReads{activeReadIndex + 1}.isKineticRead || strcmp(sortedListOfReads{activeReadIndex + 1}.readType, 'Fluorescence Spectrum') || strcmp(sortedListOfReads{activeReadIndex + 1}.readType, 'Luminescence Spectrum')
                                 if strfind(line, sortedListOfReads{activeReadIndex + 1}.getReadName()) % old comparator ['Read ', num2str(activeReadIndex + 1), ':']
                                     endStringNotFound = 0;
                                     sortedListOfReads{activeReadIndex}.lastLineOfMeasurements = currentLine - 2;
@@ -800,7 +808,7 @@ classdef NeoASCIIReader < handle
                     end
                 end
                 sortedListOfReads{activeReadIndex}.calculateCyclesByLineCount();
-                if(~isequal(sortedListOfReads{activeReadIndex}.cyclesByLineCount, sortedListOfReads{activeReadIndex}.numberOfCycles)) && numel(sortedListOfReads) > 1 && ~strcmp(sortedListOfReads{activeReadIndex}.getReadType(), 'Fluorescence Spectrum')
+                if(~isequal(sortedListOfReads{activeReadIndex}.cyclesByLineCount, sortedListOfReads{activeReadIndex}.numberOfCycles)) && numel(sortedListOfReads) > 1 && ~strcmp(sortedListOfReads{activeReadIndex}.getReadType(), 'Fluorescence Spectrum') && ~strcmp(sortedListOfReads{activeReadIndex}.getReadType(), 'Luminescence Spectrum')
                    % this read starts an appended list of reads
                    sortedListOfReads{activeReadIndex}.setIsAppendsIndex(1);
                    extraCycles = sortedListOfReads{activeReadIndex}.cyclesByLineCount - sortedListOfReads{activeReadIndex}.numberOfCycles;

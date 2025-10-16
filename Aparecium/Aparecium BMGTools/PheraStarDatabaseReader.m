@@ -29,7 +29,7 @@ classdef PheraStarDatabaseReader < handle
             this.experimentDataStructure.timeOfMeasurements = this.generateTime(record, numberOfCycles, fieldNames);
             record = iterator.next();
             this.experimentDataStructure.temperature = this.generateTemperature(record, numberOfCycles, fieldNames);
-            this.generateWellIDAndMeasurements(iterator, table, fieldNames, numberOfCycles);
+            this.generateWellIDAndMeasurements(iterator, table, fieldNames, numberOfCycles, parameterStructure);
             
             this.calculateFastKinetics();
             table.close();
@@ -39,24 +39,35 @@ classdef PheraStarDatabaseReader < handle
             this.experimentDataStructure.timeOfFastKineticsMeasurements = fastKineticsCalculator(this.experimentDataStructure.wellID', this.experimentDataStructure.readingDirection, this.experimentDataStructure.cycleTime, this.experimentDataStructure.timeOfMeasurements')';
         end
         
-        function generateWellIDAndMeasurements(this, iterator, table, fieldNames, numberOfCycles)
+        function generateWellIDAndMeasurements(this, iterator, table, fieldNames, numberOfCycles, parameterStructure)
             iterationIndex = 0;
-            this.experimentDataStructure.measurements = cell(1,(table.getRecordCount()-2)/2);
-            this.experimentDataStructure.wellID = cell(1,(table.getRecordCount()-2)/2);
+            nrOfWells = (table.getRecordCount()-2)/this.experimentDataStructure.numberOfChannels;
+            this.experimentDataStructure.measurements = cell(1, nrOfWells);
+            this.experimentDataStructure.wellID = cell(1, nrOfWells);
             %noc=2;% just a cheat for the time being.
-            while(iterator.hasNext())
-                recordCH1 = iterator.next();
-                if(iterator.hasNext())
-                    recordCH2 = iterator.next();
+            nrOfDualEmissionChannels = numel(unique(parameterStructure.emissionFilterChannel));
 
-                    iterationIndex = iterationIndex + 1;
-                    this.experimentDataStructure.wellID{iterationIndex}=char(recordCH1.getStringValue(fieldNames(1)));
-                    for fieldIndex = 4 : numberOfCycles
-                        this.experimentDataStructure.measurements{1,iterationIndex}(end+1,1)=str2double(recordCH1.getNumberValue(fieldNames(fieldIndex)));
-                        this.experimentDataStructure.measurements{1,iterationIndex}(end+1,1)=str2double(recordCH2.getNumberValue(fieldNames(fieldIndex)));
-                    end    
-                else
-                    break;
+            channelsArray = 1 : this.experimentDataStructure.numberOfChannels;
+            remappedChannelIndices = reshape(channelsArray(reshape(1:numel(channelsArray),[],nrOfDualEmissionChannels).'),[],1);  % remaps channel order as the order presented in the table does not come in the order of measurment or general logic
+                        % the order is such that channel A-s of all blocks
+                        % come before channel B-s of all blocks
+            
+            while(iterator.hasNext())
+                recordChannelCell = cell(1, nrOfWells);
+                for channelIndex = 1 : this.experimentDataStructure.numberOfChannels
+                    if iterator.hasNext()
+                        recordChannelCell{channelIndex} = iterator.next();
+                    else
+                        break
+                    end
+                end
+
+                iterationIndex = iterationIndex + 1;
+                this.experimentDataStructure.wellID{iterationIndex}=char(recordChannelCell{1}.getStringValue(fieldNames(1)));
+                for fieldIndex = 4 : numberOfCycles
+                    for channelIndex = 1 : this.experimentDataStructure.numberOfChannels
+                        this.experimentDataStructure.measurements{1,iterationIndex}(end+1,1)=str2double(recordChannelCell{remappedChannelIndices(channelIndex)}.getNumberValue(fieldNames(fieldIndex)));
+                    end
                 end
             end
         end
@@ -100,14 +111,30 @@ classdef PheraStarDatabaseReader < handle
         
         function generateChannelNames(this, parameterStructure)
 
+            nrOfDualEmissionChannels = numel(unique(parameterStructure.emissionFilterChannel));
+            %nrOfMultichromaticChannels = numel(unique(parameterStructure.multichromaticIndex));
+            channelsArray = 1 : this.experimentDataStructure.numberOfChannels;
+            remappedChannelIndices = reshape(channelsArray(reshape(1:numel(channelsArray),[],nrOfDualEmissionChannels).'),[],1);  % remaps channel order as the order presented in the table does not come in the order of measurment or general logic
+
+            
+            
             for channel = 1 : this.experimentDataStructure.numberOfChannels
                 channelLetter = parameterStructure.emissionFilterChannel{channel};
+                multichromaticIndex =  parameterStructure.multichromaticIndex{channel};
+
                 if strcmp(channelLetter, '')
                    channelLetter = 'A'; % It is for some reason that in the BMG database letter A is omitted and empty string is used instead and channels with letters start with B and so on. In ASCII files the first channel however is still named A. This line fixes this situation. 
                 end
-                this.experimentDataStructure.channelNames{channel} = [parameterStructure.filterSetupName, ', Channel ',channelLetter];
+                
+                %if strcmp(multichromaticLetter, 'A')
+                this.experimentDataStructure.channelNames{remappedChannelIndices(channel)} = [parameterStructure.filterSetupName{multichromaticIndex}, ', Channel ', channelLetter];
+                %elseif strcmp(multichromaticLetter, 'B')
+                %    this.experimentDataStructure.channelNames{channel} = [parameterStructure.filterSetupName{fix((channel-1)/nrOfDualEmissionChannels) + 1}, ', Channel ',channelLetter];
+
+                %end
                 %this.experimentDataStructure.channelNames{channel} = [parameterStructure.exitationFilter{1},'/',parameterStructure.emissionFilter{channel}];
             end 
+            this.experimentDataStructure.channelNames
         end
         
         function table = createExperimentTable(this, fileName)
