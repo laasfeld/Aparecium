@@ -27,6 +27,7 @@ classdef ImageAnalyzer < handle
     properties
         midasTableController % inner midasTableController
         imageProcessingParameters % ImageProscessingParameters object
+        AnomalyImageProcessingParameters = [] % ImageProscessingParameters object
         imageImporter % ImageImporter object that imports images
         experiment % ApareciumExperimentInput object
         results % cell array, each cell holds structure returned by StandardizeData function
@@ -88,6 +89,10 @@ classdef ImageAnalyzer < handle
         
         function setImageProcessingParameters(this, imageProcessingParameters)
             this.imageProcessingParameters = imageProcessingParameters;
+        end
+        
+        function setAnomalyImageProcessingParameters(this, imageProcessingParameters)
+            this.AnomalyImageProcessingParameters = imageProcessingParameters;
         end
         
         function setParametersToCalculate(this, parametersToCalculate)

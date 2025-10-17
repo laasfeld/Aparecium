@@ -39,7 +39,7 @@ function varargout = MembraneTools(varargin)
 
 % Edit the above text to modify the response to help MembraneTools
 
-% Last Modified by GUIDE v2.5 15-Oct-2025 13:48:32
+% Last Modified by GUIDE v2.5 17-Oct-2025 17:45:28
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -72,10 +72,19 @@ function MembraneTools_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for MembraneTools
 addApareciumToPath();  % Add all required folders to the MATLAB path
 handles.imageImporter = []; % Create a new object that can import the images correctly
-handles.imageProcessingParameters = ImageProcessingParameters(); % Create a new object that holds parameters of image analysis
-handles.imageProcessingParameters.membraneToolsBackgroundCorrection = MembraneToolsBackgroundCorrection();
-handles.imageProcessingParameters.imageSegmentationMode = handles.imageProcessingParameters.Slopes;
-handles.imageProcessingParameters.setAutoSaveMasks('on');
+
+handles.DetectionImageProcessingParameters = ImageProcessingParameters(); % Create a new object that holds parameters of image analysis
+handles.DetectionImageProcessingParameters.membraneToolsBackgroundCorrection = MembraneToolsBackgroundCorrection();
+handles.DetectionImageProcessingParameters.imageSegmentationMode = handles.imageProcessingParameters.Slopes;
+handles.DetectionImageProcessingParameters.setAutoSaveMasks('on');
+
+handles.imageProcessingParameters = handles.DetectionImageProcessingParameters;
+
+handles.AnomalyImageProcessingParameters = ImageProcessingParameters(); % Create a new object that holds parameters of image analysis
+handles.AnomalyImageProcessingParameters.membraneToolsBackgroundCorrection = MembraneToolsBackgroundCorrection();
+handles.AnomalyImageProcessingParameters.imageSegmentationMode = handles.imageProcessingParameters.Slopes;
+handles.imageProcessingParameters.setAutoSaveMasks('off');
+
 handles.imageAnalyzer = MembraneImageAnalyzer(); % Create a new object that analyzes the images
 handles.imageAnalyzer.ICSEOrMembrane = 'Membrane';
 handles.output = hObject;
@@ -2427,3 +2436,32 @@ function uibuttongroup6_SelectionChangedFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 %selectedObj = 
 handles.uibuttongroup6.SelectedObject.Callback(handles.uibuttongroup6.SelectedObject, [])
+
+
+% --- Executes on selection change in popupmenu5.
+function popupmenu5_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenu5 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu5 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenu5
+contents = cellstr(get(hObject,'String'));
+selection = contents{get(hObject,'Value')};
+if strcmp(selection, 'Detection model')
+    handles.imageProcessingParameters = handles.DetectionImageProcessingParameters;
+elseif strcmp(selection, 'Anomaly model')
+    handles.imageProcessingParameters = handles.AnomalyImageProcessingParameters;
+end
+
+% --- Executes during object creation, after setting all properties.
+function popupmenu5_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenu5 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

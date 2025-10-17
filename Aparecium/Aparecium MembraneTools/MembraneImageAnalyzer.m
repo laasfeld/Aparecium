@@ -14,6 +14,7 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
     
     methods (Static)
         
+        
         function measurementParams = performPrecalculatedProbabilitymapsAnalysis(measurementParams)
             sectionSize = 10;
             nrOfSections = ceil(numel(measurementParams)/sectionSize);
@@ -290,11 +291,14 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                     counter = 1;
 
                     for imageIndex = startIndex : endIndex % parfor should be here
+                        
                         disp(['Image index = ', num2str(imageIndex)]);
                         if strcmp(measurementParams(1).imageProcessingParams.detectionFocusOrSlopes, 'Slopes')
                             imagesForBinaryGeneration{counter} = MembraneImageAnalyzer.createSlopeImage(measurementParams(imageIndex));
                         elseif strcmp(measurementParams(1).imageProcessingParams.detectionFocusOrSlopes, 'Focus')
                             imagesForBinaryGeneration{counter} = MembraneImageAnalyzer.createFocusImageNoNorm(measurementParams(imageIndex));
+                        elseif strcmp(measurementParams(1).imageProcessingParams.detectionFocusOrSlopes, 'Zstack')
+                            imagesForBinaryGeneration{counter} = stackFromImages(folder, measurementParams(imageIndex), [], [1,2,3]);
                         end
                         counter = counter + 1;
                     end
@@ -366,11 +370,14 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                     counter = 1;
 
                     for imageIndex = startIndex : endIndex % parfor should be here
+                        measurementParams(1).imageProcessingParams.detectionFocusOrSlopes = 'Zstack'
                         disp(['Image index = ', num2str(imageIndex)]);
                         if strcmp(measurementParams(1).imageProcessingParams.detectionFocusOrSlopes, 'Slopes')
                             imagesForBinaryGeneration{counter} = MembraneImageAnalyzer.createSlopeImage(measurementParams(imageIndex));
                         elseif strcmp(measurementParams(1).imageProcessingParams.detectionFocusOrSlopes, 'Focus')
                             imagesForBinaryGeneration{counter} = MembraneImageAnalyzer.createFocusImageNoNorm(measurementParams(imageIndex));
+                        elseif strcmp(measurementParams(1).imageProcessingParams.detectionFocusOrSlopes, 'Zstack')
+                            imagesForBinaryGeneration{counter} = stackFromImages(measurementParams(imageIndex).directoryPath, measurementParams(imageIndex).imageName, [], [1,2,3]);
                         end
                         counter = counter + 1;
                     end
@@ -380,15 +387,15 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                     for imageIndex = startIndex : endIndex
                         pixelShiftVertical = measurementParams(imageIndex).imageProcessingParams.getPixelShiftVertical();
                         pixelShiftHorizontal = measurementParams(imageIndex).imageProcessingParams.getPixelShiftHorizontal();
-                        imagesForBinaryGeneration{counter} = imagesForBinaryGeneration{counter}(pixelShiftVertical+1:end, pixelShiftHorizontal+1:end);
+                        imagesForBinaryGeneration{counter} = imagesForBinaryGeneration{counter}(pixelShiftVertical+1:end, pixelShiftHorizontal+1:end, :);
                         imageSizes{imageIndex} = size(imagesForBinaryGeneration{counter});
                         counter = counter + 1;
                     end
                     try
                         if strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'off')
-                            binaryImages = MembraneImageAnalyzer.createBinaryImagesWithKeras(imagesForBinaryGeneration, measurementParams(startIndex : endIndex));
+                            binaryImages = MembraneImageAnalyzer.createBinaryImagesWithONNX(imagesForBinaryGeneration, measurementParams(startIndex : endIndex));
                         elseif strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'on')
-                            [binaryImages, probabilityMaps] = MembraneImageAnalyzer.createBinaryImagesWithKeras(imagesForBinaryGeneration, measurementParams(startIndex : endIndex));                            
+                            [binaryImages, probabilityMaps] = MembraneImageAnalyzer.createBinaryImagesWithONNX(imagesForBinaryGeneration, measurementParams(startIndex : endIndex));                            
                         end
                     catch MException
                         rethrow(MException)
@@ -659,25 +666,52 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             end
         end
         
-        function [prediction, prediction_raw] = predictSingleImageONNX(sess, inputImage, useGPU)
+        function [prediction, prediction_raw] = predictSingleImageONNX(sess, inputImage, varargin)
             % Prepare NHWC batch, run model via onnxruntime, return first output
-            [paddedInputImage, meta] = pad_stack_mean(inputImage, 1248, 1248);
-
-            if nargin < 3, useGPU = false; end
-
-            % Expect HxWxC -> 1xHxWxC (NHWC) and normalize like your python (/256)
-            x = permute(paddedInputImage, [4 1 2 3]);      % 1 x H x W x C
-            x = single(x) / 256;
-
-            yStruct = onnx_predict_python(sess, struct('x', x), "UseGPU", useGPU);
             
-            % Take the first output (or change the name if you know it)
-            outNames = fieldnames(yStruct);
-            prediction = yStruct.(outNames{1});               % H x W x (…)
-            out = unpad_stack_center(prediction, meta);
+            binarisationThreshold = 0.5;
+            analysisMode = 'Tile';
+                
+            if numel(varargin) > 0               
+                if strcmp(varargin{1}, 'Tile')
+                    analysisMode = 'Tile';
+                elseif strcmp(varargin{1}, 'Resize')
+                    analysisMode = 'Resize';
+                elseif strcmp(varargin{1}, 'Pad')
+                    analysisMode = 'Pad';
+                end  
+            end
+            
+            if strcmp(analysisMode, 'Tile')
+                %not implemented
+            elseif strcmp(analysisMode, 'resize')
+                %not implemented
+            elseif strcmp(analysisMode, 'Pad')
+            
+                [paddedInputImage, meta] = pad_stack_mean(inputImage, 1248, 1248);
+
+
+                % Expect HxWxC -> 1xHxWxC (NHWC) and normalize like your python (/256)
+                x = permute(paddedInputImage, [4 1 2 3]);      % 1 x H x W x C
+                x = single(x) / 2^16;
+
+                yStruct = onnx_predict_python(sess, struct('x', x), "UseGPU", 1);
+
+                % Take the first output (or change the name if you know it)
+                outNames = fieldnames(yStruct);
+                prediction = yStruct.(outNames{1});               % c x H x W x (…)
+                prediction_permuted_back = permute(prediction, [3 2 1]);
+                out = unpad_stack_center(prediction_permuted_back, meta);
+            end
         end
         
         function sess = createONNXsession(modelPath)
+            %if useGPU
+            providers = py.list({'CUDAExecutionProvider','CPUExecutionProvider'});
+            %else
+            %    providers = py.list({'CPUExecutionProvider'});
+            %end
+            ort = py.importlib.import_module('onnxruntime');
             so = py.onnxruntime.SessionOptions();
             sess = ort.InferenceSession(modelPath, so, pyargs('providers', providers));
         end
