@@ -741,6 +741,7 @@ classdef ImageAnalyzer < handle
             end
             
             imageProcessingParams = this.imageProcessingParameters;
+            anomalyImageProcessingParameters = this.AnomalyImageProcessingParameters;
             timeParameters.totalTimeElapsed = this.totalTimeElapsed;
             timeParameters.analysisStartTime = this.analysisStartTime;           
             nameArrayOfWell = nameArray(imagesOfWell);
@@ -778,6 +779,7 @@ classdef ImageAnalyzer < handle
                      resultStructure(picOfWell).wellName = nameArrayOfWell{picOfWell};
                      resultStructure(picOfWell).directoryPath = directoryPath;
                      resultStructure(picOfWell).imageProcessingParams = imageProcessingParams;
+                     resultStructure(picOfWell).MaskGenerationImageProcessingParams = anomalyImageProcessingParameters;
                      resultStructure(picOfWell).timeParameters = timeParameters;
                      resultStructure(picOfWell).thresholdFunctionHandle = thresholdFunctionHandle;
                      resultStructure(picOfWell).imageName = nameArrayOfWell{picOfWell};

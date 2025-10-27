@@ -39,7 +39,7 @@ function varargout = MembraneTools(varargin)
 
 % Edit the above text to modify the response to help MembraneTools
 
-% Last Modified by GUIDE v2.5 17-Oct-2025 17:45:28
+% Last Modified by GUIDE v2.5 21-Oct-2025 00:15:12
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -75,14 +75,14 @@ handles.imageImporter = []; % Create a new object that can import the images cor
 
 handles.DetectionImageProcessingParameters = ImageProcessingParameters(); % Create a new object that holds parameters of image analysis
 handles.DetectionImageProcessingParameters.membraneToolsBackgroundCorrection = MembraneToolsBackgroundCorrection();
-handles.DetectionImageProcessingParameters.imageSegmentationMode = handles.imageProcessingParameters.Slopes;
+handles.DetectionImageProcessingParameters.imageSegmentationMode = handles.DetectionImageProcessingParameters.Slopes;
 handles.DetectionImageProcessingParameters.setAutoSaveMasks('on');
 
 handles.imageProcessingParameters = handles.DetectionImageProcessingParameters;
 
 handles.AnomalyImageProcessingParameters = ImageProcessingParameters(); % Create a new object that holds parameters of image analysis
 handles.AnomalyImageProcessingParameters.membraneToolsBackgroundCorrection = MembraneToolsBackgroundCorrection();
-handles.AnomalyImageProcessingParameters.imageSegmentationMode = handles.imageProcessingParameters.Slopes;
+handles.AnomalyImageProcessingParameters.imageSegmentationMode = handles.AnomalyImageProcessingParameters.Slopes;
 handles.imageProcessingParameters.setAutoSaveMasks('off');
 
 handles.imageAnalyzer = MembraneImageAnalyzer(); % Create a new object that analyzes the images
@@ -496,7 +496,12 @@ switch handles.analysisMode % check if the user wants to analyze a completed mea
         handles.midasTableController.deleteChannelHeader(1);
         handles.imageAnalyzer.setHandles(handles); % give handles to imageAnalyzer so it could use it
         handles.imageAnalyzer.setImageImporter(handles.imageImporter); % give the image importer to the image analyzer
-        handles.imageAnalyzer.setImageProcessingParameters(handles.imageProcessingParameters); % give the image processing parameters to the image analyzer
+        handles.imageAnalyzer.setImageProcessingParameters(handles.DetectionImageProcessingParameters); % give the image processing parameters to the image analyzer
+        if get(handles.useAutomaticMasks, 'Value')
+            handles.imageAnalyzer.setAnomalyImageProcessingParameters(handles.AnomalyImageProcessingParameters); % give the image processing parameters to the image analyzer
+        else
+            handles.imageAnalyzer.setAnomalyImageProcessingParameters([]);
+        end
         handles.imageAnalyzer.setAnalysisFeedbackHandle(handles.timePassed); % give the feedback handle to the image analyzer
         handles.imageAnalyzer.setCameraAndLensParameters(handles.cameraAndLensParameters); % give the camera and lens parameters to the imageAnalyzer
         handles.imageAnalyzer.startAnalysis(); % start the analysis, this will take some time
@@ -2253,7 +2258,7 @@ handles.imageProcessingParameters.ONNXModelPath = get(hObject,'String');
 guidata(hObject, handles)
 
 % --- Executes during object creation, after setting all properties.
-function ONNXmodelPathLabel_CreateFcn(hObject, eventdata, handles)
+function ONNXModelPath_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to ONNXmodelPathLabel (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
@@ -2449,10 +2454,95 @@ function popupmenu5_Callback(hObject, eventdata, handles)
 contents = cellstr(get(hObject,'String'));
 selection = contents{get(hObject,'Value')};
 if strcmp(selection, 'Detection model')
+    handles.AnomalyImageProcessingParameters = handles.imageProcessingParameters;
     handles.imageProcessingParameters = handles.DetectionImageProcessingParameters;
 elseif strcmp(selection, 'Anomaly model')
+    handles.DetectionImageProcessingParameters = handles.imageProcessingParameters;
     handles.imageProcessingParameters = handles.AnomalyImageProcessingParameters;
 end
+handles = alignGUIToImageProcessingParameters(handles);
+guidata(hObject, handles);
+
+function handles = alignGUIToImageProcessingParameters(handles)
+
+%% options not to align
+% Save options - creating and saving of binary images, masks etc is
+% universal choice.
+% Analysis mode - unrelated for now
+% MIDAS generation options - unrelated for now
+% Camera and lens - these must be the same
+% Import options - we assume that anomalies and cells are detected both
+% from the same channel. No option for choosing separate channels for that.
+% Quantification channel focus options - no quantification from anomaly
+% detection needed
+
+% options to update
+
+% Use morphological operations?
+% Detection channel focus options
+% ONNX parameters
+% Keras parameters
+% Sobel edge detection parameters
+% Ilastik parameters
+
+% Method
+
+
+items = get(handles.popupmenu1, 'String');
+idx = find(strcmp(items, handles.imageProcessingParameters.detectionModel));
+if ~isempty(idx)
+    set(handles.popupmenu1, 'Value', idx);
+end
+
+% Use morphological operations
+
+set(handles.useMorphologicalCleaning, 'Value', handles.imageProcessingParameters.getUseMorphologicalOperations())
+set(handles.ignoreMorphologicalCleaning, 'Value', ~handles.imageProcessingParameters.getUseMorphologicalOperations())
+
+% Detection channel focus options
+
+if strcmp(handles.imageProcessingParameters.detectionFocusOrSlopes, 'Slopes')
+    set(handles.useSlopes,'Value', true)
+elseif strcmp(handles.imageProcessingParameters.detectionFocusOrSlopes, 'Focus')
+    set(handles.useFocusImage,'Value', true)
+elseif strcmp(handles.imageProcessingParameters.detectionFocusOrSlopes, 'Zstack')
+    set(handles.useZStack,'Value', true)
+end
+
+panels('Ilastik')= handles.ilastikParametersPanel;
+panels('Sobel') = handles.analysisParameters;
+panels('Keras') = handles.kerasParametersPanel;
+panels('Precalculated') = handles.precalculatedProbabilityMapsPanel;
+panels('ONNX') = handles.ONNXParametersPanel;
+
+if strcmp(handles.imageProcessingParameters.detectionModel, 'ONNXModel')
+    % ONNX options
+    set(handles.ONNXModelPath, 'String', handles.imageProcessingParameters.ONNXModelPath)
+    set(handles.edit47, 'String', num2str(handles.imageProcessingParameters.membraneLabelIndex))
+
+    set(handles.ONNXinputNormalizationMin, 'String', num2str(handles.imageProcessingParameters.getNormalizationMin()))
+    set(handles.ONNXinputNormalizationMax, 'String', num2str(handles.imageProcessingParameters.getNormalizationMax()))
+
+    if strcmp(handles.imageProcessingParameters.getPreprocessingStyle, 'Tile')
+        set(handles.ONNXtileImage, 'Value', true)
+    elseif strcmp(handles.imageProcessingParameters.getPreprocessingStyle, 'Resize')
+        set(handles.ONNXresizeImage, 'Value', true)
+    elseif strcmp(handles.imageProcessingParameters.getPreprocessingStyle, 'Pad')
+        set(handles.padImageONNX, 'Value', true)
+    end
+    
+    set(handles.ONNXbinarisationThreshold, 'String', num2str(handles.imageProcessingParameters.getBinarisationThreshold()))
+    
+elseif strcmp(handles.imageProcessingParameters.detectionModel, 'Keras')
+elseif strcmp(handles.imageProcessingParameters.detectionModel, 'Sobel')
+elseif strcmp(handles.imageProcessingParameters.detectionModel, 'Ilastik')
+elseif strcmp(handles.imageProcessingParameters.detectionModel, 'Precalculated')
+    
+end
+
+    
+
+% Keras options
 
 % --- Executes during object creation, after setting all properties.
 function popupmenu5_CreateFcn(hObject, eventdata, handles)
@@ -2465,3 +2555,23 @@ function popupmenu5_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in useZStack.
+function useZStack_Callback(hObject, eventdata, handles)
+% hObject    handle to useZStack (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of useZStack
+handles.imageProcessingParameters.setDetectionFocusOrSlopes('Zstack');
+guidata(hObject, handles);
+
+
+% --- Executes on button press in useAutomaticMasks.
+function useAutomaticMasks_Callback(hObject, eventdata, handles)
+% hObject    handle to useAutomaticMasks (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of useAutomaticMasks

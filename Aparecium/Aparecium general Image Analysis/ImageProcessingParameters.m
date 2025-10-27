@@ -70,6 +70,9 @@ classdef ImageProcessingParameters < handle
         
         % For MembraneTools - 'Slopes' detects from linear regression
         % slopes while 'Focus' detects from focus image only.
+        % 'Zstack' detects using a full "3D stack". Focus image will be the
+        % central image with equal nr below and above the stack. In case of
+        % even input, more images are taken from higher Zstack images
         detectionFocusOrSlopes = 'Slopes';
         
         membraneToolsBackgroundCorrection = [];

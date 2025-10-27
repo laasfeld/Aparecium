@@ -393,8 +393,27 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                     end
                     try
                         if strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'off')
+                            if ~isempty(measurementParams(1).MaskGenerationImageProcessingParams)
+                                [binaryMasks, maskProbabilities] = MembraneImageAnalyzer.createBinaryImagesWithONNX(imagesForBinaryGeneration, measurementParams(startIndex : endIndex), 'MaskGenerationImageProcessingParams');
+                                subcounter = 1;
+                                for imageIndexOfMask = startIndex : endIndex
+                                    measurementParams(imageIndexOfMask).qualityMask = binaryMasks{subcounter};
+                                    subcounter = subcounter + 1;
+                                end
+                            end
+
                             binaryImages = MembraneImageAnalyzer.createBinaryImagesWithONNX(imagesForBinaryGeneration, measurementParams(startIndex : endIndex));
                         elseif strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'on')
+                            
+                            if ~isempty(measurementParams(1).MaskGenerationImageProcessingParams)
+                                binaryMasks = MembraneImageAnalyzer.createBinaryImagesWithONNX(imagesForBinaryGeneration, measurementParams(startIndex : endIndex), 'MaskGenerationImageProcessingParams');
+                                subcounter = 1;
+                                for imageIndexOfMask = startIndex : endIndex
+                                    measurementParams(imageIndexOfMask).qualityMask = binaryMasks{subcounter};
+                                    subcounter = subcounter + 1;
+                                end
+                            end
+                            
                             [binaryImages, probabilityMaps] = MembraneImageAnalyzer.createBinaryImagesWithONNX(imagesForBinaryGeneration, measurementParams(startIndex : endIndex));                            
                         end
                     catch MException
@@ -562,25 +581,33 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
             end
         end
         
-        function [binaryImages, probabilityMaps] = createBinaryImagesWithONNX(slopeImages, measurementParams)
+        function [binaryImages, probabilityMaps] = createBinaryImagesWithONNX(slopeImages, measurementParams, varargin)
             
+            paramsType = 'imageProcessingParams';
+            if numel(varargin) > 0
+                if strcmp(varargin{1}, 'imageProcessingParams')
+                    paramsType = 'imageProcessingParams';
+                elseif strcmp(varargin{1}, 'MaskGenerationImageProcessingParams')
+                    paramsType = 'MaskGenerationImageProcessingParams';
+                end
+            end
             binaryImages = cell(size(slopeImages));
-            if strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'on')
+            if strcmp(measurementParams(1).(paramsType).autoSaveProbabilityMap, 'on')
                 probabilityMaps = cell(size(slopeImages));
             end
       
-            ONNXModelPath = measurementParams(1).imageProcessingParams.ONNXModelPath;
+            ONNXModelPath = measurementParams(1).(paramsType).ONNXModelPath;
             sess = MembraneImageAnalyzer.createONNXsession(ONNXModelPath);
             for imageIndex = 1 : numel(slopeImages)
-                if strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'off')
+                if strcmp(measurementParams(1).(paramsType).autoSaveProbabilityMap, 'off')
                     binaryImages{imageIndex} = MembraneImageAnalyzer.predictSingleImageONNX(sess, slopeImages{imageIndex},...
-                        measurementParams(imageIndex).imageProcessingParams.preprocessingStyle, measurementParams(imageIndex).imageProcessingParams.binarisationThreshold);
-                elseif strcmp(measurementParams(1).imageProcessingParams.autoSaveProbabilityMap, 'on')
+                        measurementParams(imageIndex).(paramsType).preprocessingStyle, measurementParams(imageIndex).(paramsType).binarisationThreshold);
+                elseif strcmp(measurementParams(1).(paramsType).autoSaveProbabilityMap, 'on')
                     [binaryImages{imageIndex}, probabilityMaps{imageIndex}] = MembraneImageAnalyzer.predictSingleImageONNX(sess, slopeImages{imageIndex},...
-                        measurementParams(imageIndex).imageProcessingParams.preprocessingStyle, measurementParams(imageIndex).imageProcessingParams.binarisationThreshold);                    
+                        measurementParams(imageIndex).(paramsType).preprocessingStyle, measurementParams(imageIndex).(paramsType).binarisationThreshold);                    
                 end
                 
-                if measurementParams(1).imageProcessingParams.useMorphologicalOperations
+                if measurementParams(1).(paramsType).useMorphologicalOperations
                     binaryImages{imageIndex} = MembraneImageAnalyzer.morphologicalOperations(binaryImages{imageIndex});
                 end
 
@@ -701,7 +728,8 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                 outNames = fieldnames(yStruct);
                 prediction = yStruct.(outNames{1});               % c x H x W x (…)
                 prediction_permuted_back = permute(prediction, [3 2 1]);
-                out = unpad_stack_center(prediction_permuted_back, meta);
+                prediction_raw = squeeze(unpad_stack_center(prediction_permuted_back, meta));
+                prediction = prediction_raw > binarisationThreshold;
             end
         end
         
@@ -1299,6 +1327,8 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                             case imageProcessingParameters.IlastikModel
                                 bw2 = providedBinary;
                             case imageProcessingParameters.KerasModel
+                                bw2 = providedBinary;
+                            case imageProcessingParameters.ONNXModel
                                 bw2 = providedBinary;
                             case imageProcessingParameters.PrecalculatedProbabilityMaps
                                 bw2 = providedBinary;
