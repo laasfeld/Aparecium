@@ -127,7 +127,7 @@ classdef MidasTableController < handle
                     nanIndices( (cycle - 1) * noOfWells + 1 : cycle * noOfWells) = false;
                 else
                     counter = counter + 1;
-                    datestr(seconds(this.eventData{noOfWells*cycle, 6}),'HH:MM:SS')
+                    %datestr(seconds(this.eventData{noOfWells*cycle, 6}),'HH:MM:SS')
                 end
             end
             
