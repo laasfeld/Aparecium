@@ -8,5 +8,12 @@ function updateMidasChannels(handles)
     for channel = 1 : numberOfChannels     
         handles.midasTableController.changeChannelHeader(channelName{channel}, channel);
     end
+    if isequal(numberOfChannels, 1)
+       try
+           handles.midasTableController.deleteChannelHeader(2);
+       catch
+           
+       end
+    end
 
 end

@@ -71,6 +71,17 @@ function outStruct = onnx_predict_python(sess, inStruct, varargin)
         npArr = pyOut{i};
         data = double(py.array.array('d', py.numpy.nditer(npArr)));
         shape = cellfun(@double, cell(npArr.shape));
-        outStruct.(outNames{i}) = reshape(data, shape);
+        %outStruct.(outNames{i}) = reshape(data, shape);
+        %r = squeeze(permute(reshape(data, shape([1,4,2,3])), [4,2,3,1]));
+        squeezed_im = squeeze(permute(reshape(data, shape([1,4,2,3])), [2,3,4,1]));
+        % add back a dimension for prediction channel if it was squeezed.
+        if isequal(numel(size(squeezed_im)), 2)
+            res = zeros([1, size(squeezed_im, 1), size(squeezed_im, 2)]);
+            res(1, :, :) = squeezed_im;
+        else
+            res = squeezed_im;
+        end
+        outStruct.(outNames{i}) = res;
+        %outStruct.(outNames{i}) = squeeze(permute(reshape(data, shape([1,4,2,3])), [4,2,3,1]));
     end
 end

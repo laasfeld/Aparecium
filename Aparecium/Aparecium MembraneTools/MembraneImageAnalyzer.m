@@ -298,7 +298,15 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                         elseif strcmp(measurementParams(1).imageProcessingParams.detectionFocusOrSlopes, 'Focus')
                             imagesForBinaryGeneration{counter} = MembraneImageAnalyzer.createFocusImageNoNorm(measurementParams(imageIndex));
                         elseif strcmp(measurementParams(1).imageProcessingParams.detectionFocusOrSlopes, 'Zstack')
-                            imagesForBinaryGeneration{counter} = stackFromImages(folder, measurementParams(imageIndex), [], [1,2,3]);
+                            try
+                                imagesForBinaryGeneration{counter} = stackFromImages(folder, measurementParams(imageIndex), [], [1,2,3]);
+                            catch
+                                try
+                                    imagesForBinaryGeneration{counter} = stackFromImages(folder, measurementParams(imageIndex), [], [0,1,2]);
+                                catch
+                                    imagesForBinaryGeneration{counter} = stackFromImages(folder, measurementParams(imageIndex), [], [0,1,1]);
+                                end
+                            end
                         end
                         counter = counter + 1;
                     end
@@ -606,7 +614,8 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                     [binaryImages{imageIndex}, probabilityMaps{imageIndex}] = MembraneImageAnalyzer.predictSingleImageONNX(sess, slopeImages{imageIndex},...
                         measurementParams(imageIndex).(paramsType).preprocessingStyle, measurementParams(imageIndex).(paramsType).binarisationThreshold);                    
                 end
-                
+                binaryImages{imageIndex} = binaryImages{imageIndex}(:,:,measurementParams(1).(paramsType).membraneLabelIndex);
+                probabilityMaps{imageIndex} = probabilityMaps{imageIndex}(:,:,measurementParams(1).(paramsType).membraneLabelIndex);
                 if measurementParams(1).(paramsType).useMorphologicalOperations
                     binaryImages{imageIndex} = MembraneImageAnalyzer.morphologicalOperations(binaryImages{imageIndex});
                 end
@@ -709,6 +718,10 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                 end  
             end
             
+            if numel(varargin) > 1               
+                binarisationThreshold = varargin{2};
+            end
+            
             if strcmp(analysisMode, 'Tile')
                 %not implemented
             elseif strcmp(analysisMode, 'resize')
@@ -727,7 +740,11 @@ classdef MembraneImageAnalyzer < ImageAnalyzer
                 % Take the first output (or change the name if you know it)
                 outNames = fieldnames(yStruct);
                 prediction = yStruct.(outNames{1});               % c x H x W x (…)
-                prediction_permuted_back = permute(prediction, [3 2 1]);
+                try
+                    prediction_permuted_back = permute(prediction, [3 2 1]);
+                catch
+                    ''
+                end
                 prediction_raw = squeeze(unpad_stack_center(prediction_permuted_back, meta));
                 prediction = prediction_raw > binarisationThreshold;
             end

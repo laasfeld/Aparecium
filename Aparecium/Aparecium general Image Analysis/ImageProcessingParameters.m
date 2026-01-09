@@ -43,8 +43,8 @@ classdef ImageProcessingParameters < handle
         ONNXModel = 'ONNXModel';
         PrecalculatedProbabilityMaps = 'PrecalculatedProbabilityMaps';
         
-        detectionModel = 'SobelModel';
-        membraneLabelIndex = 3;
+        detectionModel = 'ONNXModel';
+        membraneLabelIndex = 2;
         ilastikModelPath = [];
         kerasModelPath = [];
         ONNXModelPath = [];

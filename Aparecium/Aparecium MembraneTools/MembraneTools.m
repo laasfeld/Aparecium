@@ -80,6 +80,9 @@ handles.DetectionImageProcessingParameters.setAutoSaveMasks('on');
 
 handles.imageProcessingParameters = handles.DetectionImageProcessingParameters;
 
+
+
+
 handles.AnomalyImageProcessingParameters = ImageProcessingParameters(); % Create a new object that holds parameters of image analysis
 handles.AnomalyImageProcessingParameters.membraneToolsBackgroundCorrection = MembraneToolsBackgroundCorrection();
 handles.AnomalyImageProcessingParameters.imageSegmentationMode = handles.AnomalyImageProcessingParameters.Slopes;
@@ -107,6 +110,21 @@ handles.observationStarted = 0; % No observation is started when the program is 
 handles.TextFieldCellEditor = [];
 
 %% Change the appearance of the GUI 
+
+% Align GUI to backing data
+items = get(handles.detectionModel, 'String');
+% Find the matching index
+analysisModes = containers.Map;
+analysisModes(handles.imageProcessingParameters.IlastikModel)= 'Ilastik';
+analysisModes(handles.imageProcessingParameters.SobelModel) = 'Sobel';
+analysisModes(handles.imageProcessingParameters.KerasModel) = 'Keras';
+analysisModes(handles.imageProcessingParameters.PrecalculatedProbabilityMaps) = 'Precalculated';
+analysisModes(handles.imageProcessingParameters.ONNXModel) = 'ONNX';
+
+idx = find(strcmp(items, analysisModes(handles.imageProcessingParameters.detectionModel)));
+set(handles.detectionModel, 'Value', idx);
+detectionModel_Callback(handles.detectionModel, [], handles)
+
 %set(handles.figure1, 'Color', [225/255, 226/255, 251/255]); 
 set(handles.figure1, 'name', 'Membrane Tools')
 %%
@@ -2289,7 +2307,8 @@ function edit47_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit47 as text
 %        str2double(get(hObject,'String')) returns contents of edit47 as a double
-
+handles.imageProcessingParameters.membraneLabelIndex = str2double(get(hObject,'String'));
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function edit47_CreateFcn(hObject, eventdata, handles)
@@ -2453,10 +2472,10 @@ function popupmenu5_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from popupmenu5
 contents = cellstr(get(hObject,'String'));
 selection = contents{get(hObject,'Value')};
-if strcmp(selection, 'Detection model')
+if strcmp(selection, 'Detection model') && isequal(handles.imageProcessingParameters, handles.AnomalyImageProcessingParameters)
     handles.AnomalyImageProcessingParameters = handles.imageProcessingParameters;
     handles.imageProcessingParameters = handles.DetectionImageProcessingParameters;
-elseif strcmp(selection, 'Anomaly model')
+elseif strcmp(selection, 'Anomaly model') && isequal(handles.imageProcessingParameters, handles.DetectionImageProcessingParameters)
     handles.DetectionImageProcessingParameters = handles.imageProcessingParameters;
     handles.imageProcessingParameters = handles.AnomalyImageProcessingParameters;
 end
@@ -2537,8 +2556,9 @@ elseif strcmp(handles.imageProcessingParameters.detectionModel, 'Keras')
 elseif strcmp(handles.imageProcessingParameters.detectionModel, 'Sobel')
 elseif strcmp(handles.imageProcessingParameters.detectionModel, 'Ilastik')
 elseif strcmp(handles.imageProcessingParameters.detectionModel, 'Precalculated')
-    
+else
 end
+drawnow();
 
     
 

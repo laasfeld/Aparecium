@@ -39,8 +39,8 @@ end
 
 originalWellID = wellIDColumn(1 : noOfWells);
 numberOfCycles = numel(midasTableController.getEventTableColumnData(1))/numel(originalWellID);
-
-    
+reindexingColumn = blockAlignIndex(originalWellID, wellIDColumn);
+wellIDColumn = wellIDColumn(reindexingColumn);    
 
 %% get time of measurements from MIDAS file
 for column = 1 : numel(columnHeaders)
@@ -48,6 +48,9 @@ for column = 1 : numel(columnHeaders)
         time = [];
         fastKinetics = 0;
         timeColumn = midasTableController.getEventTableColumnData(column);
+        
+        % reindex in case the order is not preserved across all time-points
+        timeColumn = timeColumn(reindexingColumn);
         for cycle = 1 : numberOfCycles
             if ~isequal(1, size(unique(cell2mat(timeColumn( (cycle-1) * noOfWells + 1 : cycle * noOfWells))), 1))
                 fastKinetics = 1;
@@ -82,6 +85,9 @@ for i = 1 : size(columnHeaders, 2)
         namesTR{end+1} = {treatmentNameWithUnit{1}(1 : underscoreIndices(end) - 1)};%% adds the name of the data to last index of variable namesTR
         units{end+1} = treatmentNameWithUnit{1}(underscoreIndices(end) + 1  : end);
         treatmentColumn = cellstr(num2str(cell2mat(midasTableController.getEventTableColumnData(i))));
+        
+        % reindex in case the order is not preserved across all time-points
+        treatmentColumn = treatmentColumn(reindexingColumn);
         if isequal(numel(treatmentColumn), numel(midasTableController.getEventTableColumnData(i)))
             treatments(:,:,end+1) = reshape(treatmentColumn, noOfWells, numberOfCycles);
         else
@@ -93,9 +99,11 @@ noOfTreatments = size(namesTR,2);
 measurements = cell(0,0);
 channelNames = [];
 for i = 1 : size(columnHeaders, 2)
-    if(isequal(strfind(columnHeaders(i),'DV:'),{[1]}));%% checks if the particular column contains measurement data
+    if(isequal(strfind(columnHeaders(i),'DV:'),{[1]}))%% checks if the particular column contains measurement data
         channelNames{end+1} = regexprep(columnHeaders{i}, 'DV:', '');%% adds the name of the data to last index of variable channelsDV
         measurementsCellArray = midasTableController.getEventTableColumnData(i);
+        measurementsCellArray = measurementsCellArray(reindexingColumn);
+
         measurementsMatrix = zeros(numel(measurementsCellArray), 1);
         for measurement = 1 : numel(measurementsCellArray)
             if isempty(measurementsCellArray{measurement})
@@ -250,4 +258,41 @@ function [ concChangeEvent, eventTimes ] = eventReader(handles)
             end
         end
     end
+end
+
+function idx = blockAlignIndex(arr1, arr2)
+    % arr1: 1×n unique strings
+    % arr2: 1×(n*m) strings; each block of length n is a permutation of arr1
+
+    % Map arr2 elements to indices of arr1
+    [~, loc] = ismember(arr2, arr1);  % loc(i) in 1..n
+
+    n = numel(arr1);
+    N = numel(arr2);
+
+    % Sanity checks
+    assert(all(loc > 0), 'All elements of arr2 must appear in arr1.');
+    assert(mod(N, n) == 0, 'Length of arr2 must be a multiple of length of arr1.');
+
+    m = N / n;  % number of blocks
+
+    % Reshape into n×m matrix: each column = one block (as codes 1..n)
+    locMat = reshape(loc, n, m);
+
+    % We want, for each block, the row index where code 1,2,...,n appears.
+    % That’s the inverse permutation of each column.
+
+    rows = repmat((1:n)', 1, m);      % row indices
+    cols = repmat(1:m,      n, 1);    % column indices
+
+    invMat = zeros(size(locMat));     % will hold inverse permutations
+    invMat(sub2ind(size(invMat), locMat, cols)) = rows;
+    % Now invMat(k,j) = row r where locMat(r,j) == k
+
+    % Convert (row,block) positions back to linear indices in arr2
+    blockOffsets = 0:n:(N-1);         % [0 n 2n ...]
+    idxMat = invMat + repmat(blockOffsets, n, 1);
+
+    % Final linear index into arr2
+    idx = idxMat(:);
 end

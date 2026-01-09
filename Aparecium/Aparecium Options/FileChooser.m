@@ -730,6 +730,40 @@ classdef FileChooser < handle
                end
            end
         end
+        
+        
+        %% Hidex Excel methods
+        
+        function [fullFilePath, fileName] = userChooseHidexExcelFile(this)
+            if isfield(this.settings, 'HidexExcelFilePath')
+                startingPath = this.settings.HidexExcelFilePath;
+            else
+                startingPath = '';
+            end
+            
+            [fileName, filePath] = uigetfile({'*.xlsx'},'Select Hidex Excel file', startingPath);% opens dialog to select a .dat file, {'*.dat';'*.17_BV'}
+            fullFilePath = fullfile(filePath, fileName);% merges filePath and fileName to single variable
+
+            if isequal(fullFilePath(1,1),0)%checks if something was selected, if user pressed cancel, then filename(1,1) would be 0
+               error('User selected Cancel')
+            end
+            this.registerPheraStarASCIIFilePath(filePath);
+        end
+        
+        function registerHidexExcelFilePath(this, path)
+            if isfield(this.settings, 'HidexExcel_useLast')
+               if isequal(this.settings.HidexExcel_useLast, true)
+                   this.settings.HidexExcel = path;
+                   settings = this.settings; % ignore warning, it is used in the save
+                   if isdeployed
+                        save(fullfile(pwd, 'settings.mat'), 'settings');
+                   else
+                        save(fullfile(this.settingsPath, 'settings.mat'), 'settings');
+                   end
+               end
+           end
+        end
+        
     end
     
 
